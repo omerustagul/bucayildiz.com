@@ -1,0 +1,50 @@
+<!-- @dsCard group="Components" viewport="700x420" name="Data — StatTile, ProgressRing, MetricBar" subtitle="Dashboard metrics: KPI tiles, gauges, attribute bars" -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; background: var(--ink-50); padding: 24px; }
+  .lbl { font-family: var(--font-body); font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-400); margin: 0 0 10px; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+  .rings { display: flex; gap: 28px; align-items: center; margin-bottom: 24px; }
+  .bars { display: flex; flex-direction: column; gap: 12px; max-width: 360px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { StatTile, ProgressRing, MetricBar } = window.BucaYLdZTasarMSistemi_45a34f;
+function Demo(){
+  return (
+    <div>
+      <p className="lbl">StatTile</p>
+      <div className="tiles">
+        <StatTile label="VO2 Max" value="56.4" unit="ml/kg" delta="3.1%" deltaTone="up" sub="son test" accent />
+        <StatTile label="Vücut Yağ" value="11.2" unit="%" delta="0.6%" deltaTone="down" sub="hedefte" />
+        <StatTile label="Maç Süresi" value="540" unit="dk" delta="0" deltaTone="neutral" sub="bu sezon" />
+      </div>
+      <p className="lbl">ProgressRing</p>
+      <div className="rings">
+        <ProgressRing value={11.2} max={30} display="11.2%" sublabel="yağ" label="Vücut Yağ" color="var(--gold-600)" />
+        <ProgressRing value={42} max={60} display="42%" sublabel="kas" label="Kas Oranı" />
+        <ProgressRing value={88} max={100} display="88" sublabel="hazır" label="Hazıroluş" color="var(--green-600)" />
+      </div>
+      <p className="lbl">MetricBar</p>
+      <div className="bars">
+        <MetricBar label="Dayanıklılık" value={82} display="82" color="var(--gold-600)" />
+        <MetricBar label="Sürat" value={74} display="74" />
+        <MetricBar label="Güç" value={68} display="68" />
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script>
+</body>
+</html>

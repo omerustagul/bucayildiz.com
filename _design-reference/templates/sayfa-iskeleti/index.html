@@ -1,0 +1,71 @@
+<!-- @template name="Sayfa İskeleti" description="Buca Yıldız markalı sayfa şablonu — başlık, içerik ve footer ile boş bir sayfa iskeleti" -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Buca Yıldız — Sayfa İskeleti</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="./ds-base.js"></script>
+<style>
+  body { margin: 0; background: var(--surface-page); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+window.addEventListener('DOMContentLoaded', () => {
+  const NS = window.BucaYLdZTasarMSistemi_45a34f;
+  if (!NS) { console.error('DS bundle not ready'); return; }
+  const { Button, SectionHeading, Card, Badge } = NS;
+
+  function Header() {
+    return (
+      <header style={{ background: 'var(--navy-800)', borderBottom: '1px solid rgba(255,255,255,.08)' }}>
+        <div style={{ maxWidth: 1160, margin: '0 auto', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 22, color: '#fff', textTransform: 'uppercase', letterSpacing: '.02em' }}>
+            Buca Yıldız <span style={{ color: 'var(--gold-400)' }}>★</span>
+          </span>
+          <nav style={{ display: 'flex', gap: 4 }}>
+            {['Kurumsal','Takımlar','Haberler','İletişim'].map(x => (
+              <a key={x} href="#" style={{ padding: '8px 14px', fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 15, letterSpacing: '.04em', textTransform: 'uppercase', color: 'var(--navy-200)', textDecoration: 'none' }}>{x}</a>
+            ))}
+          </nav>
+          <Button variant="accent" size="sm">Başvuru</Button>
+        </div>
+      </header>
+    );
+  }
+
+  function App() {
+    return (
+      <React.Fragment>
+        <Header />
+        <main style={{ maxWidth: 1160, margin: '0 auto', padding: '64px 32px' }}>
+          <SectionHeading kicker="Yeni Sayfa" title="Sayfa Başlığı"
+            action={<Button variant="secondary" size="sm">İşlem</Button>}
+            style={{ marginBottom: 32 }} />
+          {/* TODO: sayfa içeriğinizi buraya ekleyin */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+            {[1,2,3].map(i => (
+              <Card key={i} interactive accent padding="lg">
+                <Badge tone="navy">Bölüm {i}</Badge>
+                <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 22, textTransform: 'uppercase', color: 'var(--text-strong)', margin: '12px 0 8px' }}>Kart Başlığı</h3>
+                <p style={{ fontSize: 14.5, lineHeight: 1.6, color: 'var(--text-muted)', margin: 0 }}>İçerik metni buraya gelir. Tokenlar ve bileşenler hazır.</p>
+              </Card>
+            ))}
+          </div>
+        </main>
+        <footer style={{ background: 'var(--navy-950)', color: 'var(--navy-300)', padding: '28px 32px', textAlign: 'center', fontSize: 13 }}>
+          © 2026 Buca Yıldız Futbol Akademisi
+        </footer>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+});
+</script>
+</body>
+</html>

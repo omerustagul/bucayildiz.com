@@ -1,0 +1,223 @@
+/* ============================================================
+   Buca Yıldız — Global stylesheet (Next.js entry)
+   Fonts are self-hosted via next/font (see layout.tsx); the rest
+   of the design system is imported here in dependency order.
+   ============================================================ */
+@import url('../styles/tokens/colors.css');
+@import url('../styles/tokens/typography.css');
+@import url('../styles/tokens/spacing.css');
+@import url('../styles/tokens/effects.css');
+@import url('../styles/tokens/base.css');
+
+/* App-level layout: sticky footer, smooth anchor scroll */
+html {
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ---- Homepage motion & layout helpers (ported from design kit) ---- */
+@keyframes byPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes byMarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.by-marquee {
+  width: 100%;
+  overflow: hidden;
+  padding: 20px 0 8px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+.by-marquee-track {
+  display: flex;
+  gap: 56px;
+  width: max-content;
+  align-items: flex-end;
+  animation: byMarquee 40s linear infinite;
+}
+.by-marquee:hover .by-marquee-track {
+  animation-play-state: paused;
+}
+.by-jersey {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.by-jersey-label {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--navy-200);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .by-marquee-track {
+    animation: none;
+  }
+}
+
+/* Footer link hover (CSS so the footer can stay a server component) */
+.footer-link {
+  color: var(--navy-100);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.footer-link:hover {
+  color: #fff;
+}
+.footer-legal-link {
+  font-size: 13px;
+  color: var(--navy-300);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.footer-legal-link:hover {
+  color: var(--gold-400);
+}
+
+/* Mega-menu dropdown item hover */
+.mega-link:hover {
+  background: var(--navy-50);
+  color: var(--navy-800) !important;
+}
+
+/* Link card hover lift (used on overview/index pages) */
+.link-card {
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+}
+.link-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Performans giriş modalı: mobilde 2 sütun */
+@media (max-width: 560px) {
+  .perf-fields {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* Medya kütüphanesi: mobilde klasör ağacı üstte, grid altta */
+@media (max-width: 760px) {
+  .media-lib-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Admin topbar: çok dar ekranda kullanıcı adını gizle (avatar kalır) */
+@media (max-width: 520px) {
+  .admin-user-text {
+    display: none !important;
+  }
+}
+
+/* Sporcu paneli responsive */
+@media (max-width: 900px) {
+  .perf-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .perf-kpi {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .pl-athlete {
+    flex-direction: column !important;
+  }
+  .pl-athlete-photo {
+    width: 100% !important;
+  }
+}
+
+/* Sporcu paneli üst bar: dar ekranda kullanıcı kimliğini gizle (avatar kalır) */
+@media (max-width: 520px) {
+  .pl-header-identity,
+  .pl-header-divider {
+    display: none !important;
+  }
+}
+
+/* Admin haber editörü responsive */
+@media (max-width: 1000px) {
+  .post-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+@media (max-width: 560px) {
+  .post-fields {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Admin giriş kartı responsive */
+@media (max-width: 760px) {
+  .login-card {
+    grid-template-columns: 1fr !important;
+  }
+  .login-brand {
+    display: none !important;
+  }
+}
+
+/* Başvuru formu responsive */
+@media (max-width: 880px) {
+  .basvuru-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+@media (max-width: 560px) {
+  .form-2col {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ---- Homepage responsive grid helpers ---- */
+@media (max-width: 900px) {
+  .hp-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+  .hp-grid-ages {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .hp-grid-footer {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+@media (max-width: 600px) {
+  .hp-grid-ages {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .hp-grid-footer {
+    grid-template-columns: 1fr !important;
+  }
+}

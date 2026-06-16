@@ -1,0 +1,120 @@
+/* ============================================================
+   Buca Yıldız — Base element defaults & layout helpers
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* iOS Safari'nin dar kolonlardaki metni otomatik büyütmesini (ve layout'u
+   patlatmasını) engelle — "Chrome'da iyi, iPhone'da bozuk" sorununun ana
+   nedeni. Ayrıca yatay taşmaya karşı emniyet kemeri (clip; sticky'yi bozmaz). */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: clip;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--lh-body);
+  color: var(--text-body);
+  background: var(--surface-page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+  max-width: 100%;
+}
+
+/* ============================================================
+   Özel scrollbar — ince, yarı-saydam, neredeyse görünmez, lacivert
+   tasarım çizgisi. Varsayılan kalın scrollbar'ın yerini alır.
+   ============================================================ */
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(21, 41, 90, 0.3) transparent;
+}
+/* WebKit (Chrome / Safari / Edge) */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(21, 41, 90, 0.22);
+  border-radius: 999px;
+  /* şeffaf kenarlık + padding-box: görünür kalınlık ~3px (çok ince his) */
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  transition: background-color var(--dur-fast, 0.15s) ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(21, 41, 90, 0.45);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Koyu lacivert yüzeylerde (admin/sporcu paneli kenar çubukları) açık tonlu
+   thumb — koyu zeminde de hafifçe görünür kalsın. */
+.by-scroll-on-dark {
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+.by-scroll-on-dark::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.16);
+}
+.by-scroll-on-dark::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.32);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  color: var(--text-strong);
+  margin: 0;
+  letter-spacing: var(--ls-tight);
+}
+
+a { color: var(--text-link); text-decoration: none; }
+a:hover { color: var(--color-primary-strong); }
+
+img { display: block; max-width: 100%; }
+
+:focus-visible { outline: none; box-shadow: var(--ring-focus); }
+
+/* Layout helpers */
+.bx-container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+.bx-section { padding-block: var(--section-pad-y); }
+
+/* Eyebrow + heading cluster shared across kits */
+.bx-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-weight: var(--fw-semibold);
+  font-size: var(--text-eyebrow);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--text-accent);
+}
+.bx-kicker::before {
+  content: "";
+  width: 22px;
+  height: 2px;
+  background: var(--color-accent);
+}
+
+/* Thin gold rule used as a section accent */
+.bx-rule-gold {
+  width: 56px;
+  height: var(--accent-bar);
+  background: var(--grad-gold);
+  border-radius: var(--radius-pill);
+}

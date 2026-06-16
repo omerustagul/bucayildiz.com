@@ -1,0 +1,82 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
+import { POST_TEMPLATE_IDS } from "@/lib/enums";
+
+const schema = z.object({
+  title: z.string().trim().min(1, "Başlık zorunlu.").max(160),
+  slug: z
+    .string()
+    .trim()
+    .min(1, "Slug zorunlu.")
+    .regex(/^[a-z0-9-]+$/, "Slug yalnızca küçük harf, rakam ve - içerebilir."),
+  category: z.string().trim().max(40).optional().or(z.literal("")),
+  template: z.enum(POST_TEMPLATE_IDS).default("standart"),
+  status: z.enum(["draft", "published", "scheduled"]).default("draft"),
+  coverUrl: z.string().trim().nullable().optional(),
+  excerpt: z.string().trim().max(400).optional().or(z.literal("")),
+  body: z.string().trim().max(20000).optional().or(z.literal("")),
+  author: z.string().trim().max(80).optional().or(z.literal("")),
+  featured: z.boolean().default(false),
+  publishedAt: z.string().trim().optional().or(z.literal("")),
+});
+
+export type PostResult = { error: string };
+
+async function requireAuth() {
+  const s = await getSession();
+  if (!s) redirect("/admin/giris");
+}
+
+function toData(d: z.infer<typeof schema>) {
+  return {
+    title: d.title,
+    slug: d.slug,
+    category: d.category || "",
+    template: d.template,
+    status: d.status,
+    coverUrl: d.coverUrl && d.coverUrl.trim() ? d.coverUrl : null,
+    excerpt: d.excerpt || "",
+    body: d.body || "",
+    author: d.author || "",
+    featured: d.featured,
+    publishedAt: d.publishedAt || null,
+  };
+}
+
+export async function createPost(input: unknown): Promise<PostResult | void> {
+  await requireAuth();
+  const parsed = schema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
+  try {
+    await prisma.post.create({ data: toData(parsed.data) });
+  } catch {
+    return { error: "Bu slug zaten kullanımda. Farklı bir slug deneyin." };
+  }
+  revalidatePath("/admin/haberler");
+  redirect("/admin/haberler");
+}
+
+export async function updatePost(id: string, input: unknown): Promise<PostResult | void> {
+  await requireAuth();
+  const parsed = schema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
+  try {
+    await prisma.post.update({ where: { id }, data: toData(parsed.data) });
+  } catch {
+    return { error: "Güncellenemedi. Slug benzersiz olmalı." };
+  }
+  revalidatePath("/admin/haberler");
+  redirect("/admin/haberler");
+}
+
+export async function deletePost(id: string): Promise<void> {
+  await requireAuth();
+  await prisma.post.delete({ where: { id } }).catch(() => {});
+  revalidatePath("/admin/haberler");
+  redirect("/admin/haberler");
+}

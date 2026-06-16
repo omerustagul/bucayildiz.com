@@ -1,0 +1,17 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Lacivert / Navy scale" subtitle="Brand core — primary is navy-700" -->
+<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:#fff;padding:20px;font-family:var(--font-body)}
+  .row{display:grid;grid-template-columns:repeat(11,1fr);gap:0;border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--ink-200)}
+  .sw{height:84px;display:flex;align-items:flex-end;padding:8px}
+  .sw span{font-size:10.5px;font-weight:600;letter-spacing:.02em}
+  .meta{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--ink-500)}
+  .meta b{color:var(--ink-800)}
+</style></head><body>
+<div class="row" id="r"></div>
+<div class="meta"><span><b>--navy-700</b> · primary brand navy</span><span>#15295A</span></div>
+<script>
+const steps=[['950','#060E20','#fff'],['900','#0A1733','#fff'],['800','#0E2148','#fff'],['700','#15295A','#fff'],['600','#1D3568','#fff'],['500','#2A4378','#fff'],['400','#3D5790','#fff'],['300','#6379A8','#fff'],['200','#9FACC6','#0E2148'],['100','#D5DCE7','#0E2148'],['50','#EEF1F6','#0E2148']];
+document.getElementById('r').innerHTML=steps.map(([k,c,t])=>`<div class="sw" style="background:${c};color:${t}"><span>${k}</span></div>`).join('');
+</script>
+</body></html>

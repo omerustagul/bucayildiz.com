@@ -1,0 +1,73 @@
+<!-- @dsCard group="Yönetim Paneli" viewport="1360x900" name="Admin — Yönetim Paneli" subtitle="Sporcular, takımlar, antrenman, fikstür, medya, formalar, blog sihirbazı — tek panelden" -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Yönetim Paneli — Buca Yıldız</title>
+<link rel="stylesheet" href="../../styles.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; background: var(--surface-subtle); }
+  @keyframes byFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes byDrawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  @keyframes byPopIn { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+  @keyframes byPulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+  @media (max-width: 900px){
+    main { padding: 20px 16px 48px !important; }
+    main [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--ink-300); border-radius: 6px; border: 2px solid var(--surface-subtle); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="AdminData.jsx"></script>
+<script type="text/babel" src="AdminUI.jsx"></script>
+<script type="text/babel" src="AdminShell.jsx"></script>
+<script type="text/babel" src="DashboardView.jsx"></script>
+<script type="text/babel" src="AthletesView.jsx"></script>
+<script type="text/babel" src="TeamsView.jsx"></script>
+<script type="text/babel" src="TrainingView.jsx"></script>
+<script type="text/babel" src="FixturesView.jsx"></script>
+<script type="text/babel" src="MediaView.jsx"></script>
+<script type="text/babel" src="JerseysView.jsx"></script>
+<script type="text/babel" src="BlogView.jsx"></script>
+<script type="text/babel">
+const VIEWS = {
+  dashboard: { label: 'Genel Bakış', comp: () => window.DashboardView },
+  athletes:  { label: 'Sporcular', comp: () => window.AthletesView },
+  teams:     { label: 'Takımlar', comp: () => window.TeamsView },
+  training:  { label: 'Antrenmanlar', comp: () => window.TrainingView },
+  fixtures:  { label: 'Fikstür', comp: () => window.FixturesView },
+  blog:      { label: 'Haberler / Blog', comp: () => window.BlogView },
+  media:     { label: 'Medya Kütüphanesi', comp: () => window.MediaView },
+  jerseys:   { label: 'Formalar', comp: () => window.JerseysView },
+};
+
+function App() {
+  const [active, setActive] = React.useState('dashboard');
+  React.useEffect(() => {
+    const t = setInterval(() => window.lucide && window.lucide.createIcons(), 300);
+    return () => clearInterval(t);
+  }, []);
+  React.useEffect(() => { setTimeout(() => window.lucide && window.lucide.createIcons(), 40); }, [active]);
+
+  const View = VIEWS[active].comp();
+  const { AdminShell } = window;
+  return (
+    <AdminShell active={active} onNav={setActive} breadcrumb={VIEWS[active].label}>
+      {View ? <View onNav={setActive} /> : null}
+    </AdminShell>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+setTimeout(() => window.lucide && window.lucide.createIcons(), 120);
+</script>
+</body>
+</html>

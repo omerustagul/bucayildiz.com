@@ -1,0 +1,81 @@
+<!-- @startingPoint section="Website" subtitle="Panel giriş / login screen" viewport="1280x900" -->
+<!-- @dsCard group="Website" viewport="1280x860" name="Panel Girişi — Login" subtitle="Split login screen — navy brand panel + form" -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Panele Giriş — Buca Yıldız</title>
+<link rel="stylesheet" href="../../styles.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; min-height: 100vh; background: var(--navy-950); display: grid; place-items: center; }
+  .card { display: grid; grid-template-columns: 1fr 1fr; width: min(940px, 94vw); background: #fff; border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-xl); }
+  @media (max-width: 760px){ .card{ grid-template-columns: 1fr; } .brandside{ display:none; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { Button, Input, Checkbox } = window.BucaYLdZTasarMSistemi_45a34f;
+const LOGO = '../../assets/logo-emblem.png';
+const I = (n, sz=17) => <i data-lucide={n} style={{width:sz,height:sz}}></i>;
+
+function BrandSide(){
+  return (
+    <div className="brandside" style={{background:'var(--grad-navy-deep)',color:'#fff',padding:'52px 44px',position:'relative',overflow:'hidden',display:'flex',flexDirection:'column',justifyContent:'space-between'}}>
+      <span style={{position:'absolute',right:-60,top:'40%',fontSize:300,color:'rgba(201,162,39,.05)',lineHeight:1}}>★</span>
+      <img src={LOGO} style={{width:64,height:64,objectFit:'contain',position:'relative'}} />
+      <div style={{position:'relative'}}>
+        <h1 style={{fontFamily:'var(--font-heading)',fontWeight:700,fontSize:38,lineHeight:.98,textTransform:'uppercase',margin:'0 0 12px'}}>Kulüp<br/>Paneli</h1>
+        <p style={{fontSize:14.5,lineHeight:1.6,color:'var(--navy-100)',maxWidth:300,margin:0}}>Veli, sporcu ve antrenörler için ödeme, antrenman programı ve gelişim takibi tek panelde.</p>
+      </div>
+      <span style={{position:'relative',fontSize:12,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--gold-400)',fontWeight:600}}>Buca Yıldız Futbol Akademisi</span>
+    </div>
+  );
+}
+
+function LoginForm(){
+  const [err,setErr] = React.useState(false);
+  return (
+    <div style={{padding:'52px 48px',display:'flex',flexDirection:'column',justifyContent:'center'}}>
+      <h2 style={{fontFamily:'var(--font-heading)',fontWeight:700,fontSize:30,textTransform:'uppercase',color:'var(--text-strong)',margin:'0 0 6px'}}>Panele Giriş</h2>
+      <p style={{fontSize:14.5,color:'var(--text-muted)',margin:'0 0 28px'}}>Kullanıcı adı, e-posta veya telefon ile giriş yapabilirsiniz.</p>
+      <form onSubmit={(e)=>{e.preventDefault(); setErr(true);}} style={{display:'flex',flexDirection:'column',gap:18}}>
+        <Input label="Kullanıcı Adı / E-posta / Telefon" type="text" placeholder="arda.yilmaz · ornek@eposta.com · 05xx…" leftIcon={I('user-round',16)} required />
+        <Input label="Şifre" type="password" placeholder="••••••••" leftIcon={I('lock',16)} required
+          error={err ? 'Giriş bilgileri hatalı. Kullanıcı adı, e-posta veya telefonunuzu kontrol edin.' : undefined} />
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <Checkbox label="Beni hatırla" />
+          <a href="#" style={{fontSize:13.5,fontWeight:600,color:'var(--navy-600)'}}>Şifremi unuttum</a>
+        </div>
+        <Button type="submit" variant="primary" size="lg" fullWidth>Giriş Yap</Button>
+      </form>
+      <div style={{display:'flex',alignItems:'center',gap:12,margin:'24px 0'}}>
+        <span style={{flex:1,height:1,background:'var(--ink-200)'}}/>
+        <span style={{fontSize:12,color:'var(--ink-400)',letterSpacing:'.06em',textTransform:'uppercase'}}>veya</span>
+        <span style={{flex:1,height:1,background:'var(--ink-200)'}}/>
+      </div>
+      <p style={{textAlign:'center',fontSize:14.5,color:'var(--text-muted)',margin:0}}>
+        Henüz üye değil misiniz? <a href="basvuru.html" style={{fontWeight:600,color:'var(--navy-700)'}}>Başvuru yapın</a>
+      </p>
+      <div style={{textAlign:'center',marginTop:22}}>
+        <a href="index.html" style={{fontSize:13.5,color:'var(--ink-400)',display:'inline-flex',alignItems:'center',gap:6}}>{I('arrow-left',14)} Ana sayfaya dön</a>
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  React.useEffect(()=>{ const t=setInterval(()=>window.lucide&&window.lucide.createIcons(),400); return ()=>clearInterval(t); },[]);
+  return <div className="card"><BrandSide/><LoginForm/></div>;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+setTimeout(()=>window.lucide&&window.lucide.createIcons(),80);
+</script>
+</body>
+</html>

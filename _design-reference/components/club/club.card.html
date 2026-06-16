@@ -1,0 +1,65 @@
+<!-- @dsCard group="Components" viewport="700x900" name="Club — Trial, News, Fixture, Age Group" subtitle="Domain blocks: ücretsiz deneme, haber, fikstür, yaş grubu" -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; background: var(--ink-50); padding: 24px; }
+  @keyframes byPulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  .stack { display: flex; flex-direction: column; gap: 26px; max-width: 660px; }
+  .three { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .ages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { SectionHeading, TrialBanner, NewsCard, FixtureCard, AgeGroupCard, Button } =
+  window.BucaYLdZTasarMSistemi_45a34f;
+const CREST = '../../assets/logo-emblem.png';
+function Demo(){
+  return (
+    <div className="stack">
+      <TrialBanner />
+      <div>
+        <SectionHeading kicker="Kulüpten" title="Son Haberler"
+          action={<Button variant="secondary" size="sm">Tümü</Button>} style={{marginBottom:16}} />
+        <div className="three">
+          <NewsCard category="Altyapı" date="10 Haziran 2026"
+            title="U-17 takımımız grubunu lider tamamladı"
+            excerpt="Sezonun son maçında alınan galibiyetle birlikte play-off biletini erken aldık." />
+          <NewsCard category="Tesis" date="6 Haziran 2026"
+            title="Yeni antrenman sahamız hizmete girdi"
+            excerpt="Hibrit çim yüzeyli yeni sahamız tüm yaş gruplarımızın hizmetinde." />
+        </div>
+      </div>
+      <div>
+        <SectionHeading kicker="Fikstür" title="Güncel Maç" style={{marginBottom:16}} />
+        <div className="three">
+          <FixtureCard competition="U-17 Gelişim Ligi" date="14 Haz · 19:00" status="upcoming"
+            venue="Buca Yıldız Tesisleri"
+            home={{name:'Buca Yıldız', crest: CREST, time:'19:00'}} away={{name:'Karşıyaka SK'}} />
+          <FixtureCard competition="U-15 Bölgesel" status="finished" venue="İskenderun Stadı"
+            home={{name:'Buca Yıldız', crest: CREST, score:3}} away={{name:'Altay', score:1}} />
+        </div>
+      </div>
+      <div>
+        <SectionHeading kicker="Akademi" title="Yaş Grupları" style={{marginBottom:16}} />
+        <div className="ages">
+          <AgeGroupCard label="A Takım" title="Üst yapı" count={26} />
+          <AgeGroupCard label="U-18" title="2008 doğumlular" count={23} />
+          <AgeGroupCard label="U-15" title="2011 doğumlular" count={28} />
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script>
+</body>
+</html>

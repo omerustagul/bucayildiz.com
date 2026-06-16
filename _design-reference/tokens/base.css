@@ -1,0 +1,65 @@
+/* ============================================================
+   Buca Yıldız — Base element defaults & layout helpers
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--lh-body);
+  color: var(--text-body);
+  background: var(--surface-page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  color: var(--text-strong);
+  margin: 0;
+  letter-spacing: var(--ls-tight);
+}
+
+a { color: var(--text-link); text-decoration: none; }
+a:hover { color: var(--color-primary-strong); }
+
+img { display: block; max-width: 100%; }
+
+:focus-visible { outline: none; box-shadow: var(--ring-focus); }
+
+/* Layout helpers */
+.bx-container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+.bx-section { padding-block: var(--section-pad-y); }
+
+/* Eyebrow + heading cluster shared across kits */
+.bx-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-weight: var(--fw-semibold);
+  font-size: var(--text-eyebrow);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--text-accent);
+}
+.bx-kicker::before {
+  content: "";
+  width: 22px;
+  height: 2px;
+  background: var(--color-accent);
+}
+
+/* Thin gold rule used as a section accent */
+.bx-rule-gold {
+  width: 56px;
+  height: var(--accent-bar);
+  background: var(--grad-gold);
+  border-radius: var(--radius-pill);
+}

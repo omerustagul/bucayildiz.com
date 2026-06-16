@@ -1,0 +1,79 @@
+<!-- @dsCard group="Website" viewport="1280x920" name="Ana Sayfa — Homepage" subtitle="Header, ücretsiz deneme, haberler, fikstür, medya, yaş grupları, formalar, footer" -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Buca Yıldız Futbol Akademisi</title>
+<link rel="stylesheet" href="../../styles.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes byPulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  .by-marquee { width: 100%; overflow: hidden; padding: 20px 0 8px;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); }
+  .by-marquee-track { display: flex; gap: 56px; width: max-content; align-items: flex-end; animation: byMarquee 40s linear infinite; }
+  .by-marquee:hover .by-marquee-track { animation-play-state: paused; }
+  .by-jersey { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .by-jersey-label { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--navy-200); font-weight: 600; }
+  @keyframes byMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .by-marquee-track { animation: none; } }
+  /* responsive */
+  @media (max-width: 900px){
+    .hp-grid-2 { grid-template-columns: 1fr !important; }
+    .hp-grid-ages { grid-template-columns: repeat(3,1fr) !important; }
+    .hp-grid-footer { grid-template-columns: 1fr 1fr !important; }
+  }
+  @media (max-width: 600px){
+    .hp-grid-ages { grid-template-columns: 1fr 1fr !important; }
+    .hp-grid-footer { grid-template-columns: 1fr !important; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="SiteHeader.jsx"></script>
+<script type="text/babel" src="NewsSection.jsx"></script>
+<script type="text/babel" src="FixtureSection.jsx"></script>
+<script type="text/babel" src="MediaSection.jsx"></script>
+<script type="text/babel" src="AgeGroupsSection.jsx"></script>
+<script type="text/babel" src="JerseySection.jsx"></script>
+<script type="text/babel" src="SiteFooter.jsx"></script>
+<script type="text/babel">
+const { TrialBanner } = window.BucaYLdZTasarMSistemi_45a34f;
+const { SiteHeader, NewsSection, FixtureSection, MediaSection, AgeGroupsSection, JerseySection, SiteFooter } = window;
+
+function App() {
+  React.useEffect(() => {
+    const t = setInterval(() => window.lucide && window.lucide.createIcons(), 400);
+    return () => clearInterval(t);
+  }, []);
+  const goApply = () => { window.location.href = 'basvuru.html'; };
+  const goLogin = () => { window.location.href = 'panel-giris.html'; };
+  return (
+    <React.Fragment>
+      <SiteHeader onApply={goApply} onLogin={goLogin} />
+      <main>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 32px 0' }}>
+          <TrialBanner href="ucretsiz-deneme.html" />
+        </div>
+        <NewsSection />
+        <FixtureSection />
+        <MediaSection />
+        <AgeGroupsSection />
+        <JerseySection />
+      </main>
+      <SiteFooter />
+    </React.Fragment>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+setTimeout(() => window.lucide && window.lucide.createIcons(), 80);
+</script>
+</body>
+</html>

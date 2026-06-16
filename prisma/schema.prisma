@@ -1,0 +1,303 @@
+// Buca Yıldız — Prisma schema
+//
+// PostgreSQL (dev: yerel Homebrew :5433, prod: Türkiye'de barındırılacak).
+// Şema sade tutuldu (enum yok, status String) — taşıma ve bakım kolaylığı için.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Ücretsiz deneme / akademi başvurusu (KVKK açık rıza + audit log ile).
+model Application {
+  id               String   @id @default(cuid())
+  athleteName      String
+  birthDate        String // "YYYY-MM-DD" — TZ sorunlarını önlemek için String
+  ageGroup         String
+  position         String?
+  parentName       String
+  phone            String
+  email            String?
+  kvkkConsent      Boolean  @default(false) // aydınlatma + açık rıza (zorunlu)
+  marketingConsent Boolean  @default(false) // bülten/kampanya (opsiyonel)
+  consentVersion   String // onaylanan metnin sürümü (ispat için)
+  ipAddress        String? // audit: ispat yükü veri sorumlusunda
+  userAgent        String?
+  status           String   @default("new") // new | contacted | scheduled | closed
+  createdAt        DateTime @default(now())
+
+  consents ConsentRecord[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// KVKK onay metinleri — sürümlü, avukat tarafından yazılır/onaylanır.
+/// Her metin ayrı bir belge (battaniye "hepsini kabul" rızası KVKK'da geçersiz).
+model ConsentDocument {
+  id        String   @id @default(cuid())
+  key       String // aydinlatma | acik-riza | saglik-verisi | foto-video | uyelik
+  version   String // "2026-06-15" — ispat için sürüm
+  title     String
+  summary   String // formdaki kısa onay cümlesi
+  body      String // tam metin (placeholder; avukat onayı bekleniyor)
+  isConsent Boolean  @default(true) // false = sadece aydınlatma/bilgilendirme (rıza değil)
+  required  Boolean  @default(true) // false = opsiyonel (foto-video, pazarlama) — kayda bağlanamaz
+  ordering  Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([key, version])
+  @@index([active])
+}
+
+/// Bir onayın verildiği/geri alındığı an — KVKK ispat/denetim kaydı.
+/// Hangi metin (key+sürüm+hash), kim (veli), nasıl (IP/UA/OTP), ne zaman.
+model ConsentRecord {
+  id              String   @id @default(cuid())
+  documentKey     String
+  documentVersion String
+  documentTitle   String // o anki başlık (anlık görüntü — ispat)
+  textHash        String // metnin SHA-256'sı (sonradan değişmediğinin ispatı)
+  granted         Boolean // true = verildi, false = reddedildi/geri alındı
+  granterName     String // rızayı veren (reşit değilse veli)
+  granterRelation String? // veli | anne | baba | vasi | kendisi
+  channel         String   @default("basvuru") // basvuru | veli-panel | admin
+  ipAddress       String?
+  userAgent       String?
+  otpVerified     Boolean  @default(false) // SMS OTP doğrulandı mı (sağlayıcı bağlanınca)
+  createdAt       DateTime @default(now())
+  withdrawnAt     DateTime? // geri alındıysa
+
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  athleteId     String?
+  athlete       Athlete?     @relation(fields: [athleteId], references: [id], onDelete: SetNull)
+
+  @@index([applicationId])
+  @@index([athleteId])
+  @@index([documentKey])
+}
+
+/// Takım (A Takım, U-18…U-15).
+model Team {
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  name      String
+  short     String
+  coach     String    @default("")
+  born      String    @default("")
+  sort      Int        @default(0)
+  athletes  Athlete[]
+  trainings Training[]
+  createdAt DateTime   @default(now())
+}
+
+/// Sporcu.
+model Athlete {
+  id        String   @id @default(cuid())
+  name      String
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id])
+  position  String   @default("")
+  number    Int?
+  height    Int? // cm
+  weight    Int? // kg
+  foot        String? // Sağ | Sol | Çift
+  status      String   @default("active") // active | injured | rest
+  licenseNo   String?
+  photoUrl    String?
+  birthYear   Int?
+  parentPhone String?
+  user        User?
+  performance Performance?
+  consents    ConsentRecord[]
+  pushSubs    PushSubscription[]
+  createdAt   DateTime @default(now())
+
+  @@index([teamId])
+  @@index([status])
+}
+
+/// Sporcu performans ölçümü (panel matrisi + admin girişi).
+model Performance {
+  id           String   @id @default(cuid())
+  athleteId    String   @unique
+  athlete      Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  vo2          Float?
+  vo2History   String   @default("[]") // JSON number[]
+  percentile   Int?
+  bodyFat      Float?
+  muscle       Float?
+  speed        Int? // radar 0-100
+  endurance    Int?
+  power        Int?
+  technique    Int?
+  tactic       Int?
+  passing      Int?
+  sprint30     Float?
+  verticalJump Int?
+  maxHr        Int?
+  trainingLoad Int?
+  measuredAt   String? // "YYYY-MM-DD"
+  updatedAt    DateTime @updatedAt
+}
+
+/// Forma (İç Saha, Deplasman, Üçüncü, Kaleci…).
+model Jersey {
+  id          String   @id @default(cuid())
+  name        String
+  kind        String   @default("home") // home | away | third | gk | other
+  primary     String   @default("#15295A")
+  accent      String   @default("#C9A227")
+  description String   @default("")
+  imageUrl    String?
+  active      Boolean  @default(true)
+  sort        Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+/// Medya kategorisi (ana sayfadaki "Görseller & Videolar" kartlarını besler).
+model MediaCategory {
+  id        String          @id @default(cuid())
+  name      String
+  color     String          @default("#15295A")
+  sort      Int             @default(0)
+  assets    MediaAsset[]
+  homeCards HomeMediaCard[]
+  createdAt DateTime        @default(now())
+}
+
+/// Medya klasörü (iç içe ağaç).
+model Folder {
+  id        String       @id @default(cuid())
+  name      String
+  parentId  String?
+  parent    Folder?      @relation("FolderTree", fields: [parentId], references: [id])
+  children  Folder[]     @relation("FolderTree")
+  assets    MediaAsset[]
+  createdAt DateTime     @default(now())
+
+  @@index([parentId])
+}
+
+/// Medya varlığı (foto/video).
+model MediaAsset {
+  id         String         @id @default(cuid())
+  url        String
+  title      String         @default("")
+  kind       String         @default("photo") // photo | video
+  categoryId String?
+  category   MediaCategory? @relation(fields: [categoryId], references: [id])
+  folderId   String?
+  folder     Folder?        @relation(fields: [folderId], references: [id])
+  createdAt  DateTime       @default(now())
+
+  @@index([categoryId])
+  @@index([folderId])
+}
+
+/// Ana sayfa "Görseller & Videolar" kartı (bir kategoriyi besler).
+model HomeMediaCard {
+  id         String         @id @default(cuid())
+  title      String
+  categoryId String?
+  category   MediaCategory? @relation(fields: [categoryId], references: [id])
+  kind       String         @default("photo") // photo | video
+  featured   Boolean        @default(false)
+  coverUrl   String?
+  sort       Int            @default(0)
+  createdAt  DateTime       @default(now())
+}
+
+/// Haber / blog yazısı.
+model Post {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  category    String   @default("")
+  template    String   @default("standart")
+  status      String   @default("draft") // draft | published | scheduled
+  coverUrl    String?
+  excerpt     String   @default("")
+  body        String   @default("") // paragraflar çift satır ile ayrılır
+  author      String   @default("")
+  featured    Boolean  @default(false)
+  publishedAt String? // "YYYY-MM-DD"
+  createdAt   DateTime @default(now())
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// Antrenman planı.
+model Training {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id])
+  type      String   @default("Saha") // Saha | Kondisyon | Taktik | Bireysel | Maç
+  date      String // "YYYY-MM-DD"
+  time      String   @default("") // "HH:MM"
+  duration  Int? // dakika
+  pitch     String   @default("")
+  notes     String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([teamId])
+  @@index([date])
+}
+
+/// Maç / fikstür. Kulüp (Buca Yıldız) sabit; rakip manuel girilir.
+model Fixture {
+  id           String   @id @default(cuid())
+  competition  String
+  opponent     String
+  opponentLogo String?
+  isHome       Boolean  @default(true) // ev sahibi biz miyiz
+  date         String // "YYYY-MM-DD"
+  time         String   @default("") // "HH:MM"
+  venue        String   @default("")
+  status       String   @default("upcoming") // upcoming | finished
+  ourScore     Int?
+  oppScore     Int?
+  createdAt    DateTime @default(now())
+
+  @@index([date])
+  @@index([status])
+}
+
+/// Panel kullanıcısı (admin veya sporcu). Sporcu, bir Athlete'e bağlıdır.
+model User {
+  id           String   @id @default(cuid())
+  email        String?  @unique
+  username     String?  @unique
+  passwordHash String
+  name         String
+  role         String   @default("admin") // admin | athlete
+  athleteId    String?  @unique
+  athlete      Athlete? @relation(fields: [athleteId], references: [id])
+  pushSubs     PushSubscription[]
+  createdAt    DateTime @default(now())
+}
+
+/// Web Push aboneliği (cihaz bazlı). KVKK: abonelik = opt-in; tek tıkla silinir.
+/// Bildirim gövdesine sağlık/performans verisi YAZILMAZ (özel nitelikli veri).
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  athleteId String?
+  athlete   Athlete? @relation(fields: [athleteId], references: [id], onDelete: SetNull)
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([athleteId])
+}
