@@ -51,6 +51,11 @@ import {
   Gift,
   ArrowDown,
   Brain,
+  Settings,
+  Gauge,
+  TrafficCone,
+  ArrowUpFromLine,
+  FileText,
   type LucideIcon,
 } from "lucide-react";
 
@@ -104,6 +109,11 @@ const ICONS: Record<string, LucideIcon> = {
   gift: Gift,
   "arrow-down": ArrowDown,
   brain: Brain,
+  settings: Settings,
+  gauge: Gauge,
+  "traffic-cone": TrafficCone,
+  "arrow-up-from-line": ArrowUpFromLine,
+  "file-text": FileText,
 };
 
 export type IconName = keyof typeof ICONS;

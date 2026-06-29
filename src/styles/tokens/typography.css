@@ -18,19 +18,20 @@
   --fw-semibold:600; /* @kind font */
   --fw-bold:    700; /* @kind font */
 
-  /* Fluid display sizes (clamp for hero/section use) */
-  --text-display:   clamp(48px, 6vw, 84px);   /* hero */
-  --text-h1:        clamp(38px, 4.5vw, 60px);
-  --text-h2:        clamp(30px, 3.4vw, 44px);
-  --text-h3:        24px;
-  --text-h4:        20px;
-  --text-eyebrow:   13px;   /* label / kicker */
+  /* Fluid display sizes (clamp for hero/section use) — rem tabanlı (kök 16px),
+     kullanıcının tarayıcı yazı boyutu tercihiyle ölçeklenir (erişilebilirlik). */
+  --text-display:   clamp(3rem, 6vw, 5.25rem);       /* hero  (48–84px) */
+  --text-h1:        clamp(2.375rem, 4.5vw, 3.75rem); /* (38–60px) */
+  --text-h2:        clamp(1.875rem, 3.4vw, 2.75rem); /* (30–44px) */
+  --text-h3:        1.5rem;    /* 24px */
+  --text-h4:        1.25rem;   /* 20px */
+  --text-eyebrow:   0.8125rem; /* 13px — label / kicker */
 
   /* Body sizes */
-  --text-lg:   18px;
-  --text-base: 16px;
-  --text-sm:   14px;
-  --text-xs:   12px;
+  --text-lg:   1.125rem;  /* 18px */
+  --text-base: 1rem;      /* 16px */
+  --text-sm:   0.875rem;  /* 14px */
+  --text-xs:   0.75rem;   /* 12px */
 
   /* Line heights */
   --lh-tight:   0.98; /* @kind other */

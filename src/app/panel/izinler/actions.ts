@@ -24,22 +24,26 @@ export async function setAthleteConsent(documentKey: string, granted: boolean): 
   const ipAddress = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || null;
   const userAgent = h.get("user-agent") || null;
 
-  await prisma.consentRecord.create({
-    data: {
-      documentKey: doc.key,
-      documentVersion: doc.version,
-      documentTitle: doc.title,
-      textHash: consentTextHash(doc.body),
-      granted,
-      granterName: session.name,
-      granterRelation: "veli",
-      channel: "veli-panel",
-      ipAddress,
-      userAgent,
-      athleteId: session.athleteId,
-      withdrawnAt: granted ? null : new Date(),
-    },
-  });
+  try {
+    await prisma.consentRecord.create({
+      data: {
+        documentKey: doc.key,
+        documentVersion: doc.version,
+        documentTitle: doc.title,
+        textHash: consentTextHash(doc.body),
+        granted,
+        granterName: session.name,
+        granterRelation: "veli",
+        channel: "veli-panel",
+        ipAddress,
+        userAgent,
+        athleteId: session.athleteId,
+        withdrawnAt: granted ? null : new Date(),
+      },
+    });
+  } catch {
+    return { ok: false, error: "İşlem kaydedilemedi. Lütfen tekrar deneyin." };
+  }
 
   revalidatePath("/panel/izinler");
   return { ok: true };

@@ -1,4 +1,6 @@
 "use client";
+/* eslint-disable react-hooks/set-state-in-effect -- mount sonrası istemci-only
+   tespiti (iOS/PWA/localStorage); SSR-güvenli tek seferlik senkronizasyon. */
 
 import { useEffect, useState } from "react";
 import { Icon } from "@/lib/icons";
@@ -63,7 +65,7 @@ export function InstallHint() {
           Paneli uygulama gibi kullan
         </div>
         <div style={{ fontSize: 13, color: "var(--navy-200)", marginTop: 3, lineHeight: 1.5 }}>
-          Safari'de alttaki <span style={{ display: "inline-flex", verticalAlign: "-2px" }}><ShareGlyph size={13} /></span> <strong style={{ color: "#fff" }}>Paylaş</strong> simgesine dokun,{" "}
+          Safari&apos;de alttaki <span style={{ display: "inline-flex", verticalAlign: "-2px" }}><ShareGlyph size={13} /></span> <strong style={{ color: "#fff" }}>Paylaş</strong> simgesine dokun,{" "}
           <strong style={{ color: "#fff" }}>“Ana Ekrana Ekle”</strong>yi seç. Buca Yıldız ana ekranında bir uygulama gibi açılır.
         </div>
       </div>

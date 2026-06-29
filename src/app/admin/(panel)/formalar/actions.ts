@@ -24,6 +24,7 @@ export type JerseyResult = { error: string };
 async function requireAuth() {
   const s = await getSession();
   if (!s) redirect("/admin/giris");
+  if (s.role !== "admin") redirect("/panel");
 }
 
 function toData(d: z.infer<typeof schema>) {
@@ -45,6 +46,7 @@ export async function createJersey(input: unknown): Promise<JerseyResult | void>
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   await prisma.jersey.create({ data: toData(parsed.data) });
   revalidatePath("/admin/formalar");
+  revalidatePath("/");
 }
 
 export async function updateJersey(id: string, input: unknown): Promise<JerseyResult | void> {
@@ -53,10 +55,12 @@ export async function updateJersey(id: string, input: unknown): Promise<JerseyRe
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   await prisma.jersey.update({ where: { id }, data: toData(parsed.data) });
   revalidatePath("/admin/formalar");
+  revalidatePath("/");
 }
 
 export async function deleteJersey(id: string): Promise<void> {
   await requireAuth();
   await prisma.jersey.delete({ where: { id } }).catch(() => {});
   revalidatePath("/admin/formalar");
+  revalidatePath("/");
 }

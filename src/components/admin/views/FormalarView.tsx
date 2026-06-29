@@ -88,7 +88,7 @@ function JerseyModal({ jersey, onClose }: { jersey: JerseyRow | null; onClose: (
       open
       onClose={onClose}
       title={isNew ? "Yeni Forma" : v.name || "Forma"}
-      width={480}
+      width={860}
       footer={
         <>
           {!isNew && (
@@ -105,49 +105,54 @@ function JerseyModal({ jersey, onClose }: { jersey: JerseyRow | null; onClose: (
         </>
       }
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        <Field label="Forma Görseli" hint="Şeffaf PNG önerilir (ana sayfada kayan vitrin)">
-          <FileDrop value={v.imageUrl || null} onChange={(url) => set("imageUrl", url ?? "")} label="Forma görseli yükle" aspect="4 / 3" icon="shirt" />
-        </Field>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-          <Field label="Forma Adı" required>
-            <TextInput value={v.name} onChange={(e) => set("name", e.target.value)} placeholder="örn. İç Saha" />
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="jersey-form-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0, 0.9fr) minmax(0, 1.1fr)", gap: 22, alignItems: "start" }}>
+          {/* Sol: forma görseli */}
+          <Field label="Forma Görseli" hint="Şeffaf PNG önerilir (ana sayfada kayan vitrin)">
+            <FileDrop value={v.imageUrl || null} onChange={(url) => set("imageUrl", url ?? "")} label="Forma görseli yükle" aspect="4 / 3" icon="shirt" />
           </Field>
-          <Field label="Forma Tipi">
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {KINDS.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => set("kind", t.id)}
-                  style={{ padding: "6px 10px", borderRadius: "var(--radius-sm)", border: `1.5px solid ${v.kind === t.id ? "var(--navy-700)" : "var(--ink-200)"}`, background: v.kind === t.id ? "var(--navy-50)" : "#fff", fontSize: 12.5, fontWeight: 600, color: "var(--ink-700)", cursor: "pointer" }}
-                >
-                  {t.name}
-                </button>
-              ))}
+
+          {/* Sağ: bilgi alanları */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <Field label="Forma Adı" required>
+              <TextInput value={v.name} onChange={(e) => set("name", e.target.value)} placeholder="örn. İç Saha" />
+            </Field>
+            <Field label="Forma Tipi">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {KINDS.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => set("kind", t.id)}
+                    style={{ padding: "6px 10px", borderRadius: "var(--radius-sm)", border: `1.5px solid ${v.kind === t.id ? "var(--navy-700)" : "var(--ink-200)"}`, background: v.kind === t.id ? "var(--navy-50)" : "#fff", fontSize: 12.5, fontWeight: 600, color: "var(--ink-700)", cursor: "pointer" }}
+                  >
+                    {t.name}
+                  </button>
+                ))}
+              </div>
+            </Field>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <Field label="Ana Renk">
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <input type="color" value={v.primary} onChange={(e) => set("primary", e.target.value)} style={{ width: 44, height: 38, border: "1px solid var(--ink-200)", borderRadius: "var(--radius-sm)", background: "none", cursor: "pointer" }} />
+                  <TextInput value={v.primary} onChange={(e) => set("primary", e.target.value)} style={{ fontFamily: "monospace" }} />
+                </div>
+              </Field>
+              <Field label="Vurgu Renk">
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <input type="color" value={v.accent} onChange={(e) => set("accent", e.target.value)} style={{ width: 44, height: 38, border: "1px solid var(--ink-200)", borderRadius: "var(--radius-sm)", background: "none", cursor: "pointer" }} />
+                  <TextInput value={v.accent} onChange={(e) => set("accent", e.target.value)} style={{ fontFamily: "monospace" }} />
+                </div>
+              </Field>
             </div>
-          </Field>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-          <Field label="Ana Renk">
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <input type="color" value={v.primary} onChange={(e) => set("primary", e.target.value)} style={{ width: 44, height: 38, border: "1px solid var(--ink-200)", borderRadius: "var(--radius-sm)", background: "none", cursor: "pointer" }} />
-              <TextInput value={v.primary} onChange={(e) => set("primary", e.target.value)} style={{ fontFamily: "monospace" }} />
+            <Field label="Açıklama">
+              <TextInput value={v.description} onChange={(e) => set("description", e.target.value)} placeholder="Kısa açıklama" />
+            </Field>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 13.5, color: "var(--ink-600)" }}>Ana sayfada yayınla</span>
+              <Switch checked={v.active} onChange={(n) => set("active", n)} />
             </div>
-          </Field>
-          <Field label="Vurgu Renk">
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <input type="color" value={v.accent} onChange={(e) => set("accent", e.target.value)} style={{ width: 44, height: 38, border: "1px solid var(--ink-200)", borderRadius: "var(--radius-sm)", background: "none", cursor: "pointer" }} />
-              <TextInput value={v.accent} onChange={(e) => set("accent", e.target.value)} style={{ fontFamily: "monospace" }} />
-            </div>
-          </Field>
-        </div>
-        <Field label="Açıklama">
-          <TextInput value={v.description} onChange={(e) => set("description", e.target.value)} placeholder="Kısa açıklama" />
-        </Field>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 13.5, color: "var(--ink-600)" }}>Ana sayfada yayınla</span>
-          <Switch checked={v.active} onChange={(n) => set("active", n)} />
+          </div>
         </div>
         {error && <div style={{ padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>{error}</div>}
       </div>

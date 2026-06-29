@@ -1,5 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { signSession, verifySession, SESSION_COOKIE, SESSION_MAX_AGE, type SessionPayload } from "@/lib/session";
@@ -55,4 +56,25 @@ export async function getSession(): Promise<SessionPayload | null> {
 export async function destroySession(): Promise<void> {
   const store = await cookies();
   store.delete(SESSION_COOKIE);
+}
+
+/**
+ * Yönetici yetki kapısı — server action ve sayfalarda kullanılır.
+ * Oturum yoksa girişe, admin değilse yetkisiz şekilde yönlendirir.
+ * Server action'lar middleware'i baypas eden POST uçları olduğu için her
+ * admin mutasyonu BU kontrolü kendisi yapmalıdır.
+ */
+export async function requireAdmin(): Promise<SessionPayload> {
+  const s = await getSession();
+  if (!s) redirect("/admin/giris");
+  if (s.role !== "admin") redirect("/panel");
+  return s;
+}
+
+/** Sporcu/veli yetki kapısı — oturum + athleteId zorunlu. */
+export async function requireAthlete(): Promise<SessionPayload> {
+  const s = await getSession();
+  if (!s) redirect("/giris");
+  if (!s.athleteId) redirect("/");
+  return s;
 }

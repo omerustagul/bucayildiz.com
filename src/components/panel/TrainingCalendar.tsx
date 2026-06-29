@@ -61,8 +61,8 @@ export function TrainingCalendar({ trainings, todayYmd, initialAnchor }: { train
   const mon = startOfWeek(anchor);
   const title = view === "week" ? `${mon.getDate()} – ${addDays(mon, 6).getDate()} ${MONTHS[addDays(mon, 6).getMonth()]} ${anchor.getFullYear()}` : `${MONTHS[anchor.getMonth()]} ${anchor.getFullYear()}`;
 
-  const Seg = ({ id, label }: { id: "week" | "month"; label: string }) => (
-    <button onClick={() => setView(id)} style={{ font: "inherit", cursor: "pointer", padding: "7px 16px", borderRadius: "var(--radius-sm)", border: "none", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 13, background: view === id ? "var(--navy-700)" : "transparent", color: view === id ? "#fff" : "var(--ink-500)" }}>{label}</button>
+  const seg = (id: "week" | "month", label: string) => (
+    <button key={id} onClick={() => setView(id)} style={{ font: "inherit", cursor: "pointer", padding: "7px 16px", borderRadius: "var(--radius-sm)", border: "none", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 13, background: view === id ? "var(--navy-700)" : "transparent", color: view === id ? "#fff" : "var(--ink-500)" }}>{label}</button>
   );
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(mon, i));
@@ -84,8 +84,8 @@ export function TrainingCalendar({ trainings, todayYmd, initialAnchor }: { train
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ display: "flex", gap: 2, padding: 3, background: "var(--ink-100)", borderRadius: "var(--radius-md)" }}>
-              <Seg id="week" label="Hafta" />
-              <Seg id="month" label="Ay" />
+              {seg("week", "Hafta")}
+              {seg("month", "Ay")}
             </div>
           </div>
         </div>

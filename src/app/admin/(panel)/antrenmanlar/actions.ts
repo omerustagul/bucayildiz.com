@@ -22,6 +22,7 @@ export type TrainingResult = { error: string };
 async function requireAuth() {
   const s = await getSession();
   if (!s) redirect("/admin/giris");
+  if (s.role !== "admin") redirect("/panel");
 }
 
 function toData(d: z.infer<typeof schema>) {

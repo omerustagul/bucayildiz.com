@@ -70,10 +70,26 @@ Son güncelleme: 2026-06-16
 - **Header arka plan deseni** — denendi, beğenilmedi, geri alındı; ileride
   farklı bir yaklaşımla (daha silik / filigran / kulüp yıldızı) tekrar bakılacak.
 
-### C. Panelde "Yakında" işaretli bölümler (gelecek özellikler)
-- **Ödemeler** (`/panel/odemeler`, admin tarafı) — aidat/ödeme takibi
-- **Maçlar** (`/panel/maclar`) — sporcuya özel maç kadrosu/bildirimi
-- **Profil** (`/panel/profil`) — sporcu/veli profil düzenleme
+### C. Panelde "Yakında" bölümler — ✅ TAMAMLANDI (2026-06-16)
+- ✅ **Ödemeler** — `/panel/odemeler` (sporcu görünümü) + `/admin/odemeler`
+  (aidat yönetimi); yeni `Payment` modeli.
+- ✅ **Maçlar** — `/panel/maclar` (kulübün yaklaşan maçları + sonuçları).
+- ✅ **Profil** — `/panel/profil` (bilgi görüntüleme + veli telefonu + şifre değiştirme).
+  > Not: Fixture'a `teamId` ilişkisi yok; Maçlar kulüp geneli gösteriyor.
+  > Takım-bazlı filtre ileride eklenebilir (admin fikstür formu + şema).
+
+### Güvenlik/performans düzeltmeleri — ✅ TAMAMLANDI (2026-06-16)
+A'dan Z'ye tarama sonrası tüm majör + minör bulgular giderildi: admin action
+yetkilendirme (rol kontrolü), oturum fail-open varsayılanı, dosya yükleme
+magic-byte doğrulaması, public içerik ISR (revalidate), URL whitelist, çift-submit
+guard'ları, Modal/Drawer Escape+scroll-lock, erişilebilirlik, ölü kod temizliği.
+typecheck/lint/build temiz.
+
+### Performans ölçümleri — ✅ periyodik modele geçti (2026-06-16)
+`PerformanceMeasurement` (tarihli, çok-kayıtlı). Admin `/admin/performans`'tan
+periyodik ölçüm girer; geçmiş korunur. **Sıradaki fırsat:** biriken seriden
+**raporlama** (sporcu gelişim grafikleri, takım/dönem karşılaştırmaları, dışa
+aktarma) — artık veri buna hazır.
 
 ### D. İyileştirme fikirleri (öncelik sonrası)
 - Push bildirim tetikleyicileri (yeni antrenman/maç otomatik bildirim)

@@ -35,7 +35,7 @@ export async function JerseySection() {
 
   return (
     <section style={{ background: "var(--grad-navy)", borderTop: "1px solid var(--navy-600)", overflow: "hidden" }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "72px 32px 24px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "72px clamp(16px, 5vw, 32px) 24px" }}>
         <SectionHeading kicker="Mağaza" title="2025/26 Formalarımız" onDark style={{ marginBottom: 8 }} />
       </div>
       <div className="by-marquee">

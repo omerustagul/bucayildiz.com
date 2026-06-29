@@ -17,7 +17,7 @@ const schema = z.object({
   category: z.string().trim().max(40).optional().or(z.literal("")),
   template: z.enum(POST_TEMPLATE_IDS).default("standart"),
   status: z.enum(["draft", "published", "scheduled"]).default("draft"),
-  coverUrl: z.string().trim().nullable().optional(),
+  coverUrl: z.string().trim().refine((v) => !v || /^(https?:\/\/|\/)/.test(v), "Geçersiz URL.").nullable().optional(),
   excerpt: z.string().trim().max(400).optional().or(z.literal("")),
   body: z.string().trim().max(20000).optional().or(z.literal("")),
   author: z.string().trim().max(80).optional().or(z.literal("")),
@@ -30,6 +30,7 @@ export type PostResult = { error: string };
 async function requireAuth() {
   const s = await getSession();
   if (!s) redirect("/admin/giris");
+  if (s.role !== "admin") redirect("/panel");
 }
 
 function toData(d: z.infer<typeof schema>) {
@@ -58,6 +59,8 @@ export async function createPost(input: unknown): Promise<PostResult | void> {
     return { error: "Bu slug zaten kullanımda. Farklı bir slug deneyin." };
   }
   revalidatePath("/admin/haberler");
+  revalidatePath("/haberler");
+  revalidatePath("/");
   redirect("/admin/haberler");
 }
 
@@ -71,6 +74,8 @@ export async function updatePost(id: string, input: unknown): Promise<PostResult
     return { error: "Güncellenemedi. Slug benzersiz olmalı." };
   }
   revalidatePath("/admin/haberler");
+  revalidatePath("/haberler");
+  revalidatePath("/");
   redirect("/admin/haberler");
 }
 
@@ -78,5 +83,7 @@ export async function deletePost(id: string): Promise<void> {
   await requireAuth();
   await prisma.post.delete({ where: { id } }).catch(() => {});
   revalidatePath("/admin/haberler");
+  revalidatePath("/haberler");
+  revalidatePath("/");
   redirect("/admin/haberler");
 }

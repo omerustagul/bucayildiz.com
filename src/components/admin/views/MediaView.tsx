@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/Badge";
 import { IconButton } from "@/components/ui/IconButton";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
-import { createMediaCategory, deleteMediaCategory, createMediaAsset, deleteMediaAsset, createFolder, deleteFolder, updateHomeCard } from "@/app/admin/(panel)/medya/actions";
+import { createMediaCategory, deleteMediaCategory, createMediaAsset, deleteMediaAsset, createFolder, updateHomeCard } from "@/app/admin/(panel)/medya/actions";
 
 export type FolderNode = { id: string; name: string; parentId: string | null };
 export type AssetItem = { id: string; url: string; title: string; kind: string; categoryId: string | null; folderId: string | null };
@@ -60,6 +60,7 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
   const [catFilter, setCatFilter] = useState("");
   const [newFolder, setNewFolder] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   const counts: Record<string, number> = {};
@@ -72,15 +73,24 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
 
   async function upload(file: File) {
     setBusy(true);
+    setUploadError(null);
     try {
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (res.ok) {
-        await createMediaAsset({ url: data.url, title: file.name, folderId: isRoot ? "" : folder, categoryId: catFilter, kind: "photo" });
-        startTransition(() => router.refresh());
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setUploadError(data?.error || "Yükleme başarısız. Lütfen tekrar deneyin.");
+        return;
       }
+      const created = await createMediaAsset({ url: data.url, title: file.name, folderId: isRoot ? "" : folder, categoryId: catFilter, kind: "photo" });
+      if (!created.ok) {
+        setUploadError(created.error || "Dosya kaydedilemedi.");
+        return;
+      }
+      startTransition(() => router.refresh());
+    } catch {
+      setUploadError("Yükleme sırasında bir hata oluştu.");
     } finally {
       setBusy(false);
     }
@@ -108,6 +118,9 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
             <Select options={["Tüm kategoriler", ...categories.map((c) => c.name)]} value={catFilter === "" ? "Tüm kategoriler" : categories.find((c) => c.id === catFilter)?.name} onChange={(e) => { const c = categories.find((x) => x.name === e.target.value); setCatFilter(c?.id ?? ""); }} containerStyle={{ minWidth: 160 }} />
           </div>
         </Toolbar>
+        {uploadError && (
+          <div style={{ padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>{uploadError}</div>
+        )}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(132px, 1fr))", gap: 12 }}>
           <label style={{ position: "relative", aspectRatio: "1 / 1", borderRadius: "var(--radius-md)", border: "1.5px dashed var(--ink-300)", background: "var(--ink-50)", display: "grid", placeItems: "center", cursor: busy ? "wait" : "pointer", textAlign: "center" }}>
             <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />

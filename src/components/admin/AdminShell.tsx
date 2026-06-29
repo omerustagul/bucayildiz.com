@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/lib/icons";
+import { PageTransition } from "@/components/layout/PageTransition";
 import { logoutAction } from "@/app/admin/actions";
 
 type NavItem = { href: string; label: string; icon: IconName; ready?: boolean };
@@ -17,9 +18,11 @@ const NAV: NavGroup[] = [
     group: "Kulüp",
     items: [
       { href: "/admin/sporcular", label: "Sporcular", icon: "users", ready: true },
+      { href: "/admin/performans", label: "Performans", icon: "heart-pulse", ready: true },
       { href: "/admin/takimlar", label: "Takımlar", icon: "shield", ready: true },
       { href: "/admin/antrenmanlar", label: "Antrenmanlar", icon: "dumbbell", ready: true },
       { href: "/admin/fikstur", label: "Fikstür", icon: "calendar-days", ready: true },
+      { href: "/admin/odemeler", label: "Ödemeler", icon: "clipboard-list", ready: true },
     ],
   },
   {
@@ -33,6 +36,10 @@ const NAV: NavGroup[] = [
   {
     group: "İletişim",
     items: [{ href: "/admin/bildirimler", label: "Bildirimler", icon: "bell", ready: true }],
+  },
+  {
+    group: "Sistem",
+    items: [{ href: "/admin/ayarlar", label: "Ayarlar", icon: "settings", ready: true }],
   },
 ];
 
@@ -204,7 +211,9 @@ export function AdminShell({ user, children }: { user: { name: string; role: str
           </div>
         </header>
 
-        <main style={{ padding: "28px clamp(16px, 4vw, 28px) 56px", display: "flex", flexDirection: "column", gap: 22, width: "100%", maxWidth: 1380, margin: "0 auto" }}>{children}</main>
+        <main style={{ padding: "28px clamp(16px, 4vw, 28px) 56px", width: "100%", maxWidth: 1380, margin: "0 auto" }}>
+          <PageTransition style={{ display: "flex", flexDirection: "column", gap: 22 }}>{children}</PageTransition>
+        </main>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --hostname 0.0.0.0 --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1070.0",
-    "@aws-sdk/s3-request-presigner": "^3.1070.0",
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.3",

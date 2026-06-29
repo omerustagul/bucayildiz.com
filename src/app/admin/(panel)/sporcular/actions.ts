@@ -26,6 +26,7 @@ export type AthleteResult = { error: string };
 async function requireAuth() {
   const s = await getSession();
   if (!s) redirect("/admin/giris");
+  if (s.role !== "admin") redirect("/panel");
 }
 
 function toData(d: z.infer<typeof schema>) {
@@ -69,62 +70,12 @@ export async function updateAthlete(id: string, input: unknown): Promise<Athlete
   revalidatePath("/admin/sporcular");
 }
 
-const perfNum = z.number().nullable().optional();
-const perfInt = z.number().int().nullable().optional();
-const perfSchema = z.object({
-  vo2: perfNum,
-  vo2History: z.array(z.number()).default([]),
-  percentile: perfInt,
-  bodyFat: perfNum,
-  muscle: perfNum,
-  speed: perfInt,
-  endurance: perfInt,
-  power: perfInt,
-  technique: perfInt,
-  tactic: perfInt,
-  passing: perfInt,
-  sprint30: perfNum,
-  verticalJump: perfInt,
-  maxHr: perfInt,
-  trainingLoad: perfInt,
-  measuredAt: z.string().trim().optional().or(z.literal("")),
-});
-
-/** Sporcunun performans ölçümünü kaydeder (upsert). */
-export async function savePerformance(athleteId: string, input: unknown): Promise<{ ok?: boolean; error?: string }> {
-  await requireAuth();
-  const parsed = perfSchema.safeParse(input);
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
-  const d = parsed.data;
-  const data = {
-    vo2: d.vo2 ?? null,
-    vo2History: JSON.stringify(d.vo2History ?? []),
-    percentile: d.percentile ?? null,
-    bodyFat: d.bodyFat ?? null,
-    muscle: d.muscle ?? null,
-    speed: d.speed ?? null,
-    endurance: d.endurance ?? null,
-    power: d.power ?? null,
-    technique: d.technique ?? null,
-    tactic: d.tactic ?? null,
-    passing: d.passing ?? null,
-    sprint30: d.sprint30 ?? null,
-    verticalJump: d.verticalJump ?? null,
-    maxHr: d.maxHr ?? null,
-    trainingLoad: d.trainingLoad ?? null,
-    measuredAt: d.measuredAt || null,
-  };
-  await prisma.performance.upsert({ where: { athleteId }, create: { athleteId, ...data }, update: data });
-  revalidatePath("/admin/sporcular");
-  return { ok: true };
-}
-
 /** Sporcuya panel giriş bilgisi oluşturur/günceller. */
 export async function provisionAthleteLogin(athleteId: string, username: string, password: string): Promise<{ ok?: boolean; error?: string }> {
   await requireAuth();
   const u = username.trim().toLowerCase();
   if (!u || !/^[a-z0-9._-]{3,40}$/.test(u)) return { error: "Geçerli bir kullanıcı adı girin (a-z, 0-9, . _ -)." };
-  if (password && password.length < 6) return { error: "Şifre en az 6 karakter olmalı." };
+  if (password && password.length < 8) return { error: "Şifre en az 8 karakter olmalı." };
 
   const athlete = await prisma.athlete.findUnique({ where: { id: athleteId }, include: { user: true } });
   if (!athlete) return { error: "Sporcu bulunamadı." };

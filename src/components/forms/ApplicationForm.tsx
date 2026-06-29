@@ -117,6 +117,7 @@ export function ApplicationForm({ consentDocs }: { consentDocs: ConsentDocSummar
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (pending) return;
     setFormError(null);
 
     // İstemci tarafı anında doğrulama (sunucu yeniden doğrular).

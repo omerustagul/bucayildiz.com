@@ -1,0 +1,30 @@
+-- CreateTable
+CREATE TABLE "SiteSetting" (
+    "id" TEXT NOT NULL DEFAULT 'site',
+    "clubName" TEXT NOT NULL DEFAULT 'Buca Yıldız Futbol Akademisi',
+    "clubShortName" TEXT NOT NULL DEFAULT 'Buca Yıldız',
+    "logoUrl" TEXT,
+    "foundedYear" INTEGER,
+    "phone" TEXT,
+    "email" TEXT,
+    "address" TEXT,
+    "instagramUrl" TEXT,
+    "facebookUrl" TEXT,
+    "youtubeUrl" TEXT,
+    "xUrl" TEXT,
+    "metaTitle" TEXT,
+    "metaDescription" TEXT,
+    "ogImageUrl" TEXT,
+    "keywords" TEXT,
+    "smtpHost" TEXT,
+    "smtpPort" INTEGER DEFAULT 587,
+    "smtpUser" TEXT,
+    "smtpPass" TEXT,
+    "mailFrom" TEXT,
+    "mailToAdmin" TEXT,
+    "customCursor" BOOLEAN NOT NULL DEFAULT false,
+    "cursorStyle" TEXT NOT NULL DEFAULT 'star',
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "SiteSetting_pkey" PRIMARY KEY ("id")
+);

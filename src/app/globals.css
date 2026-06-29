@@ -75,7 +75,7 @@ main {
   gap: 14px;
 }
 .by-jersey-label {
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--navy-200);
@@ -98,7 +98,7 @@ main {
   color: #fff;
 }
 .footer-legal-link {
-  font-size: 13px;
+  font-size: 0.8125rem; /* 13px */
   color: var(--navy-300);
   text-decoration: none;
   transition: color var(--dur-fast) var(--ease-out);
@@ -122,6 +122,27 @@ main {
   box-shadow: var(--shadow-lg);
 }
 
+/* Sayfa geçiş efekti — rota değişiminde içerik kısa ve akıcı belirir.
+   Navigasyonu engellemez; yalnızca giriş animasyonu. */
+@keyframes byPageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.by-page-transition {
+  animation: byPageIn 0.28s var(--ease-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .by-page-transition {
+    animation: none;
+  }
+}
+
 /* Performans giriş modalı: mobilde 2 sütun */
 @media (max-width: 560px) {
   .perf-fields {
@@ -132,6 +153,13 @@ main {
 /* Medya kütüphanesi: mobilde klasör ağacı üstte, grid altta */
 @media (max-width: 760px) {
   .media-lib-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Forma ekleme modalı: dar ekranda görsel üstte, alanlar altta (tek sütun) */
+@media (max-width: 720px) {
+  .jersey-form-grid {
     grid-template-columns: 1fr !important;
   }
 }
@@ -219,5 +247,129 @@ main {
   }
   .hp-grid-footer {
     grid-template-columns: 1fr !important;
+  }
+}
+
+/* ============================================================
+   Özel imleçler — admin > Ayarlar > Görünüm'den açılır/seçilir.
+   <html data-cursor="..."> değerine göre tüm siteye uygulanır.
+   ("default" = kural yok = yerleşik imleç.) Dokunmatik cihazlarda
+   imleç zaten görünmez, dolayısıyla zararsızdır.
+   ============================================================ */
+html[data-cursor="star"],
+html[data-cursor="star"] * {
+  cursor: url("/cursors/star.svg") 6 4, auto;
+}
+html[data-cursor="ball"],
+html[data-cursor="ball"] * {
+  cursor: url("/cursors/ball.svg") 16 16, auto;
+}
+html[data-cursor="whistle"],
+html[data-cursor="whistle"] * {
+  cursor: url("/cursors/whistle.svg") 16 16, auto;
+}
+
+/* ============================================================
+   Site header: masaüstü/mobil ayrımı CSS ile (JS'e bağımlı DEĞİL).
+   SSR'da doğru header gelir; gerçek cihazda "masaüstü header" sorunu olmaz.
+   ============================================================ */
+.by-header-mobile {
+  display: none;
+}
+@media (max-width: 900px) {
+  .by-header-desktop {
+    display: none;
+  }
+  .by-header-mobile {
+    display: block;
+  }
+}
+
+/* ============================================================
+   Touch target ≥ 44×44px (WCAG 2.5.5) — YALNIZCA dokunmatik / kaba
+   işaretçili cihazlarda uygulanır; masaüstü (fine pointer) yoğunluğu
+   korunur. CSS min-* değerleri, bileşenlerdeki sabit inline width/height'i
+   ezdiği için IconButton (32/40) ve küçük butonlar dokunmatikte 44'e çıkar.
+   ============================================================ */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  .by-btn,
+  select,
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea {
+    min-height: 44px;
+  }
+  button,
+  [role="button"],
+  [role="switch"] {
+    min-width: 44px;
+  }
+  /* Onay kutusu/radyo görseli biraz büyür; asıl dokunma hedefi yine label. */
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-width: 22px;
+    min-height: 22px;
+  }
+}
+
+/* ============================================================
+   Safe area (çentik / home indicator) — viewport-fit=cover ile birlikte.
+   İnset'i olmayan cihazlarda env() = 0, dolayısıyla etkisizdir (güvenli).
+   Sticky header çentiği lacivertle doldurur, içerik altına geçer; footer
+   alt göstergeyi açar.
+   ============================================================ */
+.by-header-mobile,
+.by-header-desktop {
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+footer {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ============================================================
+   Dokunma geri bildirimi — :active'te hafif küçülme (ölçek).
+   Butonlar/kartlarda zaten transition var; bırakınca yumuşak döner.
+   prefers-reduced-motion açıkken devre dışı.
+   ============================================================ */
+@media (prefers-reduced-motion: no-preference) {
+  button:active:not(:disabled),
+  .by-btn:active,
+  [role="button"]:active,
+  .link-card:active,
+  summary:active {
+    transform: scale(0.97);
+  }
+}
+
+/* ============================================================
+   Anasayfa hero arka planı — MASAÜSTÜ yatay foto, MOBİL kare foto.
+   Sol/üst gradient ile metin okunabilirliği. Foto yoksa lacivert zemin.
+   ============================================================ */
+.trial-hero {
+  background-color: var(--navy-950);
+  background-image: linear-gradient(
+      90deg,
+      rgba(5, 11, 26, 0.96) 0%,
+      rgba(5, 11, 26, 0.85) 32%,
+      rgba(5, 11, 26, 0.45) 58%,
+      rgba(5, 11, 26, 0.1) 100%
+    ),
+    url("/brand/hero-trial.jpg");
+  background-size: cover;
+  background-position: center;
+}
+@media (max-width: 760px) {
+  .trial-hero {
+    background-image: linear-gradient(
+        180deg,
+        rgba(5, 11, 26, 0.82) 0%,
+        rgba(5, 11, 26, 0.58) 36%,
+        rgba(5, 11, 26, 0.9) 100%
+      ),
+      url("/brand/hero-trial-square.jpg");
+    background-position: center;
   }
 }

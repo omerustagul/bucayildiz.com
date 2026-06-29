@@ -1,38 +1,39 @@
 import "server-only";
 import nodemailer from "nodemailer";
+import { getSettings } from "@/lib/settings";
 
 /**
- * E-posta gönderimi (SMTP). SMTP_* env değişkenleri tanımlı DEĞİLSE sessizce
- * atlanır (geliştirmede ve sağlayıcı bağlanmadan önce uygulamayı bloklamaz).
- * Prod'da Türkiye'deki bir SMTP sağlayıcısı (Yandex360, Turkcell, Natro vb.)
- * ile doldurulur — bkz .env.production.example.
+ * E-posta gönderimi (SMTP). Yapılandırma önce admin > Ayarlar (DB), yoksa
+ * SMTP_* env'inden okunur. Hiçbiri yoksa sessizce atlanır (uygulamayı bloklamaz).
  */
 
 type MailInput = { to: string; subject: string; html: string; text?: string };
 
-function getTransport() {
-  const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  if (!host || !user || !pass) return null;
-  const port = Number(process.env.SMTP_PORT || 587);
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465, // 465 = SSL, 587 = STARTTLS
-    auth: { user, pass },
-  });
+async function getSmtpConfig() {
+  const s = await getSettings();
+  const host = s.smtpHost || process.env.SMTP_HOST || "";
+  const user = s.smtpUser || process.env.SMTP_USER || "";
+  const pass = s.smtpPass || process.env.SMTP_PASS || "";
+  const port = s.smtpPort || Number(process.env.SMTP_PORT || 587);
+  const from = s.mailFrom || process.env.MAIL_FROM || "Buca Yıldız <bilgi@bucayildiz.com>";
+  const adminTo = s.mailToAdmin || process.env.MAIL_TO_ADMIN || s.email || process.env.SEED_ADMIN_EMAIL || "";
+  return { host, user, pass, port, from, adminTo };
 }
 
 export async function sendMail(input: MailInput): Promise<{ sent: boolean; reason?: string }> {
-  const transport = getTransport();
-  if (!transport) {
+  const cfg = await getSmtpConfig();
+  if (!cfg.host || !cfg.user || !cfg.pass) {
     console.warn(`[mail] SMTP yapılandırılmadı — atlandı: "${input.subject}" → ${input.to}`);
     return { sent: false, reason: "smtp-not-configured" };
   }
-  const from = process.env.MAIL_FROM || "Buca Yıldız <bilgi@bucayildiz.com>";
   try {
-    await transport.sendMail({ from, to: input.to, subject: input.subject, html: input.html, text: input.text });
+    const transport = nodemailer.createTransport({
+      host: cfg.host,
+      port: cfg.port,
+      secure: cfg.port === 465, // 465 = SSL, 587 = STARTTLS
+      auth: { user: cfg.user, pass: cfg.pass },
+    });
+    await transport.sendMail({ from: cfg.from, to: input.to, subject: input.subject, html: input.html, text: input.text });
     return { sent: true };
   } catch (e) {
     console.error("[mail] gönderim hatası:", e);
@@ -50,7 +51,7 @@ export async function notifyNewApplication(app: {
   phone: string;
   email: string | null;
 }) {
-  const adminTo = process.env.MAIL_TO_ADMIN || process.env.SEED_ADMIN_EMAIL;
+  const { adminTo } = await getSmtpConfig();
   const results: Record<string, boolean> = {};
 
   if (adminTo) {

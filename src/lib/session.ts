@@ -36,7 +36,7 @@ export async function verifySession(token: string | undefined): Promise<SessionP
       return {
         sub: payload.sub,
         email: payload.email,
-        role: String(payload.role ?? "admin"),
+        role: payload.role === "admin" ? "admin" : "athlete",
         name: String(payload.name ?? ""),
         athleteId: typeof payload.athleteId === "string" ? payload.athleteId : undefined,
       };

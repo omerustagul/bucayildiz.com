@@ -10,7 +10,8 @@ const hex = /^#[0-9a-fA-F]{6}$/;
 export type MediaResult = { ok: boolean; error?: string };
 
 async function authed() {
-  return !!(await getSession());
+  const s = await getSession();
+  return !!s && s.role === "admin";
 }
 
 // --- Categories ---
@@ -26,6 +27,8 @@ export async function createMediaCategory(input: unknown): Promise<MediaResult> 
   const count = await prisma.mediaCategory.count();
   await prisma.mediaCategory.create({ data: { ...parsed.data, sort: count } });
   revalidatePath("/admin/medya");
+  revalidatePath("/medya");
+  revalidatePath("/");
   return { ok: true };
 }
 
@@ -34,11 +37,13 @@ export async function deleteMediaCategory(id: string): Promise<void> {
   await prisma.mediaAsset.updateMany({ where: { categoryId: id }, data: { categoryId: null } });
   await prisma.mediaCategory.delete({ where: { id } }).catch(() => {});
   revalidatePath("/admin/medya");
+  revalidatePath("/medya");
+  revalidatePath("/");
 }
 
 // --- Assets ---
 const assetSchema = z.object({
-  url: z.string().trim().min(1, "URL zorunlu."),
+  url: z.string().trim().min(1, "URL zorunlu.").refine((v) => /^(https?:\/\/|\/)/.test(v), "Geçersiz URL."),
   title: z.string().trim().max(120).optional().or(z.literal("")),
   categoryId: z.string().trim().optional().or(z.literal("")),
   folderId: z.string().trim().optional().or(z.literal("")),
@@ -54,6 +59,8 @@ export async function createMediaAsset(input: unknown): Promise<MediaResult> {
     data: { url: d.url, title: d.title || "", kind: d.kind, categoryId: d.categoryId ? d.categoryId : null, folderId: d.folderId ? d.folderId : null },
   });
   revalidatePath("/admin/medya");
+  revalidatePath("/medya");
+  revalidatePath("/");
   return { ok: true };
 }
 
@@ -63,6 +70,8 @@ export async function createFolder(name: string, parentId: string | null): Promi
   if (!name.trim()) return { ok: false, error: "Klasör adı zorunlu." };
   await prisma.folder.create({ data: { name: name.trim(), parentId: parentId || null } });
   revalidatePath("/admin/medya");
+  revalidatePath("/medya");
+  revalidatePath("/");
   return { ok: true };
 }
 
@@ -73,6 +82,8 @@ export async function deleteFolder(id: string): Promise<void> {
   await prisma.mediaAsset.updateMany({ where: { folderId: id }, data: { folderId: null } });
   await prisma.folder.delete({ where: { id } }).catch(() => {});
   revalidatePath("/admin/medya");
+  revalidatePath("/medya");
+  revalidatePath("/");
 }
 
 // --- Home media cards ---
@@ -80,7 +91,7 @@ const cardSchema = z.object({
   title: z.string().trim().min(1, "Kart adı zorunlu.").max(80),
   categoryId: z.string().trim().optional().or(z.literal("")),
   featured: z.boolean().default(false),
-  coverUrl: z.string().trim().nullable().optional(),
+  coverUrl: z.string().trim().refine((v) => !v || /^(https?:\/\/|\/)/.test(v), "Geçersiz URL.").nullable().optional(),
 });
 
 export async function updateHomeCard(id: string, input: unknown): Promise<MediaResult> {
@@ -93,6 +104,8 @@ export async function updateHomeCard(id: string, input: unknown): Promise<MediaR
     data: { title: d.title, categoryId: d.categoryId ? d.categoryId : null, featured: d.featured, coverUrl: d.coverUrl && d.coverUrl.trim() ? d.coverUrl : null },
   });
   revalidatePath("/admin/medya");
+  revalidatePath("/medya");
+  revalidatePath("/");
   return { ok: true };
 }
 
@@ -100,4 +113,6 @@ export async function deleteMediaAsset(id: string): Promise<void> {
   if (!(await authed())) return;
   await prisma.mediaAsset.delete({ where: { id } }).catch(() => {});
   revalidatePath("/admin/medya");
+  revalidatePath("/medya");
+  revalidatePath("/");
 }

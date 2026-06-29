@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import { getSession } from "@/lib/auth";
+import { requireAthlete } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PerformanceMatrix } from "@/components/panel/PerformanceMatrix";
-import { toPerf } from "@/lib/perf";
+import { measurementsToPerf } from "@/lib/perf";
 
 export const metadata: Metadata = { title: "Performans — Sporcu Paneli" };
 
 export default async function PanelPerformans() {
-  const session = await getSession();
-  const perf = await prisma.performance.findUnique({ where: { athleteId: session!.athleteId! } });
-  return <PerformanceMatrix perf={toPerf(perf)} />;
+  const session = await requireAthlete();
+  const measurements = await prisma.performanceMeasurement.findMany({
+    where: { athleteId: session.athleteId! },
+    orderBy: { measuredAt: "asc" },
+  });
+  return <PerformanceMatrix perf={measurementsToPerf(measurements)} />;
 }

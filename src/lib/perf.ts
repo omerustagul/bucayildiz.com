@@ -1,8 +1,8 @@
 import type { Perf } from "@/components/panel/PerformanceMatrix";
 
-type DbPerf = {
+type DbMeasurement = {
+  measuredAt: string;
   vo2: number | null;
-  vo2History: string;
   percentile: number | null;
   bodyFat: number | null;
   muscle: number | null;
@@ -16,35 +16,34 @@ type DbPerf = {
   verticalJump: number | null;
   maxHr: number | null;
   trainingLoad: number | null;
-  measuredAt: string | null;
 };
 
-/** Performance DB kaydını panel matrisi prop'una çevirir (vo2History JSON parse). */
-export function toPerf(p: DbPerf | null): Perf | null {
-  if (!p) return null;
-  let history: number[] = [];
-  try {
-    const arr = JSON.parse(p.vo2History);
-    if (Array.isArray(arr)) history = arr.filter((n): n is number => typeof n === "number");
-  } catch {
-    history = [];
-  }
+/**
+ * Periyodik ölçüm dizisinden panel matrisi prop'u üretir.
+ * - Mevcut durum = en GÜNCEL tarihli ölçüm.
+ * - vo2History = tüm ölçümlerin (tarihe göre artan) VO2 serisi → trend grafiği.
+ */
+export function measurementsToPerf(measurements: DbMeasurement[]): Perf | null {
+  if (!measurements.length) return null;
+  const sorted = [...measurements].sort((a, b) => a.measuredAt.localeCompare(b.measuredAt));
+  const latest = sorted[sorted.length - 1];
+  const vo2History = sorted.map((m) => m.vo2).filter((n): n is number => typeof n === "number");
   return {
-    vo2: p.vo2,
-    vo2History: history,
-    percentile: p.percentile,
-    bodyFat: p.bodyFat,
-    muscle: p.muscle,
-    speed: p.speed,
-    endurance: p.endurance,
-    power: p.power,
-    technique: p.technique,
-    tactic: p.tactic,
-    passing: p.passing,
-    sprint30: p.sprint30,
-    verticalJump: p.verticalJump,
-    maxHr: p.maxHr,
-    trainingLoad: p.trainingLoad,
-    measuredAt: p.measuredAt,
+    vo2: latest.vo2,
+    vo2History,
+    percentile: latest.percentile,
+    bodyFat: latest.bodyFat,
+    muscle: latest.muscle,
+    speed: latest.speed,
+    endurance: latest.endurance,
+    power: latest.power,
+    technique: latest.technique,
+    tactic: latest.tactic,
+    passing: latest.passing,
+    sprint30: latest.sprint30,
+    verticalJump: latest.verticalJump,
+    maxHr: latest.maxHr,
+    trainingLoad: latest.trainingLoad,
+    measuredAt: latest.measuredAt,
   };
 }

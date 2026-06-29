@@ -5,7 +5,7 @@ import { saveUpload } from "@/lib/storage";
 /** Görsel yükleme uç noktası — yalnızca oturumlu yöneticiler. */
 export async function POST(req: Request) {
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session || session.role !== "admin") return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
 
   const form = await req.formData();
   const file = form.get("file");

@@ -1,4 +1,4 @@
-import { TrialBanner } from "@/components/home/TrialBanner";
+import { TrialHero } from "@/components/home/TrialHero";
 import { NewsSection } from "@/components/home/NewsSection";
 import { FixtureSection } from "@/components/home/FixtureSection";
 import { MediaSection } from "@/components/home/MediaSection";
@@ -8,9 +8,7 @@ import { JerseySection } from "@/components/home/JerseySection";
 export default function HomePage() {
   return (
     <>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 32px 0" }}>
-        <TrialBanner href="/ucretsiz-deneme" />
-      </div>
+      <TrialHero href="/ucretsiz-deneme" />
       <NewsSection />
       <FixtureSection />
       <MediaSection />

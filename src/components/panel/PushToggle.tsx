@@ -1,4 +1,6 @@
 "use client";
+/* eslint-disable react-hooks/set-state-in-effect -- mount sonrası istemci-only
+   tespiti (Notification/serviceWorker/standalone); meşru effect senkronizasyonu. */
 
 import { useEffect, useState } from "react";
 import { Icon } from "@/lib/icons";
@@ -107,7 +109,7 @@ export function PushToggle() {
   if (state === "loading") return card(<>{title}<div style={{ fontSize: 13, color: "var(--text-muted)" }}>Kontrol ediliyor…</div></>);
 
   if (state === "ios-needs-pwa")
-    return card(<>{title}<div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5 }}>iPhone'da bildirim için önce siteyi <strong>Ana Ekrana Ekle</strong> ile uygulama olarak ekleyin, sonra uygulamadan açın.</div></>);
+    return card(<>{title}<div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5 }}>iPhone&apos;da bildirim için önce siteyi <strong>Ana Ekrana Ekle</strong> ile uygulama olarak ekleyin, sonra uygulamadan açın.</div></>);
 
   if (state === "unsupported")
     return card(<>{title}<div style={{ fontSize: 13, color: "var(--text-muted)" }}>Bu tarayıcı bildirimleri desteklemiyor.</div></>);

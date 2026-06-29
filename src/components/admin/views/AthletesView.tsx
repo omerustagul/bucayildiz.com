@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
 import { POSITIONS } from "@/lib/enums";
 import { createAthlete, updateAthlete, deleteAthlete, provisionAthleteLogin } from "@/app/admin/(panel)/sporcular/actions";
-import { PerformanceModal, type PerfForm } from "@/components/admin/PerformanceModal";
 
 export type Team = { id: string; name: string };
 export type AthleteRow = {
@@ -34,7 +33,6 @@ export type AthleteRow = {
   parentPhone: string | null;
   hasLogin: boolean;
   username: string | null;
-  perf: PerfForm | null;
 };
 
 const STATUS: Record<string, { tone: "success" | "live" | "neutral"; label: string }> = {
@@ -71,7 +69,6 @@ function AthleteDrawer({ athlete, teams, onClose }: { athlete: AthleteRow | null
   const [credUser, setCredUser] = useState(athlete?.username ?? (athlete ? trSlug(athlete.name) : ""));
   const [credPass, setCredPass] = useState("");
   const [credMsg, setCredMsg] = useState<{ ok?: boolean; text: string } | null>(null);
-  const [perfOpen, setPerfOpen] = useState(false);
   const provision = () => {
     setCredMsg(null);
     startTransition(async () => {
@@ -231,17 +228,15 @@ function AthleteDrawer({ athlete, teams, onClose }: { athlete: AthleteRow | null
 
             <div style={{ height: 1, background: "var(--border-subtle)" }} />
             <div style={sectionTitle}>Performans</div>
-            <p style={{ fontSize: 12.5, color: "var(--ink-400)", margin: "-10px 0 0" }}>{athlete.perf ? "Ölçüm girilmiş. Güncelleyebilirsiniz." : "Sporcunun panelinde görünecek performans ölçümünü girin."}</p>
-            <Button variant="secondary" size="sm" onClick={() => setPerfOpen(true)} leftIcon={<Icon name="heart-pulse" size={15} />} style={{ alignSelf: "flex-start" }}>
-              {athlete.perf ? "Performans Ölçümünü Düzenle" : "Performans Ölçümü Gir"}
+            <p style={{ fontSize: 12.5, color: "var(--ink-400)", margin: "-10px 0 0" }}>Periyodik performans ölçümleri ayrı sayfada yönetilir; geçmiş ölçümler raporlama için korunur.</p>
+            <Button as="a" href={`/admin/performans?athlete=${athlete.id}`} variant="secondary" size="sm" leftIcon={<Icon name="heart-pulse" size={15} />} style={{ alignSelf: "flex-start" }}>
+              Performans Ölçümleri
             </Button>
           </>
         )}
 
         {error && <div style={{ padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>{error}</div>}
       </div>
-
-      {athlete && perfOpen && <PerformanceModal athleteId={athlete.id} athleteName={athlete.name} initial={athlete.perf} onClose={() => setPerfOpen(false)} />}
     </Drawer>
   );
 }

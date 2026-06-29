@@ -8,7 +8,7 @@ const VALID = ["new", "contacted", "scheduled", "closed"];
 
 export async function updateApplicationStatus(id: string, status: string): Promise<{ ok: boolean }> {
   const session = await getSession();
-  if (!session) return { ok: false };
+  if (!session || session.role !== "admin") return { ok: false };
   if (!VALID.includes(status)) return { ok: false };
 
   try {

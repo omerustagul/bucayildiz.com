@@ -14,7 +14,7 @@ export async function AgeGroupsSection() {
 
   return (
     <section style={{ background: "var(--surface-page)" }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "88px 32px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "88px clamp(16px, 5vw, 32px)" }}>
         <SectionHeading
           kicker="Akademi"
           title="Yaş Grupları"

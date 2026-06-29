@@ -1,7 +1,12 @@
 /* ============================================================
    Buca Yıldız — Base element defaults & layout helpers
    ============================================================ */
-*, *::before, *::after { box-sizing: border-box; }
+*, *::before, *::after {
+  box-sizing: border-box;
+  /* Mobilde dokununca çıkan gri/mavi vurguyu kaldır (kendi :active geri
+     bildirimimizi kullanıyoruz). */
+  -webkit-tap-highlight-color: transparent;
+}
 
 /* iOS Safari'nin dar kolonlardaki metni otomatik büyütmesini (ve layout'u
    patlatmasını) engelle — "Chrome'da iyi, iPhone'da bozuk" sorununun ana
@@ -10,6 +15,8 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   overflow-x: clip;
+  /* Uygulama hissi: kaydırma zinciri / pull-to-refresh sıçramasını engelle. */
+  overscroll-behavior: none;
 }
 
 body {
@@ -23,6 +30,7 @@ body {
   text-rendering: optimizeLegibility;
   overflow-x: clip;
   max-width: 100%;
+  overscroll-behavior: none;
 }
 
 /* ============================================================

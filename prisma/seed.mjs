@@ -237,23 +237,24 @@ if (existingAthleteUser === 0) {
   console.log(`• Sporcu girişi zaten var, atlandı.`);
 }
 
-// --- Performance (Arda, test) ---
+// --- Periyodik performans ölçümleri (Arda, zaman serisi) ---
 const ardaForPerf = await prisma.athlete.findFirst({ where: { name: "Arda Yılmaz" } });
 if (ardaForPerf) {
-  const hasPerf = await prisma.performance.findUnique({ where: { athleteId: ardaForPerf.id } });
-  if (!hasPerf) {
-    await prisma.performance.create({
-      data: {
-        athleteId: ardaForPerf.id,
-        vo2: 56.4, vo2History: JSON.stringify([51.2, 52.8, 53.4, 54.1, 55.0, 56.4]), percentile: 92,
-        bodyFat: 11.2, muscle: 42.5,
-        speed: 78, endurance: 85, power: 70, technique: 88, tactic: 82, passing: 90,
-        sprint30: 4.18, verticalJump: 58, maxHr: 196, trainingLoad: 412, measuredAt: "2026-06-08",
-      },
+  const hasPerf = await prisma.performanceMeasurement.count({ where: { athleteId: ardaForPerf.id } });
+  if (hasPerf === 0) {
+    await prisma.performanceMeasurement.createMany({
+      data: [
+        { athleteId: ardaForPerf.id, measuredAt: "2026-01-12", vo2: 51.2, percentile: 78, bodyFat: 13.1, muscle: 40.2, speed: 70, endurance: 76, power: 63, technique: 82, tactic: 75, passing: 84, sprint30: 4.42, verticalJump: 52, maxHr: 198, trainingLoad: 360, note: "Sezon başı testi" },
+        { athleteId: ardaForPerf.id, measuredAt: "2026-02-16", vo2: 52.8, percentile: 81, bodyFat: 12.6, muscle: 40.9, speed: 72, endurance: 78, power: 65, technique: 84, tactic: 77, passing: 86, sprint30: 4.35, verticalJump: 54, maxHr: 197, trainingLoad: 375 },
+        { athleteId: ardaForPerf.id, measuredAt: "2026-03-15", vo2: 53.4, percentile: 84, bodyFat: 12.2, muscle: 41.3, speed: 73, endurance: 80, power: 66, technique: 85, tactic: 78, passing: 87, sprint30: 4.30, verticalJump: 55, maxHr: 197, trainingLoad: 388 },
+        { athleteId: ardaForPerf.id, measuredAt: "2026-04-19", vo2: 54.1, percentile: 87, bodyFat: 11.8, muscle: 41.8, speed: 75, endurance: 82, power: 68, technique: 86, tactic: 80, passing: 88, sprint30: 4.25, verticalJump: 56, maxHr: 196, trainingLoad: 398 },
+        { athleteId: ardaForPerf.id, measuredAt: "2026-05-17", vo2: 55.0, percentile: 90, bodyFat: 11.5, muscle: 42.1, speed: 76, endurance: 84, power: 69, technique: 87, tactic: 81, passing: 89, sprint30: 4.21, verticalJump: 57, maxHr: 196, trainingLoad: 405 },
+        { athleteId: ardaForPerf.id, measuredAt: "2026-06-08", vo2: 56.4, percentile: 92, bodyFat: 11.2, muscle: 42.5, speed: 78, endurance: 85, power: 70, technique: 88, tactic: 82, passing: 90, sprint30: 4.18, verticalJump: 58, maxHr: 196, trainingLoad: 412 },
+      ],
     });
-    console.log("✔ Performans (Arda)");
+    console.log("✔ Performans ölçümleri (Arda, 6 dönem)");
   } else {
-    console.log("• Performans zaten var, atlandı.");
+    console.log("• Performans ölçümleri zaten var, atlandı.");
   }
 }
 
@@ -306,6 +307,41 @@ if (ardaC) {
     console.log("• Arda onay kayıtları zaten var, atlandı.");
   }
 }
+
+// --- Arda için örnek ödeme kayıtları (panel demo) ---
+if (ardaC) {
+  const payCount = await prisma.payment.count({ where: { athleteId: ardaC.id } });
+  if (payCount === 0) {
+    await prisma.payment.createMany({
+      data: [
+        { athleteId: ardaC.id, amount: 1500, period: "Nisan 2026", status: "paid", paidAt: "2026-04-05", method: "havale" },
+        { athleteId: ardaC.id, amount: 1500, period: "Mayıs 2026", status: "paid", paidAt: "2026-05-04", method: "havale" },
+        { athleteId: ardaC.id, amount: 1500, period: "Haziran 2026", status: "pending", dueDate: "2026-06-10" },
+      ],
+    });
+    console.log("✔ Arda örnek ödeme kayıtları");
+  } else {
+    console.log("• Arda ödeme kayıtları zaten var, atlandı.");
+  }
+}
+
+// --- Site ayarları (tekil satır) ---
+await prisma.siteSetting.upsert({
+  where: { id: "site" },
+  update: {},
+  create: {
+    id: "site",
+    clubName: "Buca Yıldız Futbol Akademisi",
+    clubShortName: "Buca Yıldız",
+    foundedYear: 2010,
+    email: "bilgi@bucayildiz.com",
+    metaDescription:
+      "Buca Yıldız Futbol Akademisi — İzmir Buca'da disiplin, saygı ve takım ruhuyla genç yetenekleri geliştiren altyapı futbol akademisi.",
+    customCursor: false,
+    cursorStyle: "star",
+  },
+});
+console.log("✔ Site ayarları");
 
 await prisma.$disconnect();
 console.log("Seed tamam.");

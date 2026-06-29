@@ -34,8 +34,17 @@ export function Switch({
   const control = (
     <span
       onClick={toggle}
+      onKeyDown={(e) => {
+        if (disabled) return;
+        if (e.key === " " || e.key === "Enter") {
+          e.preventDefault();
+          toggle();
+        }
+      }}
       role="switch"
       aria-checked={on}
+      aria-disabled={disabled || undefined}
+      tabIndex={disabled ? -1 : 0}
       style={{
         width: W,
         height: H,

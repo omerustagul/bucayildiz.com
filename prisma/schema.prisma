@@ -113,23 +113,27 @@ model Athlete {
   photoUrl    String?
   birthYear   Int?
   parentPhone String?
-  user        User?
-  performance Performance?
-  consents    ConsentRecord[]
-  pushSubs    PushSubscription[]
-  createdAt   DateTime @default(now())
+  user         User?
+  measurements PerformanceMeasurement[]
+  consents     ConsentRecord[]
+  pushSubs     PushSubscription[]
+  payments     Payment[]
+  createdAt    DateTime @default(now())
 
   @@index([teamId])
   @@index([status])
 }
 
 /// Sporcu performans ölçümü (panel matrisi + admin girişi).
-model Performance {
+/// Periyodik performans ölçümü. Sporcu başına ÇOK kayıt — her ölçüm tarihlidir.
+/// En güncel ölçüm = sporcunun mevcut durumu; geçmiş kayıtlar raporlama/trend
+/// için korunur. (Eski 1:1 Performance + vo2History JSON yapısının yerini aldı.)
+model PerformanceMeasurement {
   id           String   @id @default(cuid())
-  athleteId    String   @unique
+  athleteId    String
   athlete      Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  measuredAt   String // "YYYY-MM-DD" — ölçüm tarihi (zorunlu)
   vo2          Float?
-  vo2History   String   @default("[]") // JSON number[]
   percentile   Int?
   bodyFat      Float?
   muscle       Float?
@@ -143,8 +147,10 @@ model Performance {
   verticalJump Int?
   maxHr        Int?
   trainingLoad Int?
-  measuredAt   String? // "YYYY-MM-DD"
-  updatedAt    DateTime @updatedAt
+  note         String?
+  createdAt    DateTime @default(now())
+
+  @@index([athleteId, measuredAt])
 }
 
 /// Forma (İç Saha, Deplasman, Üçüncü, Kaleci…).
@@ -300,4 +306,60 @@ model PushSubscription {
 
   @@index([userId])
   @@index([athleteId])
+}
+
+/// Site geneli ayarlar — TEK satır (id="site"). Kulüp, SEO, SMTP, görünüm.
+model SiteSetting {
+  id String @id @default("site")
+
+  // Kulüp
+  clubName      String  @default("Buca Yıldız Futbol Akademisi")
+  clubShortName String  @default("Buca Yıldız")
+  logoUrl       String?
+  foundedYear   Int?
+  phone         String?
+  email         String?
+  address       String?
+  instagramUrl  String?
+  facebookUrl   String?
+  youtubeUrl    String?
+  xUrl          String?
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  ogImageUrl      String?
+  keywords        String?
+
+  // E-posta (SMTP) — DB'de tutulur; mail.ts önce buna, sonra env'e bakar.
+  smtpHost    String?
+  smtpPort    Int?    @default(587)
+  smtpUser    String?
+  smtpPass    String?
+  mailFrom    String?
+  mailToAdmin String?
+
+  // Görünüm
+  customCursor Boolean @default(false)
+  cursorStyle  String  @default("star") // star | ball | whistle | default
+
+  updatedAt DateTime @updatedAt
+}
+
+/// Aidat / ödeme kaydı. Tutar TL cinsinden tam sayı (kuruş yok — basitlik).
+model Payment {
+  id        String   @id @default(cuid())
+  athleteId String
+  athlete   Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  amount    Int // ₺ (tam sayı)
+  period    String // dönem etiketi, örn. "Haziran 2026" veya açıklama
+  status    String   @default("pending") // paid | pending | overdue
+  dueDate   String? // "YYYY-MM-DD"
+  paidAt    String? // "YYYY-MM-DD"
+  method    String? // nakit | havale | kart
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([athleteId])
+  @@index([status])
 }

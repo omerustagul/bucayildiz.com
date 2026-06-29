@@ -40,6 +40,7 @@ export default async function BasvurularPage() {
   const apps = await prisma.application.findMany({
     orderBy: { createdAt: "desc" },
     include: { consents: { orderBy: { documentKey: "asc" } } },
+    take: 200,
   });
 
   return (

@@ -45,6 +45,12 @@ const VARIANTS: Record<string, React.CSSProperties & { hover: HoverStyle }> = {
     border: "1.5px solid rgba(255,255,255,0.28)",
     hover: { background: "rgba(255,255,255,0.14)", border: "1.5px solid rgba(255,255,255,0.5)" },
   },
+  "gold-outline": {
+    background: "rgba(0,0,0,0.18)",
+    color: "var(--gold-300)",
+    border: "1.6px solid var(--gold-500)",
+    hover: { background: "var(--grad-gold)", color: "var(--navy-900)", border: "1.6px solid var(--gold-500)" },
+  },
 };
 
 interface ButtonOwnProps {
@@ -75,8 +81,9 @@ export function Button({
   disabled = false,
   as = "button",
   style = {},
+  className,
   ...rest
-}: ButtonProps) {
+}: ButtonProps & { className?: string }) {
   const [hover, setHover] = useState(false);
   const s = SIZES[size] ?? SIZES.md;
   const v = VARIANTS[variant] ?? VARIANTS.primary;
@@ -108,6 +115,7 @@ export function Button({
 
   return (
     <Comp
+      className={`by-btn${className ? ` ${className}` : ""}`}
       style={base}
       disabled={as === "button" ? disabled : undefined}
       onMouseEnter={() => setHover(true)}

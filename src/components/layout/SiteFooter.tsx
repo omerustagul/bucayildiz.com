@@ -146,10 +146,10 @@ export function SiteFooter() {
             </form>
             <div style={{ fontSize: 13.5, color: "var(--navy-200)", display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <Icon name="map-pin" size={16} /> Buca, İzmir
+                <Icon name="map-pin" size={16} /><span>Buca, İzmir</span>
               </span>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <Icon name="phone" size={16} /> +90 232 000 00 00
+                <Icon name="phone" size={16} /><span>+90 232 000 00 00</span>
               </span>
             </div>
           </div>

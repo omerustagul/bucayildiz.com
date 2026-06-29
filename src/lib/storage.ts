@@ -15,12 +15,23 @@ const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
-const extByType: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "image/gif": "gif",
-};
+/**
+ * Dosyanın GERÇEK içeriğini (magic-byte) inceler — istemci MIME'ına güvenmez.
+ * Sahte "image/png" başlığıyla SVG/HTML/script yüklenip aynı origin'den servis
+ * edilmesini (stored-XSS) engeller. Tanınmazsa null döner.
+ */
+function sniffImage(buf: Buffer): { type: string; ext: string } | null {
+  if (buf.length < 12) return null;
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return { type: "image/jpeg", ext: "jpg" };
+  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return { type: "image/png", ext: "png" };
+  if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38) return { type: "image/gif", ext: "gif" };
+  if (
+    buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
+    buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50
+  )
+    return { type: "image/webp", ext: "webp" };
+  return null;
+}
 
 function s3Config() {
   const bucket = process.env.S3_BUCKET;
@@ -52,7 +63,12 @@ async function saveToS3(
     credentials: { accessKeyId: cfg.accessKeyId, secretAccessKey: cfg.secretAccessKey },
   });
   const key = `uploads/${filename}`;
-  await client.send(new PutObjectCommand({ Bucket: cfg.bucket, Key: key, Body: buffer, ContentType: contentType }));
+  try {
+    await client.send(new PutObjectCommand({ Bucket: cfg.bucket, Key: key, Body: buffer, ContentType: contentType }));
+  } catch (e) {
+    console.error("[storage] S3 yükleme hatası:", e);
+    throw new Error("Dosya yüklenemedi (depolama hatası). Lütfen tekrar deneyin.");
+  }
 
   if (cfg.publicBase) return { url: `${cfg.publicBase.replace(/\/$/, "")}/${key}` };
   if (cfg.endpoint) return { url: `${cfg.endpoint.replace(/\/$/, "")}/${cfg.bucket}/${key}` };
@@ -67,12 +83,16 @@ export async function saveUpload(file: File): Promise<{ url: string }> {
     throw new Error("Dosya boyutu 5 MB'ı aşamaz.");
   }
 
-  const ext = extByType[file.type] ?? "bin";
-  const filename = `${Date.now()}-${crypto.randomUUID()}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
+  // İçerik imzası doğrulaması — istemci MIME'ına güvenme.
+  const sniffed = sniffImage(buffer);
+  if (!sniffed) {
+    throw new Error("Geçersiz veya bozuk görsel dosyası (yalnızca gerçek JPG/PNG/WEBP/GIF).");
+  }
+  const filename = `${Date.now()}-${crypto.randomUUID()}.${sniffed.ext}`;
 
   const cfg = s3Config();
-  if (cfg) return saveToS3(buffer, filename, file.type, cfg);
+  if (cfg) return saveToS3(buffer, filename, sniffed.type, cfg);
 
   // Yerel disk (DEV)
   await mkdir(UPLOAD_DIR, { recursive: true });

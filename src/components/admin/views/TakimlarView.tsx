@@ -7,7 +7,6 @@ import { TextInput, Drawer, Modal } from "@/components/admin/controls";
 import { Select } from "@/components/ui/Select";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
-import { IconButton } from "@/components/ui/IconButton";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
 import { createTeam, updateTeam, deleteTeam, assignAthletesToTeam } from "@/app/admin/(panel)/takimlar/actions";

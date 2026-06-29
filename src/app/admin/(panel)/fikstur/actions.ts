@@ -24,6 +24,7 @@ export type FixtureResult = { error: string };
 async function requireAuth() {
   const s = await getSession();
   if (!s) redirect("/admin/giris");
+  if (s.role !== "admin") redirect("/panel");
 }
 
 function toData(d: z.infer<typeof schema>) {
@@ -48,6 +49,9 @@ export async function createFixture(input: unknown): Promise<FixtureResult | voi
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   await prisma.fixture.create({ data: toData(parsed.data) });
   revalidatePath("/admin/fikstur");
+  revalidatePath("/fikstur");
+  revalidatePath("/fikstur/sonuclar");
+  revalidatePath("/");
 }
 
 export async function updateFixture(id: string, input: unknown): Promise<FixtureResult | void> {
@@ -56,10 +60,16 @@ export async function updateFixture(id: string, input: unknown): Promise<Fixture
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   await prisma.fixture.update({ where: { id }, data: toData(parsed.data) });
   revalidatePath("/admin/fikstur");
+  revalidatePath("/fikstur");
+  revalidatePath("/fikstur/sonuclar");
+  revalidatePath("/");
 }
 
 export async function deleteFixture(id: string): Promise<void> {
   await requireAuth();
   await prisma.fixture.delete({ where: { id } }).catch(() => {});
   revalidatePath("/admin/fikstur");
+  revalidatePath("/fikstur");
+  revalidatePath("/fikstur/sonuclar");
+  revalidatePath("/");
 }

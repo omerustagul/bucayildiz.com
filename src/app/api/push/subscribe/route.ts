@@ -27,11 +27,16 @@ export async function POST(req: Request) {
     userAgent: req.headers.get("user-agent") || null,
   };
 
-  await prisma.pushSubscription.upsert({
-    where: { endpoint },
-    update: data,
-    create: { endpoint, ...data },
-  });
+  try {
+    // Aynı endpoint başka kullanıcıya bağlıysa devralmayı engelle.
+    const existing = await prisma.pushSubscription.findUnique({ where: { endpoint }, select: { userId: true } });
+    if (existing && existing.userId && existing.userId !== session.sub) {
+      return NextResponse.json({ error: "Bu cihaz başka bir hesaba bağlı." }, { status: 409 });
+    }
+    await prisma.pushSubscription.upsert({ where: { endpoint }, update: data, create: { endpoint, ...data } });
+  } catch {
+    return NextResponse.json({ error: "Abonelik kaydedilemedi." }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }

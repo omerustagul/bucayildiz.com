@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Medya Kütüphanesi" };
 export default async function MedyaPage() {
   const [folders, assets, categories, cards] = await Promise.all([
     prisma.folder.findMany({ orderBy: { createdAt: "asc" } }),
-    prisma.mediaAsset.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.mediaAsset.findMany({ orderBy: { createdAt: "desc" }, take: 300 }),
     prisma.mediaCategory.findMany({ orderBy: { sort: "asc" }, include: { _count: { select: { assets: true } } } }),
     prisma.homeMediaCard.findMany({ orderBy: { sort: "asc" } }),
   ]);

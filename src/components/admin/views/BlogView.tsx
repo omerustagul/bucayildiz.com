@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ViewHeader, Toolbar, Panel, Field, Stepper, cardStyle } from "@/components/admin/kit";
 import { TextInput, TextArea, SearchBox, FileDrop } from "@/components/admin/controls";
@@ -51,7 +50,6 @@ function slugify(s: string) {
 
 // ---------- Wizard ----------
 function Wizard({ post, onExit }: { post: PostRow | null; onExit: () => void }) {
-  const router = useRouter();
   const isNew = !post;
   const [step, setStep] = useState(isNew ? 0 : 1);
   const [f, setF] = useState({

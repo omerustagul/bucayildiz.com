@@ -24,6 +24,7 @@ export type TeamResult = { error: string };
 async function requireAuth() {
   const s = await getSession();
   if (!s) redirect("/admin/giris");
+  if (s.role !== "admin") redirect("/panel");
 }
 
 export async function createTeam(input: unknown): Promise<TeamResult | void> {

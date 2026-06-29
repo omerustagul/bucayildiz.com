@@ -21,9 +21,9 @@ export async function NewsSection() {
 
   return (
     <section style={{ background: "var(--surface-page)" }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "88px 32px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "88px clamp(16px, 5vw, 32px)" }}>
         <SectionHeading
-          kicker="Kulüpten"
+          kicker="Blog Yazıları"
           title="Son Haberler"
           action={
             <Button as="a" href="/haberler" variant="secondary" size="sm">

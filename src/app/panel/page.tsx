@@ -5,7 +5,7 @@ import { AthleteCard } from "@/components/panel/AthleteCard";
 import { TrainingCalendar, type CalTraining } from "@/components/panel/TrainingCalendar";
 import { PerformanceMatrix } from "@/components/panel/PerformanceMatrix";
 import { PushToggle } from "@/components/panel/PushToggle";
-import { toPerf } from "@/lib/perf";
+import { measurementsToPerf } from "@/lib/perf";
 
 export const metadata: Metadata = { title: "Genel Bakış — Sporcu Paneli" };
 
@@ -13,7 +13,7 @@ export default async function PanelDashboard() {
   const session = await getSession();
   const athlete = await prisma.athlete.findUnique({
     where: { id: session!.athleteId! },
-    include: { team: { include: { trainings: { orderBy: { date: "asc" } } } }, performance: true },
+    include: { team: { include: { trainings: { orderBy: { date: "asc" } } } }, measurements: { orderBy: { measuredAt: "asc" } } },
   });
   if (!athlete) return null;
 
@@ -42,7 +42,7 @@ export default async function PanelDashboard() {
       />
       <PushToggle />
       <TrainingCalendar trainings={trainings} todayYmd={todayYmd} initialAnchor={initialAnchor} />
-      <PerformanceMatrix perf={toPerf(athlete.performance)} />
+      <PerformanceMatrix perf={measurementsToPerf(athlete.measurements)} />
     </>
   );
 }

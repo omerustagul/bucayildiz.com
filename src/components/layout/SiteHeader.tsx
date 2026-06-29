@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -133,7 +133,6 @@ const navIcon = (name: IconName, size = 17) => <Icon name={name} size={size} />;
 
 export function SiteHeader({ active: activeOverride }: { active?: string }) {
   const [open, setOpen] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [acc, setAcc] = useState<string | null>(null);
   const pathname = usePathname();
@@ -144,21 +143,14 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
     MENU.filter((m) => m.href !== "/" && (pathname === m.href || pathname.startsWith(m.href + "/")))
       .sort((a, b) => b.href.length - a.href.length)[0]?.label;
 
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 900px)");
-    const on = () => {
-      setIsMobile(mq.matches);
-      if (!mq.matches) setMobileOpen(false);
-    };
-    on();
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-
-  // ---------- MOBILE ----------
-  if (isMobile) {
-    return (
+  // Masaüstü/mobil ayrımı CSS media query ile yapılır (by-header-desktop /
+  // by-header-mobile). Böylece doğru header SSR'da/JS olmadan da gelir —
+  // gerçek cihazda "masaüstü header" sorunu yaşanmaz.
+  return (
+    <>
+      {/* ---------- MOBILE (≤900px) ---------- */}
       <header
+        className="by-header-mobile"
         style={{
           position: "sticky",
           top: 0,
@@ -170,14 +162,26 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
         <div style={{ padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <Brand compact />
           <IconButton label="Menü" variant="on-navy" onClick={() => setMobileOpen((v) => !v)}>
-            {navIcon(mobileOpen ? "x" : "menu", 20)}
+            <span style={{ display: "inline-flex", transition: "transform .28s var(--ease-out)", transform: mobileOpen ? "rotate(90deg)" : "none" }}>
+              {navIcon(mobileOpen ? "x" : "menu", 20)}
+            </span>
           </IconButton>
         </div>
-        {mobileOpen && (
-          <div className="by-scroll-on-dark" style={{ borderTop: "1px solid rgba(255,255,255,0.08)", maxHeight: "calc(100vh - 66px)", overflowY: "auto" }}>
+          <div
+            className="by-scroll-on-dark"
+            aria-hidden={!mobileOpen}
+            style={{
+              borderTop: mobileOpen ? "1px solid rgba(255,255,255,0.08)" : "1px solid transparent",
+              maxHeight: mobileOpen ? "calc(100vh - 66px)" : "0px",
+              opacity: mobileOpen ? 1 : 0,
+              overflowY: mobileOpen ? "auto" : "hidden",
+              pointerEvents: mobileOpen ? "auto" : "none",
+              transition: "max-height .34s var(--ease-out), opacity .26s ease",
+            }}
+          >
             <div style={{ padding: "14px 18px", display: "flex", flexDirection: "column", gap: 10, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
               <Button as="a" href="/giris" variant="on-navy" size="md" fullWidth leftIcon={navIcon("lock", 16)}>
-                Panele Giriş
+                Sporcu Girişi
               </Button>
               <Button as="a" href="/basvuru" variant="accent" size="md" fullWidth leftIcon={navIcon("clipboard-list", 16)}>
                 Başvuru Formu
@@ -225,8 +229,8 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
                         </span>
                       )}
                     </Link>
-                    {expandable && isOpen && (
-                      <div style={{ display: "flex", flexDirection: "column", paddingBottom: 6 }}>
+                    {expandable && (
+                      <div style={{ display: "flex", flexDirection: "column", overflow: "hidden", maxHeight: isOpen ? 480 : 0, opacity: isOpen ? 1 : 0, paddingBottom: isOpen ? 6 : 0, transition: "max-height .3s var(--ease-out), opacity .24s ease, padding .3s ease" }}>
                         {m.items.map((it) => (
                           <Link
                             key={it.label}
@@ -252,22 +256,19 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
               <Social size="md" />
             </div>
           </div>
-        )}
       </header>
-    );
-  }
 
-  // ---------- DESKTOP ----------
-  return (
-    <header
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-        background: "var(--navy-800)",
-        borderBottom: "1px solid rgba(255,255,255,0.08)",
-      }}
-    >
+      {/* ---------- DESKTOP (≥901px) ---------- */}
+      <header
+        className="by-header-desktop"
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+          background: "var(--navy-800)",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "14px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
           <Brand />
@@ -276,7 +277,7 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Button as="a" href="/giris" variant="on-navy" size="sm" leftIcon={navIcon("lock")}>
-            Panele Giriş
+            Sporcu Girişi
           </Button>
           <Button as="a" href="/basvuru" variant="accent" size="sm" leftIcon={navIcon("clipboard-list")}>
             Başvuru Formu
@@ -353,6 +354,7 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
           })}
         </div>
       </nav>
-    </header>
+      </header>
+    </>
   );
 }

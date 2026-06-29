@@ -12,7 +12,7 @@ function PhotoTile({ card }: { card: Card }) {
   return (
     <Link
       href="/medya/fotograflar"
-      style={{ position: "relative", display: "block", borderRadius: "var(--radius-md)", overflow: "hidden", background: "var(--grad-navy)", border: "1px solid var(--navy-700)", textDecoration: "none" }}
+      style={{ position: "relative", display: "block", aspectRatio: "4 / 3", borderRadius: "var(--radius-md)", overflow: "hidden", background: "var(--grad-navy)", border: "1px solid var(--navy-700)", textDecoration: "none" }}
     >
       {card.coverUrl ? (
         <Image src={card.coverUrl} alt={card.title} fill style={{ objectFit: "cover" }} sizes="(max-width: 900px) 50vw, 240px" />
@@ -36,7 +36,7 @@ export async function MediaSection() {
 
   return (
     <section style={{ background: "var(--surface-subtle)" }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "88px 32px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "88px clamp(16px, 5vw, 32px)" }}>
         <SectionHeading
           kicker="Medya"
           title="Görseller & Videolar"

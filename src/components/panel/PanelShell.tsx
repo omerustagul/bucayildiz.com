@@ -9,6 +9,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { IconButton } from "@/components/ui/IconButton";
 import { panelLogout } from "@/app/panel/actions";
 import { InstallHint } from "@/components/panel/InstallHint";
+import { PageTransition } from "@/components/layout/PageTransition";
 
 type Athlete = { name: string; teamName: string; number: number | null; position: string; photoUrl: string | null };
 
@@ -17,9 +18,9 @@ const NAV: { href: string; label: string; icon: IconName; ready?: boolean }[] = 
   { href: "/panel/antrenmanlar", label: "Antrenmanlar", icon: "calendar-days", ready: true },
   { href: "/panel/performans", label: "Performans", icon: "heart-pulse", ready: true },
   { href: "/panel/izinler", label: "İzinler", icon: "shield-check", ready: true },
-  { href: "/panel/maclar", label: "Maçlar", icon: "trophy" },
-  { href: "/panel/odemeler", label: "Ödemeler", icon: "clipboard-list" },
-  { href: "/panel/profil", label: "Profil", icon: "user-round" },
+  { href: "/panel/maclar", label: "Maçlar", icon: "trophy", ready: true },
+  { href: "/panel/odemeler", label: "Ödemeler", icon: "clipboard-list", ready: true },
+  { href: "/panel/profil", label: "Profil", icon: "user-round", ready: true },
 ];
 
 export function PanelShell({ athlete, children }: { athlete: Athlete; children: React.ReactNode }) {
@@ -140,7 +141,7 @@ export function PanelShell({ athlete, children }: { athlete: Athlete; children: 
         </header>
         <main style={{ padding: "24px clamp(14px, 4vw, 32px) 48px", display: "flex", flexDirection: "column", gap: 24, maxWidth: 1240, width: "100%" }}>
           <InstallHint />
-          {children}
+          <PageTransition style={{ display: "flex", flexDirection: "column", gap: 24 }}>{children}</PageTransition>
         </main>
       </div>
     </div>
