@@ -15,7 +15,7 @@ export default async function TakimlarPage() {
       <Section>
         <div className="hp-grid-ages" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 18 }}>
           {teams.map((t) => (
-            <AgeGroupCard key={t.id} label={t.name} title={`${t.born === "Üst yapı" ? "Üst yapı" : t.born} · ${t.coach}`} count={t._count.athletes} href={`/takimlar/${t.slug}`} />
+            <AgeGroupCard key={t.id} label={t.name} title={`${t.born === "Üst yapı" ? "Üst yapı" : t.born} · ${t.coach}`} count={t._count.athletes} image={t.coverImage ?? undefined} href={`/takimlar/${t.slug}`} />
           ))}
         </div>
       </Section>

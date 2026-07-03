@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/Button";
 import { Icon, type IconName } from "@/lib/icons";
+import { he } from "zod/locales";
 
 /**
  * Buca Yıldız — Anasayfa üst hero: "Ücretsiz Futbolcu Gelişim Analizi".
@@ -52,12 +53,12 @@ export function TrialHero({ href = "/ucretsiz-deneme" }: { href?: string }) {
           zIndex: 1,
         }}
       >
-        <div style={{ maxWidth: 600, display: "flex", flexDirection: "column", gap: "clamp(16px, 3vw, 24px)" }}>
+        <div style={{ maxWidth: 600, height: "100%", display: "flex", flexDirection: "column", gap: "clamp(16px, 3vw, 24px)", justifyContent: "space-between" }}>
           <h1
             style={{
               fontFamily: "var(--font-heading)",
               fontWeight: 800,
-              fontSize: "clamp(28px, 4vw, 48px)",
+              fontSize: "clamp(26px, 5.2vw, 46px)",
               lineHeight: 0.98,
               letterSpacing: "-0.01em",
               textTransform: "uppercase",
@@ -66,7 +67,7 @@ export function TrialHero({ href = "/ucretsiz-deneme" }: { href?: string }) {
               maxWidth: 540,
             }}
           >
-            Çocuğunuzun <span style={{ color: "var(--gold-400)" }}>Futbol Potansiyelini</span> Bilimsel<br />Olarak Ölçelim!
+            Çocuğunuzun <span style={{ color: "var(--gold-400)" }}> <br /> Futbol Potansiyelini</span> <br /> Bilimsel Olarak Ölçelim!
           </h1>
           {/* Analiz kartı */}
           <div
@@ -74,7 +75,7 @@ export function TrialHero({ href = "/ucretsiz-deneme" }: { href?: string }) {
               background: "linear-gradient(180deg, rgba(201,162,39,0.18), rgba(201,162,39,0.06))",
               border: "1px solid rgba(201,162,39,0.45)",
               borderRadius: "var(--radius-lg)",
-              padding: "clamp(16px, 3vw, 22px)",
+              padding: "1vw",
               backdropFilter: "blur(4px)",
               WebkitBackdropFilter: "blur(4px)",
             }}
@@ -83,8 +84,7 @@ export function TrialHero({ href = "/ucretsiz-deneme" }: { href?: string }) {
               style={{
                 fontFamily: "var(--font-heading)",
                 fontWeight: 700,
-                fontSize: "clamp(13px, 2vw, 17px)",
-                letterSpacing: ".05em",
+                fontSize: "2vw",
                 textTransform: "uppercase",
                 color: "var(--gold-300)",
                 marginBottom: 14,
@@ -93,9 +93,9 @@ export function TrialHero({ href = "/ucretsiz-deneme" }: { href?: string }) {
             >
               Ücretsiz Futbolcu Gelişim Analizi
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: "clamp(6px, 1.5vw, 14px)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: "2px" }}>
               {TESTS.map((t) => (
-                <div key={t.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, textAlign: "center" }}>
+                <div key={t.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, textAlign: "center" }}>
                   <span style={{ color: "var(--gold-400)", display: "inline-flex" }}>
                     <Icon name={t.icon} size={24} />
                   </span>
@@ -117,7 +117,7 @@ export function TrialHero({ href = "/ucretsiz-deneme" }: { href?: string }) {
           </div>
 
           <div>
-            <Button as="a" href={href} variant="gold-outline" size="lg" rightIcon={<Icon name="arrow-right" size={18} />}>
+            <Button as="a" href={href} variant="gold-outline" size="md" rightIcon={<Icon name="arrow-right" size={18} />}>
               Hemen Ücretsiz Randevu Al
             </Button>
           </div>

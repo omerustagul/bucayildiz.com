@@ -1,27 +1,10 @@
 import { StatTile } from "@/components/admin/kit";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressRing } from "@/components/ui/ProgressRing";
-import { MetricBar } from "@/components/ui/MetricBar";
 import { Icon, type IconName } from "@/lib/icons";
+import { type Perf, TESTS, CATEGORY_LABELS } from "@/lib/perf";
 
-export type Perf = {
-  vo2: number | null;
-  vo2History: number[];
-  percentile: number | null;
-  bodyFat: number | null;
-  muscle: number | null;
-  speed: number | null;
-  endurance: number | null;
-  power: number | null;
-  technique: number | null;
-  tactic: number | null;
-  passing: number | null;
-  sprint30: number | null;
-  verticalJump: number | null;
-  maxHr: number | null;
-  trainingLoad: number | null;
-  measuredAt: string | null;
-};
+export type { Perf };
 
 const MONTHS_SHORT = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
 const cardStyle: React.CSSProperties = { background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)", padding: 22, display: "flex", flexDirection: "column" };
@@ -71,7 +54,7 @@ function Sparkline({ data, w = 340, h = 96 }: { data: number[]; w?: number; h?: 
 }
 
 function Radar({ axes, size = 220 }: { axes: { label: string; value: number }[]; size?: number }) {
-  const cx = size / 2, cy = size / 2, R = size / 2 - 28, n = axes.length;
+  const cx = size / 2, cy = size / 2, R = size / 2 - 32, n = axes.length;
   const pt = (i: number, r: number) => {
     const a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
     return [cx + r * Math.cos(a), cy + r * Math.sin(a)] as const;
@@ -84,10 +67,12 @@ function Radar({ axes, size = 220 }: { axes: { label: string; value: number }[];
       {axes.map((_, i) => { const [x, y] = pt(i, R); return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="var(--ink-200)" strokeWidth="1" />; })}
       <polygon points={shape} fill="rgba(21,41,90,0.16)" stroke="var(--navy-700)" strokeWidth="2" strokeLinejoin="round" />
       {axes.map((ax, i) => { const [x, y] = pt(i, R * (ax.value / 100)); return <circle key={i} cx={x} cy={y} r="3.5" fill="var(--gold-500)" stroke="#fff" strokeWidth="1.5" />; })}
-      {axes.map((ax, i) => { const [x, y] = pt(i, R + 16); return <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="middle" style={{ fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 600, fill: "var(--ink-500)" }}>{ax.label}</text>; })}
+      {axes.map((ax, i) => { const [x, y] = pt(i, R + 18); return <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="middle" style={{ fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 600, fill: "var(--ink-500)" }}>{ax.label}</text>; })}
     </svg>
   );
 }
+
+const fmt = (v: number | null) => (v == null ? "—" : Number.isInteger(v) ? String(v) : v.toFixed(v < 10 ? 2 : 1));
 
 export function PerformanceMatrix({ perf }: { perf: Perf | null }) {
   if (!perf) {
@@ -109,12 +94,10 @@ export function PerformanceMatrix({ perf }: { perf: Perf | null }) {
   const monthLabels = history.map((_, i) => MONTHS_SHORT[(measuredMonth - (history.length - 1 - i) + 1200) % 12]);
 
   const radar = [
-    { label: "Sürat", value: perf.speed ?? 0 },
-    { label: "Dayanıklılık", value: perf.endurance ?? 0 },
-    { label: "Güç", value: perf.power ?? 0 },
-    { label: "Teknik", value: perf.technique ?? 0 },
-    { label: "Taktik", value: perf.tactic ?? 0 },
-    { label: "Pas", value: perf.passing ?? 0 },
+    { label: CATEGORY_LABELS.endurance, value: perf.scores.endurance ?? 0 },
+    { label: CATEGORY_LABELS.speed, value: perf.scores.speed ?? 0 },
+    { label: CATEGORY_LABELS.strength, value: perf.scores.strength ?? 0 },
+    { label: CATEGORY_LABELS.agility, value: perf.scores.agility ?? 0 },
   ];
 
   return (
@@ -123,7 +106,7 @@ export function PerformanceMatrix({ perf }: { perf: Perf | null }) {
       <div className="perf-grid" style={{ display: "grid", gridTemplateColumns: "1.15fr 1fr 1.25fr", gap: 18, alignItems: "stretch" }}>
         {/* VO2 Max */}
         <div style={cardStyle}>
-          <CardHead icon="heart-pulse" title="VO2 Max" right={perf.vo2 ? <Badge tone="success">Ölçüldü</Badge> : undefined} />
+          <CardHead icon="heart-pulse" title="VO2 Max" right={perf.vo2 ? <Badge tone="success">Hesaplandı</Badge> : undefined} />
           <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
             <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, fontSize: 46, lineHeight: 1, color: "var(--text-strong)", fontVariantNumeric: "tabular-nums" }}>{perf.vo2?.toFixed(1) ?? "—"}</span>
             <span style={{ fontFamily: "var(--font-stat)", fontWeight: 600, fontSize: 15, color: "var(--ink-400)" }}>ml/kg/dk</span>
@@ -139,14 +122,14 @@ export function PerformanceMatrix({ perf }: { perf: Perf | null }) {
               {monthLabels.map((m, i) => <span key={i}>{m}</span>)}
             </div>
           )}
-          {perf.percentile != null && (
-            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--border-subtle)" }}>
-              <MetricBar label="Yaş grubu yüzdelik dilim" value={perf.percentile} display={`${perf.percentile}.`} color="var(--navy-700)" />
+          {perf.raw.yoyoDistance != null && (
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--border-subtle)", fontSize: 12.5, color: "var(--ink-500)" }}>
+              {perf.yoyoLevel === "IR2" ? "Yo-Yo IR2" : "Yo-Yo IR1"} · {perf.raw.yoyoDistance} m koşu mesafesinden hesaplandı
             </div>
           )}
         </div>
 
-        {/* Body composition */}
+        {/* Vücut kompozisyonu */}
         <div style={cardStyle}>
           <CardHead icon="heart-pulse" title="Vücut Kompozisyonu" />
           <div style={{ display: "flex", justifyContent: "space-around", gap: 12, flex: 1, alignItems: "center" }}>
@@ -165,12 +148,21 @@ export function PerformanceMatrix({ perf }: { perf: Perf | null }) {
         </div>
       </div>
 
-      {/* KPI row */}
-      <div className="perf-kpi" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginTop: 18 }}>
-        <StatTile label="Sprint 30m" value={perf.sprint30?.toFixed(2) ?? "—"} unit="sn" accent />
-        <StatTile label="Dikey Sıçrama" value={perf.verticalJump ?? "—"} unit="cm" />
-        <StatTile label="Maks. Nabız" value={perf.maxHr ?? "—"} unit="bpm" />
-        <StatTile label="Antrenman Yükü" value={perf.trainingLoad ?? "—"} unit="AU" sub="bu hafta" />
+      {/* Ham test değerleri */}
+      <div style={{ marginTop: 24 }}>
+        <SectionTitle>Ham Test Değerleri</SectionTitle>
+        <div className="perf-kpi" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 14 }}>
+          {TESTS.map((t) => (
+            <StatTile
+              key={t.key}
+              label={t.label}
+              value={fmt(perf.raw[t.key])}
+              unit={t.unit}
+              sub={t.category ? CATEGORY_LABELS[t.category] : "Vücut Komp."}
+              accent={t.key === "yoyoDistance"}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );

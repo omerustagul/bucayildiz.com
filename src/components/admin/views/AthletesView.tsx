@@ -25,7 +25,7 @@ export type AthleteRow = {
   number: number | null;
   height: number | null;
   weight: number | null;
-  birthYear: number | null;
+  birthDate: string | null;
   foot: string | null;
   status: string;
   licenseNo: string | null;
@@ -54,7 +54,7 @@ function AthleteDrawer({ athlete, teams, onClose }: { athlete: AthleteRow | null
     foot: athlete?.foot ?? "Sağ",
     height: athlete?.height?.toString() ?? "",
     weight: athlete?.weight?.toString() ?? "",
-    birthYear: athlete?.birthYear?.toString() ?? "",
+    birthDate: athlete?.birthDate ?? "",
     licenseNo: athlete?.licenseNo ?? "",
     parentPhone: athlete?.parentPhone ?? "",
     photoUrl: athlete?.photoUrl ?? "",
@@ -91,7 +91,7 @@ function AthleteDrawer({ athlete, teams, onClose }: { athlete: AthleteRow | null
       number: num(v.number),
       height: num(v.height),
       weight: num(v.weight),
-      birthYear: num(v.birthYear),
+      birthDate: v.birthDate || null,
       foot: v.foot || null,
       status: v.active ? "active" : "rest",
       licenseNo: v.licenseNo,
@@ -182,8 +182,8 @@ function AthleteDrawer({ athlete, teams, onClose }: { athlete: AthleteRow | null
           <Field label="Kilo" hint="kg">
             <TextInput type="number" value={v.weight} onChange={(e) => set("weight", e.target.value)} placeholder="68" />
           </Field>
-          <Field label="Doğum Yılı">
-            <TextInput type="number" value={v.birthYear} onChange={(e) => set("birthYear", e.target.value)} placeholder="2009" />
+          <Field label="Doğum Tarihi">
+            <TextInput type="date" value={v.birthDate} onChange={(e) => set("birthDate", e.target.value)} />
           </Field>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>

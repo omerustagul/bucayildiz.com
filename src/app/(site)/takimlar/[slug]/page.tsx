@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { PageHero } from "@/components/layout/PageHero";
-import { Section, Prose, StatStrip } from "@/components/content/blocks";
+import { Section, Prose } from "@/components/content/blocks";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -10,25 +11,100 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: team ? team.name : "Takım" };
 }
 
+function fmtDate(d?: string | null) {
+  if (!d) return "—";
+  const [y, m, day] = d.split("-");
+  return y && m && day ? `${day}.${m}.${y}` : d;
+}
+function initials(name: string) {
+  return name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase() || "BY";
+}
+
+const th: React.CSSProperties = { textAlign: "left", padding: "12px 14px", fontSize: 11.5, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--ink-500)", whiteSpace: "nowrap", background: "var(--ink-50)" };
+const td: React.CSSProperties = { padding: "12px 14px", fontSize: 14, color: "var(--ink-700)", borderTop: "1px solid var(--ink-100)", whiteSpace: "nowrap" };
+const stat: React.CSSProperties = { fontFamily: "var(--font-stat)", fontWeight: 700, color: "var(--navy-900)" };
+
 export default async function TeamPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const team = await prisma.team.findUnique({ where: { slug }, include: { _count: { select: { athletes: true } } } });
+  const team = await prisma.team.findUnique({
+    where: { slug },
+    include: {
+      _count: { select: { athletes: true } },
+      athletes: { where: { status: "active" }, orderBy: [{ number: "asc" }, { name: "asc" }] },
+    },
+  });
   if (!team) notFound();
 
-  const born = team.born === "Üst yapı" ? "Üst yapı" : team.born;
+  const cover = team.coverImage ?? null;
+  const bornLabel = team.born === "Üst yapı" ? "Üst yapı kadrosu" : team.born ? `${team.born} doğumlular` : "";
+  const meta = [`${team._count.athletes} sporcu`, bornLabel, team.coach].filter(Boolean).join("  ·  ");
 
   return (
     <>
-      <PageHero kicker="Akademi" title={team.name} breadcrumb={[{ label: "Takımlar", href: "/takimlar" }, { label: team.name }]} />
+      {cover ? (
+        <section
+          style={{
+            background: `linear-gradient(90deg, rgba(8,18,38,.9), rgba(8,18,38,.5) 55%, rgba(8,18,38,.22)), linear-gradient(to top, rgba(8,18,38,.92), rgba(8,18,38,0) 55%), center/cover no-repeat url("${cover}")`,
+            borderBottom: "3px solid var(--gold-500)",
+          }}
+        >
+          <div style={{ maxWidth: 1160, margin: "0 auto", padding: "clamp(72px, 15vw, 150px) clamp(16px, 5vw, 32px) 30px", color: "#fff" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12.5, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--gold-400)" }}>
+              <span style={{ width: 22, height: 2, background: "var(--gold-500)" }} /> Akademi · Kadro
+            </span>
+            <h1 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(34px, 5vw, 60px)", lineHeight: 0.98, textTransform: "uppercase", color: "#fff", margin: "12px 0 10px" }}>{team.name}</h1>
+            <div style={{ fontSize: 14.5, color: "var(--navy-100)" }}>{meta}</div>
+          </div>
+        </section>
+      ) : (
+        <PageHero kicker="Akademi · Kadro" title={team.name} lead={meta} breadcrumb={[{ label: "Takımlar", href: "/takimlar" }, { label: team.name }]} />
+      )}
+
       <Section>
-        <StatStrip
-          stats={[
-            { value: String(team._count.athletes), label: "Sporcu" },
-            { value: born || "—", label: "Doğum Yılı" },
-            { value: team.short, label: "Kategori" },
-          ]}
-        />
+        <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "var(--text-h3)", textTransform: "uppercase", color: "var(--text-strong)", margin: "0 0 18px" }}>Kadro</h2>
+        {team.athletes.length === 0 ? (
+          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--ink-400)", fontSize: 15, border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", background: "var(--surface-card)" }}>
+            Bu takımda henüz aktif sporcu yok.
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", background: "var(--surface-card)" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
+              <thead>
+                <tr>
+                  <th style={th}>Sporcu</th>
+                  <th style={th}>Mevki</th>
+                  <th style={th}>Doğum Tarihi</th>
+                  <th style={{ ...th, textAlign: "right" }}>Boy</th>
+                  <th style={{ ...th, textAlign: "right" }}>Kilo</th>
+                  <th style={{ ...th, textAlign: "center" }}>Forma No</th>
+                  <th style={{ ...th, textAlign: "center" }}>Ayak</th>
+                </tr>
+              </thead>
+              <tbody>
+                {team.athletes.map((a) => (
+                  <tr key={a.id}>
+                    <td style={td}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+                        <span style={{ width: 36, height: 36, flex: "none", borderRadius: "50%", overflow: "hidden", background: "var(--navy-50)", border: "1px solid var(--border-subtle)", display: "grid", placeItems: "center", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 13, color: "var(--navy-600)", position: "relative" }}>
+                          {a.photoUrl ? <Image src={a.photoUrl} alt="" fill sizes="36px" style={{ objectFit: "cover" }} /> : initials(a.name)}
+                        </span>
+                        <span style={{ fontWeight: 600, color: "var(--text-strong)" }}>{a.name}</span>
+                      </div>
+                    </td>
+                    <td style={td}>{a.position || "—"}</td>
+                    <td style={td}>{fmtDate(a.birthDate)}</td>
+                    <td style={{ ...td, textAlign: "right" }}>{a.height ? <span style={stat}>{a.height}<span style={{ color: "var(--ink-400)", fontSize: 12 }}> cm</span></span> : "—"}</td>
+                    <td style={{ ...td, textAlign: "right" }}>{a.weight ? <span style={stat}>{a.weight}<span style={{ color: "var(--ink-400)", fontSize: 12 }}> kg</span></span> : "—"}</td>
+                    <td style={{ ...td, textAlign: "center" }}>{a.number != null ? <span style={stat}>#{a.number}</span> : "—"}</td>
+                    <td style={{ ...td, textAlign: "center" }}>{a.foot || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Section>
+
       <Section background="subtle">
         <Prose>
           <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "var(--text-h3)", textTransform: "uppercase", color: "var(--text-strong)", margin: 0 }}>Teknik Sorumlu</h2>

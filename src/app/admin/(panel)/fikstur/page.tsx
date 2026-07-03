@@ -5,6 +5,9 @@ import { FixturesView, type FixtureRow } from "@/components/admin/views/Fixtures
 export const metadata: Metadata = { title: "Fikstür" };
 
 export default async function FiksturPage() {
-  const fixtures = await prisma.fixture.findMany({ orderBy: { date: "desc" } });
-  return <FixturesView fixtures={fixtures as FixtureRow[]} />;
+  const [fixtures, teams] = await Promise.all([
+    prisma.fixture.findMany({ orderBy: { date: "desc" } }),
+    prisma.team.findMany({ orderBy: { sort: "asc" }, select: { id: true, name: true } }),
+  ]);
+  return <FixturesView fixtures={fixtures as FixtureRow[]} teams={teams} />;
 }

@@ -1,0 +1,21 @@
+-- AlterTable
+ALTER TABLE "PerformanceMeasurement" DROP COLUMN "endurance",
+DROP COLUMN "maxHr",
+DROP COLUMN "passing",
+DROP COLUMN "percentile",
+DROP COLUMN "power",
+DROP COLUMN "speed",
+DROP COLUMN "tactic",
+DROP COLUMN "technique",
+DROP COLUMN "trainingLoad",
+DROP COLUMN "vo2",
+ADD COLUMN     "agility505" DOUBLE PRECISION,
+ADD COLUMN     "repeatedSprint" DOUBLE PRECISION,
+ADD COLUMN     "sprint10" DOUBLE PRECISION,
+ADD COLUMN     "sprint20" DOUBLE PRECISION,
+ADD COLUMN     "standingLongJump" DOUBLE PRECISION,
+ADD COLUMN     "tTest" DOUBLE PRECISION,
+ADD COLUMN     "yoyoDistance" DOUBLE PRECISION,
+ADD COLUMN     "yoyoLevel" TEXT,
+ALTER COLUMN "verticalJump" SET DATA TYPE DOUBLE PRECISION;
+

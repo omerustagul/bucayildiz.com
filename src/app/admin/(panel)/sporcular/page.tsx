@@ -19,7 +19,7 @@ export default async function SporcularPage() {
     number: a.number,
     height: a.height,
     weight: a.weight,
-    birthYear: a.birthYear,
+    birthDate: a.birthDate,
     foot: a.foot,
     status: a.status,
     licenseNo: a.licenseNo,

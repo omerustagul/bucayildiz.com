@@ -50,7 +50,7 @@ export async function FixtureSection() {
         <div className="hp-grid-2" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 24, alignItems: "stretch" }}>
           {/* Next match feature */}
           {next && (
-            <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: "var(--radius-xl)", padding: "clamp(20px, 5vw, 36px)", display: "flex", flexDirection: "column", gap: 24 }}>
+            <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: "var(--radius-xl)", padding: "clamp(20px, 5vw, 36px)", display: "flex", flexDirection: "column", gap: 24, justifyContent: "space-between" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Badge tone="gold">Sıradaki Maç</Badge>
                 <span style={{ fontSize: 13, color: "var(--navy-200)", fontWeight: 500 }}>{next.competition}</span>

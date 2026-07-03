@@ -85,16 +85,18 @@ model ConsentRecord {
 
 /// Takım (A Takım, U-18…U-15).
 model Team {
-  id        String    @id @default(cuid())
-  slug      String    @unique
-  name      String
-  short     String
-  coach     String    @default("")
-  born      String    @default("")
-  sort      Int        @default(0)
-  athletes  Athlete[]
-  trainings Training[]
-  createdAt DateTime   @default(now())
+  id         String     @id @default(cuid())
+  slug       String     @unique
+  name       String
+  short      String
+  coach      String     @default("")
+  born       String     @default("")
+  coverImage String?
+  sort       Int        @default(0)
+  athletes   Athlete[]
+  trainings  Training[]
+  fixtures   Fixture[]
+  createdAt  DateTime   @default(now())
 }
 
 /// Sporcu.
@@ -111,7 +113,8 @@ model Athlete {
   status      String   @default("active") // active | injured | rest
   licenseNo   String?
   photoUrl    String?
-  birthYear   Int?
+  birthYear   Int? // (kullanımdan kalktı — birthDate'e taşındı)
+  birthDate   String? // "YYYY-MM-DD"
   parentPhone String?
   user         User?
   measurements PerformanceMeasurement[]
@@ -129,26 +132,29 @@ model Athlete {
 /// En güncel ölçüm = sporcunun mevcut durumu; geçmiş kayıtlar raporlama/trend
 /// için korunur. (Eski 1:1 Performance + vo2History JSON yapısının yerini aldı.)
 model PerformanceMeasurement {
-  id           String   @id @default(cuid())
-  athleteId    String
-  athlete      Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  measuredAt   String // "YYYY-MM-DD" — ölçüm tarihi (zorunlu)
-  vo2          Float?
-  percentile   Int?
-  bodyFat      Float?
-  muscle       Float?
-  speed        Int? // radar 0-100
-  endurance    Int?
-  power        Int?
-  technique    Int?
-  tactic       Int?
-  passing      Int?
-  sprint30     Float?
-  verticalJump Int?
-  maxHr        Int?
-  trainingLoad Int?
-  note         String?
-  createdAt    DateTime @default(now())
+  id               String   @id @default(cuid())
+  athleteId        String
+  athlete          Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  measuredAt       String // "YYYY-MM-DD" — ölçüm tarihi (zorunlu)
+  // Dayanıklılık — VO2max yoyoLevel + yoyoDistance'tan otomatik hesaplanır (saklanmaz).
+  yoyoLevel        String? // "IR1" | "IR2"
+  yoyoDistance     Float? // m
+  repeatedSprint   Float? // sn (tekrarlı sprint testi)
+  // Vücut kompozisyonu
+  bodyFat          Float? // %
+  muscle           Float? // %
+  // Sürat
+  sprint10         Float? // sn
+  sprint20         Float? // sn
+  sprint30         Float? // sn (max sürat 30m)
+  // Kuvvet
+  verticalJump     Float? // cm (dikey sıçrama)
+  standingLongJump Float? // cm (durarak uzun atlama)
+  // Çeviklik
+  tTest            Float? // sn
+  agility505       Float? // sn
+  note             String?
+  createdAt        DateTime @default(now())
 
   @@index([athleteId, measuredAt])
 }
@@ -270,10 +276,13 @@ model Fixture {
   status       String   @default("upcoming") // upcoming | finished
   ourScore     Int?
   oppScore     Int?
+  teamId       String? // hangi takımın maçı (A Takım, U-18…)
+  team         Team?    @relation(fields: [teamId], references: [id])
   createdAt    DateTime @default(now())
 
   @@index([date])
   @@index([status])
+  @@index([teamId])
 }
 
 /// Panel kullanıcısı (admin veya sporcu). Sporcu, bir Athlete'e bağlıdır.

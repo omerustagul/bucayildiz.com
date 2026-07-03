@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ViewHeader, Field } from "@/components/admin/kit";
-import { TextInput, Drawer, Modal } from "@/components/admin/controls";
+import { TextInput, Drawer, Modal, FileDrop } from "@/components/admin/controls";
 import { Select } from "@/components/ui/Select";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
 import { createTeam, updateTeam, deleteTeam, assignAthletesToTeam } from "@/app/admin/(panel)/takimlar/actions";
 
-export type TeamRow = { id: string; name: string; short: string; coach: string; born: string; sort: number; athleteCount: number };
+export type TeamRow = { id: string; name: string; short: string; coach: string; born: string; coverImage: string | null; sort: number; athleteCount: number };
 export type AthleteLite = { id: string; name: string; teamId: string; teamName: string; number: number | null; position: string };
 
 const BORN_OPTIONS = ["Üst yapı", "2008", "2009", "2010", "2011", "2012", "2013"];
@@ -26,6 +26,7 @@ function slugify(s: string) {
 function NewTeamModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const [v, setV] = useState({ name: "", short: "", coach: "", born: "" });
+  const [cover, setCover] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const set = <K extends keyof typeof v>(k: K, val: string) => setV((s) => ({ ...s, [k]: val }));
@@ -33,7 +34,7 @@ function NewTeamModal({ onClose }: { onClose: () => void }) {
   const save = () => {
     setError(null);
     startTransition(async () => {
-      const res = await createTeam({ name: v.name, short: v.short, coach: v.coach, born: v.born, slug: slugify(v.name), sort: 99 });
+      const res = await createTeam({ name: v.name, short: v.short, coach: v.coach, born: v.born, coverImage: cover, slug: slugify(v.name), sort: 99 });
       if (res?.error) setError(res.error);
       else {
         onClose();
@@ -64,6 +65,9 @@ function NewTeamModal({ onClose }: { onClose: () => void }) {
           <Field label="Antrenör"><TextInput value={v.coach} onChange={(e) => set("coach", e.target.value)} placeholder="Antrenör adı" /></Field>
           <Select label="Yaş Kategorisi" placeholder="Seç" options={BORN_OPTIONS} value={v.born} onChange={(e) => set("born", e.target.value)} />
         </div>
+        <Field label="Kapak Görseli">
+          <FileDrop value={cover} onChange={setCover} label="Kapak görseli yükle" hint="Ana sayfa kartında görünür · 3:4 dikey önerilir" aspect="3 / 4" style={{ maxWidth: 200 }} />
+        </Field>
         {error && <div style={{ padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>{error}</div>}
       </div>
     </Modal>
@@ -73,6 +77,7 @@ function NewTeamModal({ onClose }: { onClose: () => void }) {
 function TeamDrawer({ team, athletes, onClose }: { team: TeamRow; athletes: AthleteLite[]; onClose: () => void }) {
   const router = useRouter();
   const [v, setV] = useState({ name: team.name, short: team.short, coach: team.coach, born: team.born });
+  const [cover, setCover] = useState<string | null>(team.coverImage);
   const [addOpen, setAddOpen] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +90,7 @@ function TeamDrawer({ team, athletes, onClose }: { team: TeamRow; athletes: Athl
   const save = () => {
     setError(null);
     startTransition(async () => {
-      const res = await updateTeam(team.id, { name: v.name, short: v.short, coach: v.coach, born: v.born, slug: slugify(v.name), sort: team.sort });
+      const res = await updateTeam(team.id, { name: v.name, short: v.short, coach: v.coach, born: v.born, coverImage: cover, slug: slugify(v.name), sort: team.sort });
       if (res?.error) setError(res.error);
       else { onClose(); router.refresh(); }
     });
@@ -129,6 +134,10 @@ function TeamDrawer({ team, athletes, onClose }: { team: TeamRow; athletes: Athl
           <Field label="Antrenör"><TextInput value={v.coach} onChange={(e) => set("coach", e.target.value)} /></Field>
           <Select label="Yaş Kategorisi" options={BORN_OPTIONS} value={v.born} onChange={(e) => set("born", e.target.value)} />
         </div>
+
+        <Field label="Kapak Görseli">
+          <FileDrop value={cover} onChange={setCover} label="Kapak görseli yükle" hint="Ana sayfa ve takımlar kartında görünür · 3:4 dikey önerilir" aspect="3 / 4" style={{ maxWidth: 220 }} />
+        </Field>
 
         {error && <div style={{ padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>{error}</div>}
 
@@ -205,7 +214,7 @@ export function TakimlarView({ teams, athletes }: { teams: TeamRow[]; athletes: 
             onClick={() => setOpen(t)}
             style={{ textAlign: "left", cursor: "pointer", font: "inherit", background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)", overflow: "hidden", padding: 0 }}
           >
-            <div style={{ background: "var(--grad-navy)", padding: "18px", display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ background: t.coverImage ? `linear-gradient(rgba(8,18,38,.5), rgba(8,18,38,.8)), center/cover no-repeat url("${t.coverImage}")` : "var(--grad-navy)", padding: "18px", display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{ width: 52, height: 52, borderRadius: "var(--radius-md)", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.16)", display: "grid", placeItems: "center", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 18, color: "var(--gold-400)" }}>{t.short}</div>
               <div>
                 <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 24, textTransform: "uppercase", color: "#fff", lineHeight: 1 }}>{t.name}</div>

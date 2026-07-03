@@ -56,10 +56,11 @@ export default async function BasvuruPage() {
     summary: d.summary,
     required: d.required,
     isConsent: d.isConsent,
+    body: d.body,
   }));
 
   return (
-    <div style={{ maxWidth: 1160, margin: "40px auto", padding: "0 32px" }}>
+    <div style={{ maxWidth: 1280, margin: "20px auto", padding: "0 16px" }}>
       <div
         className="basvuru-grid"
         style={{

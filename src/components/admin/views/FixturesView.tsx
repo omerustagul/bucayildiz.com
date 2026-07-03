@@ -27,7 +27,10 @@ export type FixtureRow = {
   status: string;
   ourScore: number | null;
   oppScore: number | null;
+  teamId: string | null;
 };
+
+export type TeamOpt = { id: string; name: string };
 
 const STATUS: Record<string, { tone: "navy" | "neutral"; label: string }> = {
   upcoming: { tone: "navy", label: "Yaklaşan" },
@@ -39,10 +42,11 @@ const fmtDate = (d: string) => {
 };
 const num = (v: string) => (v.trim() === "" ? null : Number(v));
 
-function FixtureDrawer({ fx, onClose }: { fx: FixtureRow | null; onClose: () => void }) {
+function FixtureDrawer({ fx, teams, onClose }: { fx: FixtureRow | null; teams: TeamOpt[]; onClose: () => void }) {
   const router = useRouter();
   const isNew = !fx;
   const [v, setV] = useState({
+    teamId: fx?.teamId ?? "",
     competition: fx?.competition ?? "",
     opponent: fx?.opponent ?? "",
     opponentLogo: fx?.opponentLogo ?? "",
@@ -62,6 +66,7 @@ function FixtureDrawer({ fx, onClose }: { fx: FixtureRow | null; onClose: () => 
   const save = () => {
     setError(null);
     const payload = {
+      teamId: v.teamId || null,
       competition: v.competition,
       opponent: v.opponent,
       opponentLogo: v.opponentLogo || null,
@@ -115,6 +120,14 @@ function FixtureDrawer({ fx, onClose }: { fx: FixtureRow | null; onClose: () => 
       }
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <Select
+          label="Takım"
+          required
+          placeholder="Takım seçiniz…"
+          options={teams.map((t) => ({ value: t.id, label: t.name }))}
+          value={v.teamId}
+          onChange={(e) => set("teamId", e.target.value)}
+        />
         <Field label="Müsabaka / Lig" required>
           <TextInput value={v.competition} onChange={(e) => set("competition", e.target.value)} placeholder="örn. U-17 Gelişim Ligi" />
         </Field>
@@ -173,8 +186,9 @@ function FixtureDrawer({ fx, onClose }: { fx: FixtureRow | null; onClose: () => 
   );
 }
 
-export function FixturesView({ fixtures }: { fixtures: FixtureRow[] }) {
-  const [tab, setTab] = useState("all");
+export function FixturesView({ fixtures, teams }: { fixtures: FixtureRow[]; teams: TeamOpt[] }) {
+  const [tab, setTab] = useState("all"); // takım filtresi: "all" | teamId
+  const [statusFilter, setStatusFilter] = useState("all"); // all | upcoming | finished
   const [q, setQ] = useState("");
   const [drawer, setDrawer] = useState<{ fx: FixtureRow | null } | null>(null);
 
@@ -182,16 +196,16 @@ export function FixturesView({ fixtures }: { fixtures: FixtureRow[] }) {
     () =>
       fixtures.filter(
         (f) =>
-          (tab === "all" || f.status === tab) &&
+          (tab === "all" || f.teamId === tab) &&
+          (statusFilter === "all" || f.status === statusFilter) &&
           (q.trim() === "" || `${f.opponent} ${f.competition}`.toLocaleLowerCase("tr").includes(q.toLocaleLowerCase("tr"))),
       ),
-    [fixtures, tab, q],
+    [fixtures, tab, statusFilter, q],
   );
 
   const tabs = [
     { id: "all", label: "Tümü", count: fixtures.length },
-    { id: "upcoming", label: "Yaklaşan", count: fixtures.filter((f) => f.status === "upcoming").length },
-    { id: "finished", label: "Tamamlanan", count: fixtures.filter((f) => f.status === "finished").length },
+    ...teams.map((t) => ({ id: t.id, label: t.name, count: fixtures.filter((f) => f.teamId === t.id).length })),
   ];
 
   const cols: Column<FixtureRow>[] = [
@@ -205,16 +219,18 @@ export function FixturesView({ fixtures }: { fixtures: FixtureRow[] }) {
         </div>
       ),
     },
+    { key: "competition", label: "Lig", render: (r) => <Badge tone="outline">{r.competition}</Badge> },
     {
       key: "match",
       label: "Maç",
+      align: "center",
       render: (r) => {
         const home = r.isHome ? "Buca Yıldız" : r.opponent;
         const away = r.isHome ? r.opponent : "Buca Yıldız";
         const homeScore = r.isHome ? r.ourScore : r.oppScore;
         const awayScore = r.isHome ? r.oppScore : r.ourScore;
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
             <span style={{ fontWeight: 600, color: home === "Buca Yıldız" ? "var(--navy-700)" : "var(--ink-700)" }}>{home}</span>
             {r.status === "finished" ? (
               <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, background: "var(--ink-100)", borderRadius: "var(--radius-sm)", padding: "2px 9px", color: "var(--text-strong)" }}>{homeScore ?? 0}–{awayScore ?? 0}</span>
@@ -226,7 +242,6 @@ export function FixturesView({ fixtures }: { fixtures: FixtureRow[] }) {
         );
       },
     },
-    { key: "competition", label: "Lig", render: (r) => <Badge tone="outline">{r.competition}</Badge> },
     { key: "venue", label: "Saha", render: (r) => <span style={{ fontSize: 13, color: "var(--ink-500)" }}>{r.venue || "—"}</span> },
     { key: "status", label: "Durum", align: "center", render: (r) => <Badge tone={STATUS[r.status]?.tone ?? "neutral"}>{STATUS[r.status]?.label ?? r.status}</Badge> },
     { key: "go", label: "", width: 44, align: "right", render: () => <span style={{ color: "var(--ink-300)", display: "inline-flex" }}><Icon name="pencil" size={15} /></span> },
@@ -246,10 +261,19 @@ export function FixturesView({ fixtures }: { fixtures: FixtureRow[] }) {
       />
       <Toolbar>
         <SearchBox placeholder="Rakip / lig ara…" value={q} onChange={setQ} />
-        <span style={{ marginLeft: "auto", fontSize: 13, color: "var(--ink-400)" }}>{rows.length} maç</span>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ fontSize: 13, color: "var(--ink-400)", whiteSpace: "nowrap" }}>{rows.length} maç</span>
+          <Select
+            options={[{ value: "all", label: "Tümü" }, { value: "upcoming", label: "Yaklaşan" }, { value: "finished", label: "Tamamlanan" }]}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            containerStyle={{ minWidth: 152 }}
+            style={{ padding: "8px 34px 8px 12px", fontSize: 13.5 }}
+          />
+        </div>
       </Toolbar>
       <Table columns={cols} rows={rows} getRowKey={(r) => r.id} onRowClick={(r) => setDrawer({ fx: r })} empty="Maç bulunamadı." />
-      {drawer && <FixtureDrawer fx={drawer.fx} onClose={() => setDrawer(null)} />}
+      {drawer && <FixtureDrawer fx={drawer.fx} teams={teams} onClose={() => setDrawer(null)} />}
     </>
   );
 }

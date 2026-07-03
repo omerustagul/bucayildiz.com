@@ -17,6 +17,7 @@ const schema = z.object({
   status: z.enum(["upcoming", "finished"]).default("upcoming"),
   ourScore: z.number().int().min(0).max(99).nullable().optional(),
   oppScore: z.number().int().min(0).max(99).nullable().optional(),
+  teamId: z.string().trim().nullable().optional(),
 });
 
 export type FixtureResult = { error: string };
@@ -40,6 +41,7 @@ function toData(d: z.infer<typeof schema>) {
     status: d.status,
     ourScore: finished ? d.ourScore ?? null : null,
     oppScore: finished ? d.oppScore ?? null : null,
+    teamId: d.teamId && d.teamId.trim() ? d.teamId : null,
   };
 }
 

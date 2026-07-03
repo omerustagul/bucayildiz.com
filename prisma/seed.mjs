@@ -1,6 +1,7 @@
 // İlk admin + takımlar + örnek sporcuları oluşturur (idempotent). Çalıştır:
 //   node --env-file=.env prisma/seed.mjs
 import { PrismaClient } from "@prisma/client";
+import { CONSENT_DOCS, CONSENT_VERSION } from "./consent-texts.mjs";
 import bcrypt from "bcryptjs";
 import { createHash } from "node:crypto";
 
@@ -84,7 +85,19 @@ if (existingFx === 0) {
     { competition: "A Takım Bölgesel", opponent: "Menemen FK", isHome: true, date: "2026-06-07", time: "20:00", venue: "Buca Yıldız Tesisleri", status: "finished", ourScore: 2, oppScore: 2 },
     { competition: "Hazırlık Maçı", opponent: "Bucaspor", isHome: true, date: "2026-06-28", time: "18:00", venue: "Buca Yıldız Tesisleri", status: "upcoming" },
   ];
-  for (const f of FIXTURES) await prisma.fixture.create({ data: f });
+  // Maçları takıma bağla (competition'dan çıkarımla).
+  const fxTeams = await prisma.team.findMany({ select: { id: true, name: true } });
+  const fxNorm = (s) => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const fxATeam = fxTeams.find((t) => fxNorm(t.name).includes("ATAKIM")) || fxTeams[0];
+  const fxPick = (comp) => {
+    const c = fxNorm(comp);
+    for (const t of fxTeams) {
+      const n = fxNorm(t.name);
+      if (n.startsWith("U") && c.includes(n)) return t.id;
+    }
+    return fxATeam?.id ?? null;
+  };
+  for (const f of FIXTURES) await prisma.fixture.create({ data: { ...f, teamId: fxPick(f.competition) } });
   console.log(`✔ Maçlar: ${FIXTURES.length}`);
 } else {
   console.log(`• Maçlar zaten var (${existingFx}), atlandı.`);
@@ -244,12 +257,12 @@ if (ardaForPerf) {
   if (hasPerf === 0) {
     await prisma.performanceMeasurement.createMany({
       data: [
-        { athleteId: ardaForPerf.id, measuredAt: "2026-01-12", vo2: 51.2, percentile: 78, bodyFat: 13.1, muscle: 40.2, speed: 70, endurance: 76, power: 63, technique: 82, tactic: 75, passing: 84, sprint30: 4.42, verticalJump: 52, maxHr: 198, trainingLoad: 360, note: "Sezon başı testi" },
-        { athleteId: ardaForPerf.id, measuredAt: "2026-02-16", vo2: 52.8, percentile: 81, bodyFat: 12.6, muscle: 40.9, speed: 72, endurance: 78, power: 65, technique: 84, tactic: 77, passing: 86, sprint30: 4.35, verticalJump: 54, maxHr: 197, trainingLoad: 375 },
-        { athleteId: ardaForPerf.id, measuredAt: "2026-03-15", vo2: 53.4, percentile: 84, bodyFat: 12.2, muscle: 41.3, speed: 73, endurance: 80, power: 66, technique: 85, tactic: 78, passing: 87, sprint30: 4.30, verticalJump: 55, maxHr: 197, trainingLoad: 388 },
-        { athleteId: ardaForPerf.id, measuredAt: "2026-04-19", vo2: 54.1, percentile: 87, bodyFat: 11.8, muscle: 41.8, speed: 75, endurance: 82, power: 68, technique: 86, tactic: 80, passing: 88, sprint30: 4.25, verticalJump: 56, maxHr: 196, trainingLoad: 398 },
-        { athleteId: ardaForPerf.id, measuredAt: "2026-05-17", vo2: 55.0, percentile: 90, bodyFat: 11.5, muscle: 42.1, speed: 76, endurance: 84, power: 69, technique: 87, tactic: 81, passing: 89, sprint30: 4.21, verticalJump: 57, maxHr: 196, trainingLoad: 405 },
-        { athleteId: ardaForPerf.id, measuredAt: "2026-06-08", vo2: 56.4, percentile: 92, bodyFat: 11.2, muscle: 42.5, speed: 78, endurance: 85, power: 70, technique: 88, tactic: 82, passing: 90, sprint30: 4.18, verticalJump: 58, maxHr: 196, trainingLoad: 412 },
+        { athleteId: ardaForPerf.id, measuredAt: "2026-01-12", yoyoLevel: "IR1", yoyoDistance: 1080, repeatedSprint: 7.40, bodyFat: 13.1, muscle: 40.2, sprint10: 2.05, sprint20: 3.35, sprint30: 4.62, verticalJump: 42, standingLongJump: 198, tTest: 11.20, agility505: 2.62, note: "Sezon başı testi" },
+        { athleteId: ardaForPerf.id, measuredAt: "2026-02-16", yoyoLevel: "IR1", yoyoDistance: 1180, repeatedSprint: 7.30, bodyFat: 12.6, muscle: 40.9, sprint10: 2.01, sprint20: 3.30, sprint30: 4.55, verticalJump: 44, standingLongJump: 203, tTest: 11.00, agility505: 2.57 },
+        { athleteId: ardaForPerf.id, measuredAt: "2026-03-15", yoyoLevel: "IR1", yoyoDistance: 1280, repeatedSprint: 7.20, bodyFat: 12.2, muscle: 41.3, sprint10: 1.98, sprint20: 3.25, sprint30: 4.48, verticalJump: 46, standingLongJump: 208, tTest: 10.80, agility505: 2.53 },
+        { athleteId: ardaForPerf.id, measuredAt: "2026-04-19", yoyoLevel: "IR1", yoyoDistance: 1400, repeatedSprint: 7.12, bodyFat: 11.8, muscle: 41.8, sprint10: 1.95, sprint20: 3.20, sprint30: 4.42, verticalJump: 47, standingLongJump: 213, tTest: 10.60, agility505: 2.49 },
+        { athleteId: ardaForPerf.id, measuredAt: "2026-05-17", yoyoLevel: "IR1", yoyoDistance: 1540, repeatedSprint: 7.05, bodyFat: 11.5, muscle: 42.1, sprint10: 1.91, sprint20: 3.15, sprint30: 4.36, verticalJump: 49, standingLongJump: 218, tTest: 10.45, agility505: 2.45 },
+        { athleteId: ardaForPerf.id, measuredAt: "2026-06-08", yoyoLevel: "IR1", yoyoDistance: 1680, repeatedSprint: 7.00, bodyFat: 11.2, muscle: 42.5, sprint10: 1.88, sprint20: 3.10, sprint30: 4.30, verticalJump: 50, standingLongJump: 222, tTest: 10.30, agility505: 2.42 },
       ],
     });
     console.log("✔ Performans ölçümleri (Arda, 6 dönem)");
@@ -258,29 +271,18 @@ if (ardaForPerf) {
   }
 }
 
-// --- KVKK onay belgeleri (sürümlü; metinler TASLAK — avukat onayı bekleniyor) ---
-const CONSENT_VERSION = "2026-06-15";
-const DRAFT = "\n\n— — —\n⚠️ Bu metin taslaktır; nihai hali KVKK avukatı tarafından hazırlanıp onaylanacaktır.";
-const consentDocs = [
-  { key: "aydinlatma", title: "Aydınlatma Metni", summary: "Aydınlatma metnini okudum.", isConsent: false, required: true, ordering: 1,
-    body: "Buca Yıldız Futbol Akademisi (\"Kulüp\") olarak, 6698 sayılı KVKK kapsamında veri sorumlusu sıfatıyla; sporcu adayının ve velisinin kimlik, iletişim, doğum tarihi, fiziksel ölçüm ve sağlık verileri ile varsa görsel verilerini, akademi başvurusu, antrenman planlaması, performans takibi ve yasal yükümlülüklerin yerine getirilmesi amaçlarıyla işliyoruz. Verileriniz Türkiye'de barındırılır. KVKK md.11 haklarınızı kullanabilirsiniz." + DRAFT },
-  { key: "acik-riza", title: "Kişisel Verilerin İşlenmesi — Açık Rıza", summary: "Kişisel verilerimin yukarıdaki amaçlarla işlenmesine açık rıza veriyorum.", isConsent: true, required: true, ordering: 2,
-    body: "Sporcu adayına ve veliye ait kimlik ve iletişim verilerinin; başvurunun değerlendirilmesi, deneme antrenmanı organizasyonu ve Kulüp ile iletişim amaçlarıyla işlenmesine açık rıza veriyorum. Rızamı dilediğim zaman geri alabileceğimi biliyorum." + DRAFT },
-  { key: "saglik-verisi", title: "Sağlık ve Fiziksel Ölçüm Verileri — Açık Rıza (Özel Nitelikli)", summary: "Sporcunun sağlık ve fiziksel ölçüm (özel nitelikli) verilerinin işlenmesine açık rıza veriyorum.", isConsent: true, required: true, ordering: 3,
-    body: "Sporcunun boy, kilo, fiziksel performans ölçümleri ve sağlık durumuna ilişkin özel nitelikli kişisel verilerinin; antrenman güvenliği, gelişim ve performans takibi amaçlarıyla, yalnızca yetkili antrenör/sağlık personeli tarafından işlenmesine açık rıza veriyorum." + DRAFT },
-  { key: "foto-video", title: "Fotoğraf ve Video Paylaşım Muvafakatnamesi", summary: "Sporcunun fotoğraf/videolarının Kulüp tanıtımında ve sosyal medyada paylaşılmasına izin veriyorum.", isConsent: true, required: false, ordering: 4,
-    body: "Sporcunun antrenman, maç ve etkinliklerde çekilen fotoğraf ve videolarının; Kulübün web sitesi, sosyal medya hesapları ve tanıtım materyallerinde paylaşılmasına muvafakat ediyorum. Bu izin OPSİYONELDİR; vermemem üyelik/kayıt hakkımı etkilemez ve izni dilediğim zaman geri alabilirim." + DRAFT },
-  { key: "pazarlama", title: "Ticari Elektronik İleti (Pazarlama) İzni", summary: "Kulüpten haber, duyuru ve kampanyalardan haberdar olmak istiyorum.", isConsent: true, required: false, ordering: 5,
-    body: "Kulübe ait haber, duyuru, etkinlik ve kampanyalara ilişkin ticari elektronik iletilerin (SMS/e-posta) tarafıma gönderilmesine izin veriyorum. İzni dilediğim zaman geri alabilirim." + DRAFT },
-];
-for (const d of consentDocs) {
+// --- KVKK onay belgeleri (sürümlü; metinler kapsamlı TASLAK — avukat onayı bekleniyor) ---
+// Metinler tek kaynaktan (prisma/consent-texts.mjs) gelir.
+for (const d of CONSENT_DOCS) {
   await prisma.consentDocument.upsert({
     where: { key_version: { key: d.key, version: CONSENT_VERSION } },
     update: { title: d.title, summary: d.summary, body: d.body, isConsent: d.isConsent, required: d.required, ordering: d.ordering, active: true },
     create: { key: d.key, version: CONSENT_VERSION, title: d.title, summary: d.summary, body: d.body, isConsent: d.isConsent, required: d.required, ordering: d.ordering },
   });
 }
-console.log(`✔ KVKK onay belgeleri: ${consentDocs.length} (sürüm ${CONSENT_VERSION})`);
+// Eski sürümleri pasifleştir — formda yalnızca güncel sürüm görünsün.
+await prisma.consentDocument.updateMany({ where: { version: { not: CONSENT_VERSION } }, data: { active: false } });
+console.log(`✔ KVKK onay belgeleri: ${CONSENT_DOCS.length} (sürüm ${CONSENT_VERSION})`);
 
 // --- Arda için örnek sporcu-seviyesi onay kayıtları (izinler sayfası demo) ---
 const ardaC = await prisma.athlete.findFirst({ where: { name: "Arda Yılmaz" } });

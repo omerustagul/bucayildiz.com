@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { IconButton } from "@/components/ui/IconButton";
 import { Icon, type IconName } from "@/lib/icons";
@@ -107,8 +108,8 @@ export function SearchBox({ placeholder = "Ara…", value, onChange, width = 260
 
 export function Drawer({ open, onClose, title, subtitle, children, footer, width = 480 }: { open: boolean; onClose: () => void; title: string; subtitle?: string; children: React.ReactNode; footer?: React.ReactNode; width?: number }) {
   useOverlayDismiss(open, onClose);
-  if (!open) return null;
-  return (
+  if (!open || typeof document === "undefined") return null;
+  return createPortal(
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.45)", zIndex: 200 }} />
       <aside role="dialog" aria-modal="true" aria-label={title} style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: `min(${width}px, 94vw)`, background: "var(--surface-page)", boxShadow: "var(--shadow-xl)", zIndex: 201, display: "flex", flexDirection: "column" }}>
@@ -124,14 +125,15 @@ export function Drawer({ open, onClose, title, subtitle, children, footer, width
         <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>{children}</div>
         {footer && <div style={{ padding: "16px 24px", borderTop: "1px solid var(--border-subtle)", display: "flex", gap: 10, justifyContent: "flex-end", background: "var(--surface-subtle)" }}>{footer}</div>}
       </aside>
-    </>
+    </>,
+    document.body,
   );
 }
 
 export function Modal({ open, onClose, title, children, footer, width = 460 }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode; footer?: React.ReactNode; width?: number }) {
   useOverlayDismiss(open, onClose);
-  if (!open) return null;
-  return (
+  if (!open || typeof document === "undefined") return null;
+  return createPortal(
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.5)", display: "grid", placeItems: "center", zIndex: 210, padding: 20 }}>
       <div onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={title} style={{ width: `min(${width}px, 96vw)`, background: "var(--surface-page)", borderRadius: "var(--radius-xl)", boxShadow: "var(--shadow-xl)", overflow: "hidden" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -143,7 +145,8 @@ export function Modal({ open, onClose, title, children, footer, width = 460 }: {
         <div style={{ padding: 24, maxHeight: "calc(90vh - 132px)", overflowY: "auto" }}>{children}</div>
         {footer && <div style={{ padding: "16px 24px", borderTop: "1px solid var(--border-subtle)", display: "flex", gap: 10, justifyContent: "flex-end", background: "var(--surface-subtle)" }}>{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

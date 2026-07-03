@@ -17,7 +17,7 @@ export async function AgeGroupsSection() {
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "88px clamp(16px, 5vw, 32px)" }}>
         <SectionHeading
           kicker="Akademi"
-          title="Yaş Grupları"
+          title="Takımlarımız"
           action={
             <Button as="a" href="/takimlar" variant="secondary" size="sm">
               Tüm Takımlar
@@ -32,6 +32,7 @@ export async function AgeGroupsSection() {
               label={t.name}
               title={t.born === "Üst yapı" ? "Üst yapı kadrosu" : t.born ? `${t.born} doğumlular` : t.coach}
               count={t._count.athletes}
+              image={t.coverImage ?? undefined}
               href={`/takimlar/${t.slug}`}
             />
           ))}

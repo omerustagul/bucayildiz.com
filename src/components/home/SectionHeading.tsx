@@ -9,6 +9,7 @@ export function SectionHeading({
   onDark = false,
   align = "left",
   style = {},
+  titleStyle,
 }: {
   kicker?: string;
   title: string;
@@ -16,6 +17,7 @@ export function SectionHeading({
   onDark?: boolean;
   align?: "left" | "center";
   style?: React.CSSProperties;
+  titleStyle?: React.CSSProperties;
 }) {
   const titleColor = onDark ? "#fff" : "var(--text-strong)";
   return (
@@ -59,6 +61,7 @@ export function SectionHeading({
             textTransform: "uppercase",
             color: titleColor,
             margin: 0,
+            ...titleStyle,
           }}
         >
           {title}

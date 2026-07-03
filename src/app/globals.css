@@ -33,10 +33,12 @@ main {
 
 /* ---- Homepage motion & layout helpers (ported from design kit) ---- */
 @keyframes byPulse {
+
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.35;
   }
@@ -46,6 +48,7 @@ main {
   from {
     transform: translateX(0);
   }
+
   to {
     transform: translateX(-50%);
   }
@@ -58,6 +61,7 @@ main {
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
 }
+
 .by-marquee-track {
   display: flex;
   gap: 56px;
@@ -65,17 +69,21 @@ main {
   align-items: flex-end;
   animation: byMarquee 40s linear infinite;
 }
+
 .by-marquee:hover .by-marquee-track {
   animation-play-state: paused;
 }
+
 .by-jersey {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 14px;
 }
+
 .by-jersey-label {
-  font-size: 0.75rem; /* 12px */
+  font-size: 0.75rem;
+  /* 12px */
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--navy-200);
@@ -94,15 +102,19 @@ main {
   text-decoration: none;
   transition: color var(--dur-fast) var(--ease-out);
 }
+
 .footer-link:hover {
   color: #fff;
 }
+
 .footer-legal-link {
-  font-size: 0.8125rem; /* 13px */
+  font-size: 0.8125rem;
+  /* 13px */
   color: var(--navy-300);
   text-decoration: none;
   transition: color var(--dur-fast) var(--ease-out);
 }
+
 .footer-legal-link:hover {
   color: var(--gold-400);
 }
@@ -117,6 +129,7 @@ main {
 .link-card {
   transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
 }
+
 .link-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-lg);
@@ -129,14 +142,17 @@ main {
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: none;
   }
 }
+
 .by-page-transition {
   animation: byPageIn 0.28s var(--ease-out) both;
 }
+
 @media (prefers-reduced-motion: reduce) {
   .by-page-transition {
     animation: none;
@@ -176,12 +192,15 @@ main {
   .perf-grid {
     grid-template-columns: 1fr !important;
   }
+
   .perf-kpi {
     grid-template-columns: 1fr 1fr !important;
   }
+
   .pl-athlete {
     flex-direction: column !important;
   }
+
   .pl-athlete-photo {
     width: 100% !important;
   }
@@ -189,6 +208,7 @@ main {
 
 /* Sporcu paneli üst bar: dar ekranda kullanıcı kimliğini gizle (avatar kalır) */
 @media (max-width: 520px) {
+
   .pl-header-identity,
   .pl-header-divider {
     display: none !important;
@@ -201,6 +221,7 @@ main {
     grid-template-columns: 1fr !important;
   }
 }
+
 @media (max-width: 560px) {
   .post-fields {
     grid-template-columns: 1fr !important;
@@ -212,6 +233,7 @@ main {
   .login-card {
     grid-template-columns: 1fr !important;
   }
+
   .login-brand {
     display: none !important;
   }
@@ -223,6 +245,7 @@ main {
     grid-template-columns: 1fr !important;
   }
 }
+
 @media (max-width: 560px) {
   .form-2col {
     grid-template-columns: 1fr !important;
@@ -234,17 +257,28 @@ main {
   .hp-grid-2 {
     grid-template-columns: 1fr !important;
   }
+
   .hp-grid-ages {
     grid-template-columns: repeat(3, 1fr) !important;
   }
+
   .hp-grid-footer {
     grid-template-columns: 1fr 1fr !important;
   }
+
+  .how-grid {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+    max-width: 460px;
+    margin: 0 auto;
+  }
 }
+
 @media (max-width: 600px) {
   .hp-grid-ages {
     grid-template-columns: 1fr 1fr !important;
   }
+
   .hp-grid-footer {
     grid-template-columns: 1fr !important;
   }
@@ -260,10 +294,12 @@ html[data-cursor="star"],
 html[data-cursor="star"] * {
   cursor: url("/cursors/star.svg") 6 4, auto;
 }
+
 html[data-cursor="ball"],
 html[data-cursor="ball"] * {
   cursor: url("/cursors/ball.svg") 16 16, auto;
 }
+
 html[data-cursor="whistle"],
 html[data-cursor="whistle"] * {
   cursor: url("/cursors/whistle.svg") 16 16, auto;
@@ -276,10 +312,12 @@ html[data-cursor="whistle"] * {
 .by-header-mobile {
   display: none;
 }
+
 @media (max-width: 900px) {
   .by-header-desktop {
     display: none;
   }
+
   .by-header-mobile {
     display: block;
   }
@@ -292,19 +330,22 @@ html[data-cursor="whistle"] * {
    ezdiği için IconButton (32/40) ve küçük butonlar dokunmatikte 44'e çıkar.
    ============================================================ */
 @media (pointer: coarse) {
+
   button,
   [role="button"],
   .by-btn,
   select,
   input:not([type="checkbox"]):not([type="radio"]),
   textarea {
-    min-height: 44px;
+    min-height: 38px;
   }
+
   button,
   [role="button"],
   [role="switch"] {
-    min-width: 44px;
+    min-width: 38px;
   }
+
   /* Onay kutusu/radyo görseli biraz büyür; asıl dokunma hedefi yine label. */
   input[type="checkbox"],
   input[type="radio"] {
@@ -325,6 +366,7 @@ html[data-cursor="whistle"] * {
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
 }
+
 footer {
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -335,6 +377,7 @@ footer {
    prefers-reduced-motion açıkken devre dışı.
    ============================================================ */
 @media (prefers-reduced-motion: no-preference) {
+
   button:active:not(:disabled),
   .by-btn:active,
   [role="button"]:active,
@@ -350,25 +393,22 @@ footer {
    ============================================================ */
 .trial-hero {
   background-color: var(--navy-950);
-  background-image: linear-gradient(
-      90deg,
+  background-image: linear-gradient(90deg,
       rgba(5, 11, 26, 0.96) 0%,
       rgba(5, 11, 26, 0.85) 32%,
       rgba(5, 11, 26, 0.45) 58%,
-      rgba(5, 11, 26, 0.1) 100%
-    ),
+      rgba(5, 11, 26, 0.1) 100%),
     url("/brand/hero-trial.jpg");
   background-size: cover;
   background-position: center;
 }
+
 @media (max-width: 760px) {
   .trial-hero {
-    background-image: linear-gradient(
-        180deg,
+    background-image: linear-gradient(180deg,
         rgba(5, 11, 26, 0.82) 0%,
         rgba(5, 11, 26, 0.58) 36%,
-        rgba(5, 11, 26, 0.9) 100%
-      ),
+        rgba(5, 11, 26, 0.9) 100%),
       url("/brand/hero-trial-square.jpg");
     background-position: center;
   }

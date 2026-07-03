@@ -11,24 +11,20 @@ const num = z.number().finite().nullable().optional();
 const measurementSchema = z.object({
   athleteId: z.string().min(1, "Sporcu seçiniz."),
   measuredAt: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçerli bir ölçüm tarihi giriniz."),
-  vo2: num,
-  percentile: num,
+  yoyoLevel: z.enum(["IR1", "IR2"]).nullable().optional(),
+  yoyoDistance: num,
+  repeatedSprint: num,
   bodyFat: num,
   muscle: num,
-  speed: num,
-  endurance: num,
-  power: num,
-  technique: num,
-  tactic: num,
-  passing: num,
+  sprint10: num,
+  sprint20: num,
   sprint30: num,
   verticalJump: num,
-  maxHr: num,
-  trainingLoad: num,
+  standingLongJump: num,
+  tTest: num,
+  agility505: num,
   note: z.string().trim().max(300).optional().or(z.literal("")),
 });
-
-const int = (v: number | null | undefined) => (v == null ? null : Math.round(v));
 
 /** Yeni periyodik performans ölçümü ekler (geçmişi korur — upsert DEĞİL). */
 export async function addMeasurement(input: unknown): Promise<MeasurementResult> {
@@ -37,25 +33,28 @@ export async function addMeasurement(input: unknown): Promise<MeasurementResult>
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
 
+  // Yo-Yo mesafesi girildiyse seviye zorunlu (VO2max hesabı için).
+  if (d.yoyoDistance != null && !d.yoyoLevel) {
+    return { ok: false, error: "Yo-Yo mesafesi için test seviyesi (IR1/IR2) seçiniz." };
+  }
+
   try {
     await prisma.performanceMeasurement.create({
       data: {
         athleteId: d.athleteId,
         measuredAt: d.measuredAt,
-        vo2: d.vo2 ?? null,
-        percentile: int(d.percentile),
+        yoyoLevel: d.yoyoDistance != null ? (d.yoyoLevel ?? null) : null,
+        yoyoDistance: d.yoyoDistance ?? null,
+        repeatedSprint: d.repeatedSprint ?? null,
         bodyFat: d.bodyFat ?? null,
         muscle: d.muscle ?? null,
-        speed: int(d.speed),
-        endurance: int(d.endurance),
-        power: int(d.power),
-        technique: int(d.technique),
-        tactic: int(d.tactic),
-        passing: int(d.passing),
+        sprint10: d.sprint10 ?? null,
+        sprint20: d.sprint20 ?? null,
         sprint30: d.sprint30 ?? null,
-        verticalJump: int(d.verticalJump),
-        maxHr: int(d.maxHr),
-        trainingLoad: int(d.trainingLoad),
+        verticalJump: d.verticalJump ?? null,
+        standingLongJump: d.standingLongJump ?? null,
+        tTest: d.tTest ?? null,
+        agility505: d.agility505 ?? null,
         note: d.note || null,
       },
     });

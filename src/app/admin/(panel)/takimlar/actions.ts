@@ -16,6 +16,7 @@ const schema = z.object({
     .regex(/^[a-z0-9-]+$/, "Slug yalnızca küçük harf, rakam ve - içerebilir."),
   coach: z.string().trim().max(120).optional().or(z.literal("")),
   born: z.string().trim().max(60).optional().or(z.literal("")),
+  coverImage: z.string().trim().max(1000).nullish(),
   sort: z.coerce.number().int().min(0).max(999).default(0),
 });
 

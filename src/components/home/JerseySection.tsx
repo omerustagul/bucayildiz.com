@@ -34,19 +34,52 @@ export async function JerseySection() {
   const loop = [...jerseys, ...jerseys, ...jerseys];
 
   return (
-    <section style={{ background: "var(--grad-navy)", borderTop: "1px solid var(--navy-600)", overflow: "hidden" }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "72px clamp(16px, 5vw, 32px) 24px" }}>
-        <SectionHeading kicker="Mağaza" title="2025/26 Formalarımız" onDark style={{ marginBottom: 8 }} />
+    <section style={{ position: "relative", overflow: "hidden", background: "var(--surface-page)", isolation: "isolate" }}>
+      {/* Sol-üstten sağ-alta eğimli lacivert bant + silik marka motifi (yıldız + top).
+          Bant tüm bölümü kaplar; açık zemin yalnız sağ-üst ve sol-alt köşe üçgenlerinde görünür. */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "var(--grad-navy)",
+          clipPath: "polygon(0% 7%, 100% 19%, 100% 90%, 0% 78%)",
+          overflow: "hidden",
+          zIndex: -1,
+          filter: "drop-shadow(0 18px 38px rgba(14,33,72,.18))",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: 'url("/brand/jersey-pattern.svg")',
+            backgroundRepeat: "repeat",
+            backgroundSize: "40px 40px",
+          }}
+        />
       </div>
-      <div className="by-marquee">
-        <div className="by-marquee-track">
-          {loop.map((k, i) => (
-            <Jersey key={i} j={k} />
-          ))}
+
+      <div>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "44px clamp(16px, 5vw, 32px) 8px" }}>
+          <SectionHeading
+            kicker="Mağaza"
+            title="2025/26 Formalarımız"
+            onDark
+            titleStyle={{ color: "#fff", mixBlendMode: "difference" }}
+            style={{ marginBottom: 8 }}
+          />
         </div>
-      </div>
-      <div style={{ textAlign: "center", paddingBottom: 64 }}>
-        <span style={{ fontSize: 13, color: "var(--navy-200)", letterSpacing: "0.04em" }}>Resmi formalar yakında kulüp mağazasında · Üzerine gelin, kayma durur</span>
+        <div className="by-marquee">
+          <div className="by-marquee-track">
+            {loop.map((k, i) => (
+              <Jersey key={i} j={k} />
+            ))}
+          </div>
+        </div>
+        <div style={{ textAlign: "center", padding: "26px 0 48px" }}>
+          <span style={{ fontSize: 13, color: "#fff", mixBlendMode: "difference", letterSpacing: "0.04em" }}>Resmi formalar yakında kulüp mağazasında · Üzerine gelin, kayma durur</span>
+        </div>
       </div>
     </section>
   );
