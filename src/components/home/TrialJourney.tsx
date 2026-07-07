@@ -217,8 +217,8 @@ export function TrialJourney() {
       <section className="tj-cta">
         <span className="tj-star-bg">★</span>
         <div className="tj-cta-inner">
-          <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(28px,4vw,46px)", textTransform: "uppercase", color: "#fff", margin: 0, lineHeight: 1.02 }}>Yıldız adayınızı sahaya bekliyoruz</h2>
-          <p style={{ fontSize: 16, lineHeight: 1.6, color: "var(--navy-100)", maxWidth: 520, margin: "16px auto 28px" }}>Başvuru formunu doldurun, antrenörlerimiz ücretsiz deneme antrenmanı için sizinle iletişime geçsin.</p>
+          <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(28px,4vw,46px)", textTransform: "uppercase", color: "var(--navy-800)", margin: 0, lineHeight: 1.02 }}>Yıldız adayınızı sahaya bekliyoruz</h2>
+          <p style={{ fontSize: 16, lineHeight: 1.6, color: "var(--navy-600)", maxWidth: 520, margin: "16px auto 28px" }}>Başvuru formunu doldurun, antrenörlerimiz ücretsiz deneme antrenmanı için sizinle iletişime geçsin.</p>
           <Button as="a" href="/basvuru" variant="accent" size="lg" leftIcon={<Icon name="clipboard-list" size={18} />}>Ücretsiz Başvuru Formu</Button>
         </div>
       </section>

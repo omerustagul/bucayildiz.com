@@ -39,9 +39,9 @@ export function NotificationComposer({ teams, totalSubs }: { teams: Team[]; tota
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 560 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 560, padding: "22px" }}>
       <p style={{ margin: 0, fontSize: 13.5, color: "var(--text-muted)", lineHeight: 1.55 }}>
-        Toplam <strong style={{ color: "var(--text-strong)" }}>{totalSubs}</strong> abone cihaz.
+        Toplam <strong style={{ color: "var(--text-strong)" }}>{totalSubs}</strong> kullanıcı.
         KVKK: bildirim metnine sağlık/performans verisi yazmayın — genel tutun.
       </p>
 

@@ -59,3 +59,6 @@ backups/
 
 # kisisel Claude ayarlari (takim ayarlari .claude/settings.json ile gelir)
 .claude/settings.local.json
+
+# IDE
+.idea/
