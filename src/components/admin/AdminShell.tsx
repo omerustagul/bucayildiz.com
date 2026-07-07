@@ -19,6 +19,7 @@ const NAV: NavGroup[] = [
     items: [
       { href: "/admin/sporcular", label: "Sporcular", icon: "users", ready: true },
       { href: "/admin/performans", label: "Performans", icon: "heart-pulse", ready: true },
+      { href: "/admin/beslenme", label: "Beslenme", icon: "clipboard-list", ready: true },
       { href: "/admin/takimlar", label: "Takımlar", icon: "shield", ready: true },
       { href: "/admin/takvim-programi", label: "Takvim Programı", icon: "calendar-check", ready: true },
       { href: "/admin/antrenmanlar", label: "Antrenmanlar", icon: "dumbbell", ready: true },
