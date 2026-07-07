@@ -94,8 +94,9 @@ export function AdminShell({ user, children }: { user: { name: string; role: str
       {/* Mobile overlay */}
       {isMobile && mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.45)", zIndex: 55 }} />}
 
-      {/* Sidebar */}
+      {/* Sidebar — konum/animasyon CSS'te (.adm-sidebar): ilk boyamada doğru, flaş yok */}
       <aside
+        className={`adm-sidebar${mobileOpen ? " adm-sidebar-open" : ""}`}
         style={{
           width: isMobile ? 256 : collapsed ? 76 : 256,
           flex: "none",
@@ -103,14 +104,6 @@ export function AdminShell({ user, children }: { user: { name: string; role: str
           borderRight: "1px solid rgba(255,255,255,.07)",
           display: "flex",
           flexDirection: "column",
-          position: isMobile ? "fixed" : "sticky",
-          top: 0,
-          left: 0,
-          bottom: isMobile ? 0 : undefined,
-          height: "100vh",
-          zIndex: isMobile ? 60 : undefined,
-          transform: isMobile ? (mobileOpen ? "translateX(0)" : "translateX(-100%)") : "none",
-          transition: "transform var(--dur-base) var(--ease-out), width var(--dur-base) var(--ease-out)",
         }}
       >
         <Link
@@ -183,8 +176,8 @@ export function AdminShell({ user, children }: { user: { name: string; role: str
         </div>
       </aside>
 
-      {/* Main column */}
-      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+      {/* Main column — sidebar fixed; sol boşluk .adm-main (CSS), daraltmada inline */}
+      <div className="adm-main" style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", marginLeft: !isMobile && collapsed ? 76 : undefined }}>
         <header style={{ position: "sticky", top: 0, zIndex: 30, background: "rgba(255,255,255,.9)", backdropFilter: "blur(8px)", borderBottom: "1px solid var(--border-subtle)" }}>
           <div style={{ padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>

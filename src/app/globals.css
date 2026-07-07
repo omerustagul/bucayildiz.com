@@ -530,14 +530,29 @@ footer {
   .by-tap-ring, .by-icon-pop { animation: none; }
 }
 
-/* --- Sporcu paneli sidebar: konum/animasyon CSS'te (ilk boyamada doğru; JS flaşı yok) --- */
-.pl-sidebar { position: sticky; top: 0; height: 100vh; transition: transform var(--dur-base) var(--ease-out); }
+/* --- Panel/Admin sidebar'ları: HER ZAMAN fixed + tam ekran yüksekliği (100dvh).
+   Konum/animasyon CSS'te → ilk boyamada doğru, JS/hydration flaşı yok.
+   Yalnız nav içeriği scroll olur; alt buton (Çıkış) daima görünür. --- */
+.pl-sidebar, .adm-sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  height: 100vh; height: 100dvh;
+  z-index: 40;
+  transition: transform var(--dur-base) var(--ease-out), width var(--dur-base) var(--ease-out);
+}
+.pl-main { margin-left: 252px; }
+.adm-main { margin-left: 256px; transition: margin-left var(--dur-base) var(--ease-out); }
 .pl-menu-btn { display: none; }
 @media (max-width: 900px) {
-  .pl-sidebar { position: fixed; left: 0; top: 0; bottom: 0; z-index: 60; transform: translateX(-100%); }
-  .pl-sidebar.pl-sidebar-open { transform: translateX(0); }
+  .pl-sidebar, .adm-sidebar { z-index: 60; transform: translateX(-100%); }
+  .pl-sidebar.pl-sidebar-open, .adm-sidebar.adm-sidebar-open { transform: translateX(0); }
+  .pl-main, .adm-main { margin-left: 0 !important; }
   .pl-menu-btn { display: grid; }
 }
+
+/* --- Overlay/sekme scroll disiplini: lastik-bant ile sürüklenip "hareket etme" yok --- */
+body { overscroll-behavior-y: none; }
+.by-tabs { overscroll-behavior-x: contain; touch-action: pan-x; }
+.by-overlay-scroll { overscroll-behavior: contain; }
 
 /* --- Giriş kartı: mobilde kompakt --- */
 @media (max-width: 760px) {

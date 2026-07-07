@@ -72,7 +72,7 @@ export function PanelShell({ athlete, unreadCount = 0, children }: { athlete: At
             <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--gold-400)", marginTop: 3, fontWeight: 600 }}>Sporcu Paneli</div>
           </div>
         </div>
-        <nav style={{ padding: 12, display: "flex", flexDirection: "column", gap: 3, flex: 1 }}>
+        <nav className="by-scroll-on-dark" style={{ padding: 12, display: "flex", flexDirection: "column", gap: 3, flex: 1, overflowY: "auto", minHeight: 0 }}>
           {NAV.map((n) => {
             const on = pathname === n.href;
             const disabled = !n.ready;
@@ -112,8 +112,8 @@ export function PanelShell({ athlete, unreadCount = 0, children }: { athlete: At
         </div>
       </aside>
 
-      {/* Main */}
-      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+      {/* Main — sidebar fixed olduğundan sol boşluk .pl-main (CSS) ile açılır */}
+      <div className="pl-main" style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(255,255,255,.88)", backdropFilter: "blur(8px)", borderBottom: "1px solid var(--border-subtle)" }}>
           <div style={{ padding: "14px clamp(14px, 4vw, 32px)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
