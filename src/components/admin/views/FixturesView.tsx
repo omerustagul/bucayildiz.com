@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ViewHeader, Toolbar, Field } from "@/components/admin/kit";
@@ -186,11 +186,68 @@ function FixtureDrawer({ fx, teams, onClose }: { fx: FixtureRow | null; teams: T
   );
 }
 
+/** Mobil (<=560px) kart listesi — Table yerine; tıklayınca aynı Drawer açılır. */
+function FixtureCards({ rows, onOpen }: { rows: FixtureRow[]; onOpen: (r: FixtureRow) => void }) {
+  if (rows.length === 0) {
+    return (
+      <div style={{ padding: "40px 16px", textAlign: "center", color: "var(--ink-400)", fontSize: 14, background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)" }}>
+        Maç bulunamadı.
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {rows.map((r) => {
+        const home = r.isHome ? "Buca Yıldız" : r.opponent;
+        const away = r.isHome ? r.opponent : "Buca Yıldız";
+        const hs = r.isHome ? r.ourScore : r.oppScore;
+        const as = r.isHome ? r.oppScore : r.ourScore;
+        const finished = r.status === "finished";
+        return (
+          <button
+            key={r.id}
+            type="button"
+            onClick={() => onOpen(r)}
+            style={{ font: "inherit", textAlign: "left", cursor: "pointer", background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8, boxShadow: "var(--shadow-xs)" }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+              <Badge tone="outline">{r.competition}</Badge>
+              <span style={{ marginLeft: "auto", flex: "none" }}>
+                <Badge tone={STATUS[r.status]?.tone ?? "neutral"}>{STATUS[r.status]?.label ?? r.status}</Badge>
+              </span>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 8, fontWeight: 600, fontSize: 13.5 }}>
+              <span style={{ textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: home === "Buca Yıldız" ? "var(--navy-700)" : "var(--ink-700)" }}>{home}</span>
+              <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, background: "var(--ink-100)", borderRadius: "var(--radius-sm)", padding: "2px 9px", fontVariantNumeric: "tabular-nums" }}>
+                {finished ? `${hs ?? 0}–${as ?? 0}` : "vs"}
+              </span>
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: away === "Buca Yıldız" ? "var(--navy-700)" : "var(--ink-700)" }}>{away}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--ink-500)", minWidth: 0 }}>
+              <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, color: "var(--text-strong)", flex: "none" }}>{fmtDate(r.date)}</span>
+              {r.time && <span style={{ flex: "none" }}>{r.time}</span>}
+              {r.venue && <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>· {r.venue}</span>}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function FixturesView({ fixtures, teams }: { fixtures: FixtureRow[]; teams: TeamOpt[] }) {
   const [tab, setTab] = useState("all"); // takım filtresi: "all" | teamId
   const [statusFilter, setStatusFilter] = useState("all"); // all | upcoming | finished
   const [q, setQ] = useState("");
   const [drawer, setDrawer] = useState<{ fx: FixtureRow | null } | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 560px)");
+    const on = () => setIsMobile(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
 
   const rows = useMemo(
     () =>
@@ -272,7 +329,11 @@ export function FixturesView({ fixtures, teams }: { fixtures: FixtureRow[]; team
           />
         </div>
       </Toolbar>
-      <Table columns={cols} rows={rows} getRowKey={(r) => r.id} onRowClick={(r) => setDrawer({ fx: r })} empty="Maç bulunamadı." />
+      {isMobile ? (
+        <FixtureCards rows={rows} onOpen={(r) => setDrawer({ fx: r })} />
+      ) : (
+        <Table columns={cols} rows={rows} getRowKey={(r) => r.id} onRowClick={(r) => setDrawer({ fx: r })} empty="Maç bulunamadı." />
+      )}
       {drawer && <FixtureDrawer fx={drawer.fx} teams={teams} onClose={() => setDrawer(null)} />}
     </>
   );
