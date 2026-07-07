@@ -38,6 +38,8 @@ const schema = z.object({
   // Görünüm
   customCursor: z.boolean().default(false),
   cursorStyle: z.enum(["default", "star", "ball", "whistle"]).default("star"),
+  mobileNavAdmin: z.boolean().default(true),
+  mobileNavPanel: z.boolean().default(true),
 });
 
 const orNull = (v: string | undefined | null) => (v && v.trim() !== "" ? v.trim() : null);
@@ -71,6 +73,8 @@ export async function saveSettings(input: unknown): Promise<SettingsResult> {
     mailToAdmin: orNull(d.mailToAdmin),
     customCursor: d.customCursor,
     cursorStyle: d.cursorStyle,
+    mobileNavAdmin: d.mobileNavAdmin,
+    mobileNavPanel: d.mobileNavPanel,
   };
   // SMTP şifresi yalnızca yeni değer girilirse güncellenir.
   if (d.smtpPass && d.smtpPass.trim() !== "") data.smtpPass = d.smtpPass;

@@ -390,6 +390,8 @@ model SiteSetting {
   // Görünüm
   customCursor Boolean @default(false)
   cursorStyle  String  @default("star") // star | ball | whistle | default
+  mobileNavAdmin Boolean @default(true) // yönetim panelinde mobil alt gezinme çubuğu
+  mobileNavPanel Boolean @default(true) // sporcu panelinde mobil alt gezinme çubuğu
 
   updatedAt DateTime @updatedAt
 }

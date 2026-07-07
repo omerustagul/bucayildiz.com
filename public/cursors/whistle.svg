@@ -1,8 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-  <g fill="#0E2148" stroke="#ffffff" stroke-width="1" stroke-linejoin="round">
-    <rect x="3.5" y="13" width="10" height="6.5" rx="2.2"/>
-    <circle cx="18" cy="17" r="8.2"/>
-  </g>
-  <path d="M15.5,8.6 a3.2,3.2 0 0 1 5,0" fill="none" stroke="#0E2148" stroke-width="2.2" stroke-linecap="round"/>
-  <circle cx="18" cy="17" r="2.6" fill="#C9A227"/>
+  <defs>
+    <linearGradient id="metal" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#e8ebf0"/>
+      <stop offset="0.45" stop-color="#aeb6c2"/>
+      <stop offset="1" stop-color="#6e7684"/>
+    </linearGradient>
+    <linearGradient id="metalDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8d95a3"/>
+      <stop offset="1" stop-color="#4d5462"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="16" cy="29.2" rx="9" ry="1.8" fill="#000" opacity="0.16"/>
+  <circle cx="6.4" cy="7.2" r="3.1" fill="none" stroke="url(#metalDark)" stroke-width="1.8"/>
+  <path d="M8.4 8.6 L23.5 12.2 C24.6 12.5 24.6 14.0 23.5 14.3 L15.5 16.2 L10.0 12.4 Z"
+        fill="url(#metal)" stroke="#3c4350" stroke-width="1.1" stroke-linejoin="round"/>
+  <circle cx="14.2" cy="19.8" r="8.0" fill="url(#metal)" stroke="#3c4350" stroke-width="1.2"/>
+  <circle cx="12.6" cy="21.2" r="2.6" fill="#2b2f38"/>
+  <circle cx="11.9" cy="20.5" r="0.8" fill="#9aa2b0"/>
+  <path d="M20.4 15.1 L26.8 17.9 L25.4 20.6 L19.6 18.2 Z" fill="#2b2f38"/>
+  <path d="M9.0 15.4 A8 8 0 0 1 15.5 12.6 L15.9 14.4 A6.2 6.2 0 0 0 10.6 16.8 Z" fill="#ffffff" opacity="0.45"/>
+  <path d="M10.5 9.6 L20.5 12.0 L20.2 13.0 L10.8 10.7 Z" fill="#ffffff" opacity="0.4"/>
 </svg>

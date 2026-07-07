@@ -10,6 +10,7 @@ import { IconButton } from "@/components/ui/IconButton";
 import { panelLogout } from "@/app/panel/actions";
 import { InstallHint } from "@/components/panel/InstallHint";
 import { PageTransition } from "@/components/layout/PageTransition";
+import { MobileTabBar, type TabBarItem } from "@/components/ui/MobileTabBar";
 
 type Athlete = { name: string; teamName: string; number: number | null; position: string; photoUrl: string | null };
 
@@ -25,7 +26,16 @@ const NAV: { href: string; label: string; icon: IconName; ready?: boolean }[] = 
   { href: "/panel/profil", label: "Profil", icon: "user-round", ready: true },
 ];
 
-export function PanelShell({ athlete, unreadCount = 0, children }: { athlete: Athlete; unreadCount?: number; children: React.ReactNode }) {
+/** Mobil alt çubuk: önemli sayfalar (solda antrenman+performans, ortada genel bakış, sağda beslenme+maçlar). */
+const TABBAR_ITEMS: TabBarItem[] = [
+  { kind: "link", href: "/panel/antrenmanlar", label: "Antrenman", icon: "calendar-days" },
+  { kind: "link", href: "/panel/performans", label: "Performans", icon: "heart-pulse" },
+  { kind: "link", href: "/panel", label: "Genel Bakış", icon: "layout-dashboard" },
+  { kind: "link", href: "/panel/beslenme", label: "Beslenme", icon: "apple" },
+  { kind: "link", href: "/panel/maclar", label: "Maçlar", icon: "trophy" },
+];
+
+export function PanelShell({ athlete, unreadCount = 0, mobileNav = true, children }: { athlete: Athlete; unreadCount?: number; mobileNav?: boolean; children: React.ReactNode }) {
   const pathname = usePathname();
   const numberLabel = athlete.number != null ? `${athlete.number} Numara` : athlete.position;
   const title = NAV.find((n) => n.href === pathname)?.label ?? "Genel Bakış";
@@ -140,11 +150,13 @@ export function PanelShell({ athlete, unreadCount = 0, children }: { athlete: At
             </div>
           </div>
         </header>
-        <main style={{ padding: "24px clamp(14px, 4vw, 32px) 48px", display: "flex", flexDirection: "column", gap: 24, width: "100%" }}>
+        <main className={mobileNav ? "by-tabbar-pad" : undefined} style={{ padding: "24px clamp(14px, 4vw, 32px) 48px", display: "flex", flexDirection: "column", gap: 24, width: "100%" }}>
           <InstallHint />
           <PageTransition style={{ display: "flex", flexDirection: "column", gap: 24 }}>{children}</PageTransition>
         </main>
       </div>
+
+      {mobileNav && <MobileTabBar items={TABBAR_ITEMS} pathname={pathname} homeHref="/panel" />}
     </div>
   );
 }

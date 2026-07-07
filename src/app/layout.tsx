@@ -67,6 +67,10 @@ export const viewport: Viewport = {
   themeColor: "#0E2148",
   width: "device-width",
   initialScale: 1,
+  // İki parmak yakınlaştırma ve input odağında otomatik zoom kapalı —
+  // paneller uygulama gibi davranır (kullanıcı kararı, 2026-07-07).
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
 };
 

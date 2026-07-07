@@ -33,6 +33,8 @@ export default async function AyarlarPage() {
     mailToAdmin: str(s.mailToAdmin),
     customCursor: s.customCursor,
     cursorStyle: s.cursorStyle,
+    mobileNavAdmin: s.mobileNavAdmin,
+    mobileNavPanel: s.mobileNavPanel,
   };
 
   return (

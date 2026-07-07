@@ -15,6 +15,7 @@ export type SettingsFormValues = {
   metaTitle: string; metaDescription: string; ogImageUrl: string; keywords: string;
   smtpHost: string; smtpPort: string; smtpUser: string; mailFrom: string; mailToAdmin: string;
   customCursor: boolean; cursorStyle: string;
+  mobileNavAdmin: boolean; mobileNavPanel: boolean;
 };
 
 const TABS: { id: string; label: string; icon: IconName }[] = [
@@ -164,6 +165,24 @@ export function SettingsForm({ initial, smtpPassSet }: { initial: SettingsFormVa
             <p style={{ margin: 0, fontSize: 12, color: "var(--text-muted)" }}>
               İmleç tüm siteye uygulanır. Dokunmatik cihazlarda etkisi yoktur.
             </p>
+
+            <div style={{ height: 1, background: "var(--border-subtle)", margin: "6px 0" }} />
+
+            {/* Mobil alt gezinme çubukları */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+              <div>
+                <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 15, color: "var(--text-strong)" }}>Mobil Alt Menü — Yönetim Paneli</div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 3 }}>Mobil cihazlarda yönetim panelinin altında hızlı gezinme çubuğu göster.</div>
+              </div>
+              <Switch checked={v.mobileNavAdmin} onChange={(n) => set("mobileNavAdmin", n)} />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+              <div>
+                <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 15, color: "var(--text-strong)" }}>Mobil Alt Menü — Sporcu Paneli</div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 3 }}>Mobil cihazlarda sporcu panelinin altında hızlı gezinme çubuğu göster.</div>
+              </div>
+              <Switch checked={v.mobileNavPanel} onChange={(n) => set("mobileNavPanel", n)} />
+            </div>
           </div>
         )}
       </div>

@@ -560,3 +560,10 @@ body { overscroll-behavior-y: none; }
   .login-form-side h2 { font-size: 24px !important; }
   .login-card { width: min(440px, 100%) !important; }
 }
+
+/* --- Mobil alt gezinme çubuğu (yalnız <=900px) --- */
+.by-tabbar { display: none; }
+@media (max-width: 900px) {
+  .by-tabbar { display: block; }
+  .by-tabbar-pad { padding-bottom: calc(84px + env(safe-area-inset-bottom)) !important; }
+}
