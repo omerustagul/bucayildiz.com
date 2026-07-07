@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Panel } from "@/components/admin/kit";
 import { Badge } from "@/components/ui/Badge";
@@ -109,6 +110,8 @@ export function ScheduleCalendar({ teams, trainings, fixtures, todayYmd }: { tea
         </select>
       }
     >
+      {/* cal-container: container query — dar alanda hafta ızgarası dikey ajandaya döner (globals.css) */}
+      <div className="cal-container">
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
         <IconButton label="Önceki hafta" variant="outline" size="sm" onClick={() => { setAnchor((a) => addDays(a, -7)); setTip(null); }}><Icon name="chevron-down" size={16} style={{ transform: "rotate(90deg)" }} /></IconButton>
         <IconButton label="Sonraki hafta" variant="outline" size="sm" onClick={() => { setAnchor((a) => addDays(a, 7)); setTip(null); }}><Icon name="chevron-down" size={16} style={{ transform: "rotate(-90deg)" }} /></IconButton>
@@ -173,25 +176,30 @@ export function ScheduleCalendar({ teams, trainings, fixtures, todayYmd }: { tea
         <LegendDot color="var(--gold-600)" label="Bireysel Antrenman" />
         <LegendDot color="var(--red-600)" label="Maç (fikstürden otomatik)" />
       </div>
+      </div>
 
-      {tip && !isMobile && (
+      {/* Portal: PageTransition'ın transform'u position:fixed'ı kendine bağlar (containing
+          block); popover/sheet body'ye taşınarak gerçek viewport koordinatları kullanılır. */}
+      {tip && !isMobile && createPortal(
         <div
           onMouseEnter={cancelHide}
           onMouseLeave={scheduleHide}
           style={{ position: "fixed", left: tip.x, top: tip.y, transform: `translate(-50%, ${tip.up ? "-100%" : "0"})`, zIndex: 80, width: 300, maxWidth: "calc(100vw - 24px)" }}
         >
           <ProgramDetailCard item={tip.item} teams={teams} />
-        </div>
+        </div>,
+        document.body,
       )}
 
-      {sheet && isMobile && (
+      {sheet && isMobile && createPortal(
         <>
           <div onClick={closeSheet} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.45)", zIndex: 70 }} />
           <div role="dialog" aria-modal="true" aria-label="Program detayı" style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 71, maxHeight: "72vh", overflowY: "auto", borderRadius: "16px 16px 0 0", background: "var(--surface-card)", boxShadow: "var(--shadow-lg)", padding: "8px 0 22px" }}>
             <div style={{ width: 44, height: 4, borderRadius: 2, background: "var(--ink-200)", margin: "8px auto 10px" }} />
             <ProgramDetailCard item={sheet} teams={teams} plain />
           </div>
-        </>
+        </>,
+        document.body,
       )}
     </Panel>
   );
