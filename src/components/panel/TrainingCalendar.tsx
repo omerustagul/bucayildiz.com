@@ -4,19 +4,16 @@ import { useState } from "react";
 import { IconButton } from "@/components/ui/IconButton";
 import { Icon } from "@/lib/icons";
 
-export type CalTraining = { id: string; date: string; time: string; type: string; duration: number | null };
+export type CalTraining = { id: string; date: string; time: string; scope: string; duration: number | null };
 
 const MONTHS = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 const DOW = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 
-const TYPES: Record<string, { label: string; color: string; soft: string }> = {
-  Saha: { label: "Saha Antrenmanı", color: "var(--navy-600)", soft: "var(--navy-50)" },
-  Kondisyon: { label: "Kondisyon", color: "var(--gold-600)", soft: "var(--gold-100)" },
-  Taktik: { label: "Taktik", color: "var(--green-600)", soft: "var(--green-100)" },
-  Maç: { label: "Maç", color: "var(--red-600)", soft: "var(--red-100)" },
-  Bireysel: { label: "Bireysel", color: "var(--navy-400)", soft: "var(--ink-100)" },
+const SCOPES: Record<string, { label: string; color: string; soft: string }> = {
+  team: { label: "Takım Antrenmanı", color: "var(--navy-600)", soft: "var(--navy-50)" },
+  individual: { label: "Bireysel Antrenman", color: "var(--gold-600)", soft: "var(--gold-100)" },
 };
-const typeMeta = (t: string) => TYPES[t] ?? { label: t, color: "var(--navy-600)", soft: "var(--navy-50)" };
+const scopeMeta = (s: string) => SCOPES[s] ?? SCOPES.team;
 
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const parseYmd = (s: string) => {
@@ -28,14 +25,14 @@ const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.get
 const addMonths = (d: Date, n: number) => { const x = new Date(d); x.setMonth(x.getMonth() + n, 1); return x; };
 const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
-function EventChip({ time, type, compact }: { time: string; type: string; compact?: boolean }) {
-  const t = typeMeta(type);
+function EventChip({ time, scope, compact }: { time: string; scope: string; compact?: boolean }) {
+  const t = scopeMeta(scope);
   if (compact) {
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--ink-700)", overflow: "hidden", whiteSpace: "nowrap" }}>
         <span style={{ width: 6, height: 6, borderRadius: 2, background: t.color, flex: "none" }} />
         <span className="cal-chip-txt" style={{ fontVariantNumeric: "tabular-nums", color: "var(--ink-400)" }}>{time}</span>
-        <span className="cal-chip-txt" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{type}</span>
+        <span className="cal-chip-txt" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{t.label}</span>
       </div>
     );
   }
@@ -103,7 +100,7 @@ export function TrainingCalendar({ trainings, todayYmd, initialAnchor }: { train
                   </div>
                   <div className="cal-day-body" style={{ padding: 8, display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
                     {evs.length === 0 && <span style={{ margin: "auto", fontSize: 11, color: "var(--ink-300)" }}>—</span>}
-                    {evs.map((ev) => <EventChip key={ev.id} time={ev.time} type={ev.type} />)}
+                    {evs.map((ev) => <EventChip key={ev.id} time={ev.time} scope={ev.scope} />)}
                   </div>
                 </div>
               );
@@ -123,7 +120,7 @@ export function TrainingCalendar({ trainings, todayYmd, initialAnchor }: { train
                   <button key={i} className="cal-month-cell" onClick={() => { setAnchor(day); setView("week"); }} style={{ textAlign: "left", cursor: "pointer", font: "inherit", background: isToday ? "var(--navy-50)" : "var(--surface-card)", border: `1px solid ${isToday ? "var(--navy-300)" : "var(--border-subtle)"}`, borderRadius: "var(--radius-sm)", padding: "7px 8px", minHeight: 92, opacity: inMonth ? 1 : 0.42, display: "flex", flexDirection: "column", gap: 5 }}>
                     <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, fontSize: 14, color: isToday ? "var(--navy-700)" : "var(--text-strong)", fontVariantNumeric: "tabular-nums", alignSelf: "flex-start", background: isToday ? "var(--gold-300)" : "transparent", borderRadius: 3, padding: isToday ? "0 5px" : 0 }}>{day.getDate()}</span>
                     <div style={{ display: "flex", flexDirection: "column", gap: 3, overflow: "hidden" }}>
-                      {evs.slice(0, 2).map((ev) => <EventChip key={ev.id} time={ev.time} type={ev.type} compact />)}
+                      {evs.slice(0, 2).map((ev) => <EventChip key={ev.id} time={ev.time} scope={ev.scope} compact />)}
                       {evs.length > 2 && <span style={{ fontSize: 10.5, color: "var(--ink-400)", fontWeight: 600 }}>+{evs.length - 2} daha</span>}
                     </div>
                   </button>
@@ -134,7 +131,7 @@ export function TrainingCalendar({ trainings, todayYmd, initialAnchor }: { train
         )}
 
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 14 }}>
-          {Object.entries(TYPES).map(([k, t]) => (
+          {Object.entries(SCOPES).map(([k, t]) => (
             <span key={k} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--ink-500)" }}>
               <span style={{ width: 10, height: 10, borderRadius: 3, background: t.color }} />{t.label}
             </span>

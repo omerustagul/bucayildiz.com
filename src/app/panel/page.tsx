@@ -17,7 +17,7 @@ export default async function PanelDashboard() {
   });
   if (!athlete) return null;
 
-  const trainings: CalTraining[] = athlete.team.trainings.map((t) => ({ id: t.id, date: t.date, time: t.time, type: t.type, duration: t.duration }));
+  const trainings: CalTraining[] = athlete.team.trainings.map((t) => ({ id: t.id, date: t.date, time: t.time, scope: t.scope, duration: t.duration }));
 
   const now = new Date();
   const todayYmd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
