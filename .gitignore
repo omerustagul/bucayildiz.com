@@ -53,3 +53,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# yerel veritabani yedekleri (asla commit edilmez)
+backups/
+
+# kisisel Claude ayarlari (takim ayarlari .claude/settings.json ile gelir)
+.claude/settings.local.json
