@@ -8,7 +8,7 @@ gereken adımları içerir. KVKK gereği veritabanı ve yedekler Türkiye'de tut
 ## 1. Mimari özet
 
 - **Uygulama:** Next.js 16 (Node.js 20+ çalışma zamanı)
-- **Veritabanı:** PostgreSQL 16 (dev: yerel Homebrew `:5433`, prod: Türkiye)
+- **Veritabanı:** PostgreSQL (dev: bu makinede native PG18 `:5432`, prod: Türkiye)
 - **ORM:** Prisma 6 — şema tek (`prisma/schema.prisma`), migration'lar
   `prisma/migrations/` altında sürümlenir.
 - **Dosya yükleme:** Şu an yerel disk (`public/uploads`). Prod'da Türkiye'deki
@@ -19,15 +19,12 @@ gereken adımları içerir. KVKK gereği veritabanı ve yedekler Türkiye'de tut
 
 ## 2. Yerel geliştirme (dev)
 
-PostgreSQL yerelde Homebrew ile **5433** portunda çalışır (5432'deki başka bir
-Postgres ile çakışmamak için).
+Bu makinede (Windows) PostgreSQL 18 **native** olarak **5432** portunda çalışır
+(Docker/5433 kullanılmıyor — Docker Desktop bu makinede bozuk).
 
 ```bash
-# Postgres servisi (girişte otomatik başlar)
-brew services start postgresql@16
-
-# Bağlantı testi
-pg_isready -h 127.0.0.1 -p 5433
+# Bağlantı testi (PG18 bin dizini PATH'te ise)
+pg_isready -h 127.0.0.1 -p 5432
 
 # Şema + örnek veri
 npm run db:migrate     # bekleyen migration'ları uygular
@@ -37,8 +34,10 @@ npm run dev            # http://localhost:3000
 
 Dev veritabanı bağlantısı (`.env`):
 ```
-DATABASE_URL="postgresql://bucayildiz:bucayildiz_dev@127.0.0.1:5433/bucayildiz?schema=public"
+DATABASE_URL="postgresql://bucayildiz:bucayildiz_dev@127.0.0.1:5432/bucayildiz?schema=public"
 ```
+
+> Not: eski dokümanlardaki "Homebrew :5433" macOS ortamına aitti; artık geçerli değil.
 
 Faydalı komutlar:
 | Komut | İş |
