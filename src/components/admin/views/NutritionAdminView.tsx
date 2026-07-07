@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ViewHeader, Panel, Field, StatTile } from "@/components/admin/kit";
 import { TextInput, TextArea, Drawer, Modal } from "@/components/admin/controls";
-import { Select } from "@/components/ui/Select";
+import { AthletePickerModal } from "@/components/admin/AthletePickerModal";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
@@ -89,14 +89,9 @@ export function NutritionAdminView({
   mealLogs: NMealLog[];
   todayYmd: string;
 }) {
-  const [teamFilter, setTeamFilter] = useState<string>("all");
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  const visibleAthletes = useMemo(
-    () => (teamFilter === "all" ? athletes : athletes.filter((a) => a.teamId === teamFilter)),
-    [athletes, teamFilter],
-  );
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const athletesWithActivePlan = useMemo(() => {
     const s = new Set<string>();
@@ -161,20 +156,14 @@ export function NutritionAdminView({
       {!selectedAthlete ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 18, minWidth: 0 }}>
           {/* Hızlı sporcu seçimi — programı olan sporcuya da rapordan tek adımda gidilir */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-600)" }}>Sporcu seç:</span>
-            <select
-              value=""
-              onChange={(e) => { if (e.target.value) setSelectedAthleteId(e.target.value); }}
-              style={{ font: "inherit", fontSize: 13.5, padding: "8px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--ink-200)", background: "#fff", color: "var(--ink-700)", minWidth: 220 }}
+          <div>
+            <Button
+              variant="secondary"
+              leftIcon={<Icon name="users" size={16} />}
+              onClick={() => setPickerOpen(true)}
             >
-              <option value="">Sporcu seçiniz…</option>
-              {athletes.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name} — {teamNameById.get(a.teamId) ?? ""}
-                </option>
-              ))}
-            </select>
+              Sporcu Seç
+            </Button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
             <StatTile label="Toplam Sporcu" value={athletes.length} icon="users" accent />
@@ -248,84 +237,47 @@ export function NutritionAdminView({
           </Panel>
         </div>
       ) : (
-        <div className="hp-grid-2" style={{ display: "grid", gridTemplateColumns: "380px 1fr", gap: 18, alignItems: "start" }}>
-          <Panel title="Sporcu">
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <Select
-                label="Takım"
-                options={[{ value: "all", label: "Tüm Takımlar" }, ...teams.map((t) => ({ value: t.id, label: t.name }))]}
-                value={teamFilter}
-                onChange={(e) => setTeamFilter(e.target.value)}
-              />
-              <div style={{ maxHeight: 460, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
-                {visibleAthletes.length === 0 && (
-                  <span style={{ padding: 8, fontSize: 13, color: "var(--ink-400)" }}>Bu takımda sporcu bulunmuyor.</span>
-                )}
-                {visibleAthletes.map((a) => {
-                  const on = a.id === selectedAthleteId;
-                  const hasActive = athletesWithActivePlan.has(a.id);
-                  return (
-                    <button
-                      key={a.id}
-                      type="button"
-                      onClick={() => setSelectedAthleteId(on ? null : a.id)}
-                      style={{
-                        font: "inherit",
-                        textAlign: "left",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        padding: "10px 11px",
-                        borderRadius: "var(--radius-sm)",
-                        border: "none",
-                        background: on ? "var(--navy-50)" : "transparent",
-                        color: on ? "var(--navy-800)" : "var(--ink-700)",
-                        fontWeight: on ? 600 : 500,
-                        fontSize: 13.5,
-                      }}
-                    >
-                      <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name}</span>
-                      {hasActive && (
-                        <span
-                          title="Aktif programı var"
-                          style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--gold-500)", flex: "none" }}
-                        />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </Panel>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
-            <div>
-              <Button
-                variant="secondary"
-                size="sm"
-                leftIcon={<Icon name="arrow-left" size={14} />}
-                onClick={() => setSelectedAthleteId(null)}
-              >
-                Rapora Dön
-              </Button>
-            </div>
-            {athletePlans.length === 0 ? (
-              <div style={{ padding: "44px 16px", textAlign: "center", color: "var(--ink-400)", fontSize: 14, background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)" }}>
-                Bu sporcuya ait program yok.
-              </div>
-            ) : (
-              athletePlans.map((p) => (
-                <PlanCard key={p.id} plan={p} mealLogs={mealLogs.filter((l) => l.athleteId === p.athleteId)} todayYmd={todayYmd} />
-              ))
-            )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<Icon name="arrow-left" size={14} />}
+              onClick={() => setSelectedAthleteId(null)}
+            >
+              Rapora Dön
+            </Button>
+            <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 700, fontSize: 15, color: "var(--text-strong)" }}>
+              {selectedAthlete.name} <span style={{ fontWeight: 500, color: "var(--ink-400)" }}>— {teamNameById.get(selectedAthlete.teamId) ?? ""}</span>
+            </span>
+            <Button variant="ghost" size="sm" onClick={() => setPickerOpen(true)}>
+              Değiştir
+            </Button>
           </div>
+          {athletePlans.length === 0 ? (
+            <div style={{ padding: "44px 16px", textAlign: "center", color: "var(--ink-400)", fontSize: 14, background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)" }}>
+              Bu sporcuya ait program yok.
+            </div>
+          ) : (
+            athletePlans.map((p) => (
+              <PlanCard key={p.id} plan={p} mealLogs={mealLogs.filter((l) => l.athleteId === p.athleteId)} todayYmd={todayYmd} />
+            ))
+          )}
         </div>
       )}
 
       {drawerOpen && selectedAthleteId && (
         <PlanDrawer mode="create" athleteId={selectedAthleteId} onClose={() => setDrawerOpen(false)} />
       )}
+
+      <AthletePickerModal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        teams={teams}
+        athletes={athletes}
+        mode="single"
+        onSelect={(id) => setSelectedAthleteId(id)}
+      />
     </>
   );
 }

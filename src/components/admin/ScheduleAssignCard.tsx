@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Panel, Field } from "@/components/admin/kit";
 import { TextInput, TextArea } from "@/components/admin/controls";
+import { AthletePickerModal } from "@/components/admin/AthletePickerModal";
 import { Select } from "@/components/ui/Select";
 import { Switch } from "@/components/ui/Switch";
 import { Badge } from "@/components/ui/Badge";
@@ -38,16 +39,22 @@ export function ScheduleAssignCard({ teams, athletes, fixtures }: { teams: STeam
   const [notify, setNotify] = useState(true);
   const [selFx, setSelFx] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const teamAthletes = useMemo(() => athletes.filter((a) => a.teamId === team), [athletes, team]);
+  const currentTeam = useMemo(() => teams.filter((t) => t.id === team), [teams, team]);
   const fx = fixtures.find((f) => f.id === selFx) ?? null;
 
-  const toggleAthlete = (id: string) =>
+  const selectedAthletes = useMemo(
+    () => teamAthletes.filter((a) => selAthletes.has(a.id)),
+    [teamAthletes, selAthletes],
+  );
+
+  const removeAthlete = (id: string) =>
     setSelAthletes((s) => {
       const n = new Set(s);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
+      n.delete(id);
       return n;
     });
   const setDrill = (i: number, v: string) => setDrills((ds) => ds.map((d, j) => (j === i ? v : d)));
@@ -108,38 +115,30 @@ export function ScheduleAssignCard({ teams, athletes, fixtures }: { teams: STeam
             <Select label="Takım" required options={teams.map((t) => ({ value: t.id, label: t.name }))} value={team} onChange={(e) => { setTeam(e.target.value); setSelAthletes(new Set()); }} />
             {kind === "individual" && (
               <Field label="Sporcular" required>
-                <div style={{ maxHeight: 190, overflowY: "auto", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", padding: 6, display: "flex", flexDirection: "column", gap: 2 }}>
-                  {teamAthletes.length === 0 && <span style={{ padding: 8, fontSize: 13, color: "var(--ink-400)" }}>Bu takımda sporcu bulunmuyor.</span>}
-                  {teamAthletes.map((a) => (
-                    <label key={a.id} style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13.5, padding: "7px 9px", borderRadius: "var(--radius-sm)", cursor: "pointer", background: selAthletes.has(a.id) ? "var(--navy-50)" : "transparent", color: "var(--ink-700)" }}>
-                      <input type="checkbox" checked={selAthletes.has(a.id)} onChange={() => toggleAthlete(a.id)} />
-                      {a.name}
-                    </label>
-                  ))}
-                </div>
-                {/* Sayaç + kısayollar: listenin altında tek satır, kısayollar sağa yaslı */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                  <span style={{ fontSize: 12.5, color: "var(--ink-400)" }}>{selAthletes.size} sporcu seçili</span>
-                  {teamAthletes.length > 0 && (
-                    <div style={{ display: "flex", gap: 14 }}>
-                      <button
-                        type="button"
-                        onClick={() => setSelAthletes(new Set(teamAthletes.map((a) => a.id)))}
-                        style={{ font: "inherit", cursor: "pointer", border: "none", background: "none", padding: 0, fontSize: 12.5, fontWeight: 600, color: "var(--navy-700)" }}
+                <Button variant="secondary" fullWidth leftIcon={<Icon name="users" size={16} />} onClick={() => setPickerOpen(true)}>
+                  Sporcu Seç
+                </Button>
+                <span style={{ fontSize: 12.5, color: "var(--ink-400)" }}>{selAthletes.size} sporcu seçili</span>
+                {selAthletes.size > 0 && selAthletes.size <= 6 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {selectedAthletes.map((a) => (
+                      <span
+                        key={a.id}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, maxWidth: 200, padding: "5px 6px 5px 10px", borderRadius: "var(--radius-pill)", background: "var(--navy-50)", color: "var(--navy-800)", fontSize: 12.5, fontWeight: 600 }}
                       >
-                        Tümünü Seç
-                      </button>
-                      <button
-                        type="button"
-                        disabled={selAthletes.size === 0}
-                        onClick={() => setSelAthletes(new Set())}
-                        style={{ font: "inherit", cursor: selAthletes.size ? "pointer" : "default", border: "none", background: "none", padding: 0, fontSize: 12.5, fontWeight: 600, color: selAthletes.size ? "var(--ink-500)" : "var(--ink-300)" }}
-                      >
-                        Seçimi Temizle
-                      </button>
-                    </div>
-                  )}
-                </div>
+                        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeAthlete(a.id)}
+                          aria-label={`${a.name} seçimini kaldır`}
+                          style={{ font: "inherit", cursor: "pointer", border: "none", background: "none", padding: 0, display: "inline-flex", color: "var(--navy-500)" }}
+                        >
+                          <Icon name="x" size={12} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </Field>
             )}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -181,6 +180,16 @@ export function ScheduleAssignCard({ teams, athletes, fixtures }: { teams: STeam
           </>
         )}
       </div>
+
+      <AthletePickerModal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        teams={currentTeam}
+        athletes={teamAthletes}
+        mode="multi"
+        selectedIds={[...selAthletes]}
+        onApply={(ids) => setSelAthletes(new Set(ids))}
+      />
     </Panel>
   );
 }
