@@ -122,6 +122,9 @@ model Athlete {
   pushSubs     PushSubscription[]
   payments     Payment[]
   trainingAttendance TrainingAttendance[]
+  assignments        AthleteAssignment[]
+  nutritionPlans     NutritionPlan[]
+  mealLogs           MealLog[]
   createdAt    DateTime @default(now())
 
   @@index([teamId])
@@ -407,4 +410,74 @@ model Payment {
 
   @@index([athleteId])
   @@index([status])
+}
+
+/// Sporcuya atanan içerik: mesaj/direktif veya doküman.
+model AthleteAssignment {
+  id        String    @id @default(cuid())
+  athleteId String
+  athlete   Athlete   @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  kind      String    @default("message") // message | document
+  title     String
+  body      String    @default("")
+  fileUrl   String? // doküman (storage.ts üzerinden)
+  readAt    DateTime? // sporcu ilk görüntülediğinde
+  createdAt DateTime  @default(now())
+
+  @@index([athleteId, createdAt])
+}
+
+/// Beslenme programı — sporcuya atanır; öğünler günlük şablondur.
+/// KVKK: öğün günlüğü sağlık-ilişkili veridir; görünürlük admin + sporcunun kendisi.
+model NutritionPlan {
+  id        String          @id @default(cuid())
+  athleteId String
+  athlete   Athlete         @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  title     String
+  startDate String // "YYYY-MM-DD"
+  endDate   String? // boş = açık uçlu
+  notes     String          @default("")
+  active    Boolean         @default(true)
+  meals     NutritionMeal[]
+  createdAt DateTime        @default(now())
+
+  @@index([athleteId, active])
+}
+
+/// Program öğünü (günlük şablon satırı) + hedef makrolar (opsiyonel).
+model NutritionMeal {
+  id      String        @id @default(cuid())
+  planId  String
+  plan    NutritionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  name    String // Kahvaltı | Ara Öğün | Öğle | Akşam | ...
+  time    String        @default("") // "08:00"
+  content String        @default("") // ne yenecek (serbest metin)
+  kcal    Int? // hedef makrolar
+  protein Int? // gram
+  carbs   Int?
+  fat     Int?
+  sort    Int           @default(0)
+  logs    MealLog[]
+
+  @@index([planId])
+}
+
+/// Sporcunun öğün günlüğü — öğün+gün başına TEK kayıt (upsert).
+model MealLog {
+  id        String        @id @default(cuid())
+  mealId    String
+  meal      NutritionMeal @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  athleteId String
+  athlete   Athlete       @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  date      String // "YYYY-MM-DD"
+  photoUrl  String? // öğün fotoğrafı
+  note      String        @default("")
+  kcal      Int? // gerçekleşen (opsiyonel)
+  protein   Int?
+  carbs     Int?
+  fat       Int?
+  createdAt DateTime      @default(now())
+
+  @@unique([mealId, athleteId, date])
+  @@index([athleteId, date])
 }
