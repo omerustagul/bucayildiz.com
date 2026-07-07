@@ -114,11 +114,12 @@ export function TrainingView({ teams, trainings }: { teams: TeamLite[]; training
 
         {/* Weekly plan */}
         <Panel title={`Haftalık Plan — ${teamName}`} action={<Badge tone="gold">Bu takım</Badge>}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10 }}>
+          <div className="cal-container">
+          <div className="cal-week-grid" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10 }}>
             {DOW.map((d, i) => (
-              <div key={d} style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", overflow: "hidden", minHeight: 150, display: "flex", flexDirection: "column" }}>
-                <div style={{ padding: "8px 10px", background: "var(--ink-50)", borderBottom: "1px solid var(--border-subtle)", fontSize: 11.5, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--ink-500)", textAlign: "center" }}>{d}</div>
-                <div style={{ padding: 7, display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
+              <div key={d} className="cal-day" style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", overflow: "hidden", minHeight: 150, display: "flex", flexDirection: "column" }}>
+                <div className="cal-day-head" style={{ padding: "8px 10px", background: "var(--ink-50)", borderBottom: "1px solid var(--border-subtle)", fontSize: 11.5, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--ink-500)", textAlign: "center" }}>{d}</div>
+                <div className="cal-day-body" style={{ padding: 7, display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
                   {!weekly[i]?.length && <div style={{ margin: "auto", fontSize: 11, color: "var(--ink-300)" }}>—</div>}
                   {weekly[i]?.map((s) => (
                     <div key={s.id} style={{ padding: "7px 8px", borderRadius: "var(--radius-sm)", background: "var(--surface-card)", borderLeft: `3px solid ${typeColor(s.type)}`, boxShadow: "var(--shadow-xs)" }}>
@@ -130,6 +131,7 @@ export function TrainingView({ teams, trainings }: { teams: TeamLite[]; training
                 </div>
               </div>
             ))}
+          </div>
           </div>
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 14 }}>
             {TYPE_META.map((t) => (

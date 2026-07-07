@@ -43,6 +43,10 @@ yarn-error.log*
 # uploaded media (dev local storage)
 /public/uploads
 
+# geçici / çalışma alanı (commit edilmez)
+/silinecek
+/.playwright-mcp
+
 # vercel
 .vercel
 

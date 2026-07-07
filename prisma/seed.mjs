@@ -289,7 +289,7 @@ const ardaC = await prisma.athlete.findFirst({ where: { name: "Arda Yılmaz" } }
 if (ardaC) {
   const existing = await prisma.consentRecord.count({ where: { athleteId: ardaC.id } });
   if (existing === 0) {
-    for (const d of consentDocs) {
+    for (const d of CONSENT_DOCS) {
       await prisma.consentRecord.create({
         data: {
           documentKey: d.key,

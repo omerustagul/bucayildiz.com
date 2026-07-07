@@ -34,8 +34,8 @@ function EventChip({ time, type, compact }: { time: string; type: string; compac
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--ink-700)", overflow: "hidden", whiteSpace: "nowrap" }}>
         <span style={{ width: 6, height: 6, borderRadius: 2, background: t.color, flex: "none" }} />
-        <span style={{ fontVariantNumeric: "tabular-nums", color: "var(--ink-400)" }}>{time}</span>
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{type}</span>
+        <span className="cal-chip-txt" style={{ fontVariantNumeric: "tabular-nums", color: "var(--ink-400)" }}>{time}</span>
+        <span className="cal-chip-txt" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{type}</span>
       </div>
     );
   }
@@ -75,7 +75,7 @@ export function TrainingCalendar({ trainings, todayYmd, initialAnchor }: { train
         <span style={{ width: 18, height: 2, background: "var(--gold-500)" }} />
         <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 18, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--ink-600)", margin: 0 }}>Program Takvimi</h2>
       </div>
-      <div style={{ background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)", padding: 20 }}>
+      <div className="cal-container" style={{ background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)", padding: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap", marginBottom: 18 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <IconButton label="Önceki" variant="outline" size="sm" onClick={() => go(-1)}><Icon name="chevron-down" size={16} style={{ transform: "rotate(90deg)" }} /></IconButton>
@@ -91,17 +91,17 @@ export function TrainingCalendar({ trainings, todayYmd, initialAnchor }: { train
         </div>
 
         {view === "week" ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10 }}>
+          <div className="cal-week-grid" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10 }}>
             {weekDays.map((day, i) => {
               const isToday = sameDay(day, today);
               const evs = eventsFor(day);
               return (
-                <div key={i} style={{ background: isToday ? "var(--navy-50)" : "var(--surface-card)", border: `1px solid ${isToday ? "var(--navy-300)" : "var(--border-subtle)"}`, borderRadius: "var(--radius-md)", overflow: "hidden", minHeight: 188, display: "flex", flexDirection: "column" }}>
-                  <div style={{ padding: "8px 10px", borderBottom: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", justifyContent: "space-between", background: isToday ? "var(--navy-700)" : "transparent" }}>
+                <div key={i} className="cal-day" style={{ background: isToday ? "var(--navy-50)" : "var(--surface-card)", border: `1px solid ${isToday ? "var(--navy-300)" : "var(--border-subtle)"}`, borderRadius: "var(--radius-md)", overflow: "hidden", minHeight: 188, display: "flex", flexDirection: "column" }}>
+                  <div className="cal-day-head" style={{ padding: "8px 10px", borderBottom: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", justifyContent: "space-between", background: isToday ? "var(--navy-700)" : "transparent" }}>
                     <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: isToday ? "#fff" : "var(--ink-400)" }}>{DOW[i]}</span>
                     <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, fontSize: 16, color: isToday ? "var(--gold-400)" : "var(--text-strong)", fontVariantNumeric: "tabular-nums" }}>{day.getDate()}</span>
                   </div>
-                  <div style={{ padding: 8, display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
+                  <div className="cal-day-body" style={{ padding: 8, display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
                     {evs.length === 0 && <span style={{ margin: "auto", fontSize: 11, color: "var(--ink-300)" }}>—</span>}
                     {evs.map((ev) => <EventChip key={ev.id} time={ev.time} type={ev.type} />)}
                   </div>
@@ -114,13 +114,13 @@ export function TrainingCalendar({ trainings, todayYmd, initialAnchor }: { train
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, marginBottom: 6 }}>
               {DOW.map((d) => <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--ink-400)", padding: "2px 0" }}>{d}</div>)}
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gridAutoRows: "1fr", gap: 6 }}>
+            <div className="cal-month-grid" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gridAutoRows: "1fr", gap: 6 }}>
               {monthCells.map((day, i) => {
                 const inMonth = day.getMonth() === anchor.getMonth();
                 const isToday = sameDay(day, today);
                 const evs = eventsFor(day);
                 return (
-                  <button key={i} onClick={() => { setAnchor(day); setView("week"); }} style={{ textAlign: "left", cursor: "pointer", font: "inherit", background: isToday ? "var(--navy-50)" : "var(--surface-card)", border: `1px solid ${isToday ? "var(--navy-300)" : "var(--border-subtle)"}`, borderRadius: "var(--radius-sm)", padding: "7px 8px", minHeight: 92, opacity: inMonth ? 1 : 0.42, display: "flex", flexDirection: "column", gap: 5 }}>
+                  <button key={i} className="cal-month-cell" onClick={() => { setAnchor(day); setView("week"); }} style={{ textAlign: "left", cursor: "pointer", font: "inherit", background: isToday ? "var(--navy-50)" : "var(--surface-card)", border: `1px solid ${isToday ? "var(--navy-300)" : "var(--border-subtle)"}`, borderRadius: "var(--radius-sm)", padding: "7px 8px", minHeight: 92, opacity: inMonth ? 1 : 0.42, display: "flex", flexDirection: "column", gap: 5 }}>
                     <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, fontSize: 14, color: isToday ? "var(--navy-700)" : "var(--text-strong)", fontVariantNumeric: "tabular-nums", alignSelf: "flex-start", background: isToday ? "var(--gold-300)" : "transparent", borderRadius: 3, padding: isToday ? "0 5px" : 0 }}>{day.getDate()}</span>
                     <div style={{ display: "flex", flexDirection: "column", gap: 3, overflow: "hidden" }}>
                       {evs.slice(0, 2).map((ev) => <EventChip key={ev.id} time={ev.time} type={ev.type} compact />)}

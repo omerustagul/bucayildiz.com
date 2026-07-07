@@ -1,0 +1,36 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .agents/hooks/block-protected-paths.mjs",
+            "timeout": 15,
+            "statusMessage": "Korumalı klasör kontrolü..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .agents/hooks/lint-on-write.mjs",
+            "timeout": 120,
+            "statusMessage": "ESLint çalışıyor..."
+          },
+          {
+            "type": "command",
+            "command": "node .agents/hooks/test-on-change.mjs",
+            "timeout": 300,
+            "statusMessage": "İlgili testler çalışıyor..."
+          }
+        ]
+      }
+    ]
+  }
+}

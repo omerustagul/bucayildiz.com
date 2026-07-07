@@ -413,3 +413,63 @@ footer {
     background-position: center;
   }
 }
+
+/* ============================================================
+   Haftalık antrenman takvimi — responsive (panel + admin).
+   Container query: takvim /panel'de tam genişlik, /admin'de 380px'lik
+   formun yanında dar render edilir; viewport yerine KENDİ genişliğine
+   göre daralır. Dar kapta hafta görünümü tek sütunlu ajandaya döner
+   (gün başlığı solda dikey şerit), ay görünümü kompaktlaşır ve chip
+   metinleri gizlenip renkli nokta kalır. !important inline stilleri ezer.
+   ============================================================ */
+.cal-container {
+  container-type: inline-size;
+}
+
+@container (max-width: 640px) {
+  .cal-week-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .cal-day {
+    flex-direction: row !important;
+    min-height: 56px !important;
+  }
+
+  .cal-day-head {
+    flex-direction: column !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    width: 64px;
+    flex: none;
+    border-bottom: none !important;
+    border-right: 1px solid var(--border-subtle);
+    text-align: center;
+  }
+
+  .cal-day-body {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .cal-day-body > * {
+    flex: none;
+  }
+
+  .cal-month-grid {
+    gap: 4px !important;
+  }
+
+  .cal-month-cell {
+    min-height: 56px !important;
+    padding: 5px 6px !important;
+  }
+
+  .cal-chip-txt {
+    display: none !important;
+  }
+}
