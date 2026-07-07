@@ -316,10 +316,12 @@ export function FixturesView({ fixtures, teams }: { fixtures: FixtureRow[]; team
         }
         tabs={<Tabs tabs={tabs} value={tab} onChange={setTab} />}
       />
-      <Toolbar>
-        <SearchBox placeholder="Rakip / lig ara…" value={q} onChange={setQ} />
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 13, color: "var(--ink-400)", whiteSpace: "nowrap" }}>{rows.length} maç</span>
+      <Toolbar style={{ flexWrap: "nowrap" }}>
+        <div style={{ flex: "1 1 140px", minWidth: 120, maxWidth: 280 }}>
+          <SearchBox placeholder="Rakip / lig ara…" value={q} onChange={setQ} width="100%" />
+        </div>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, flex: "none" }}>
+          <span className="fx-count" style={{ fontSize: 13, color: "var(--ink-400)", whiteSpace: "nowrap" }}>{rows.length} maç</span>
           <Select
             options={[{ value: "all", label: "Tümü" }, { value: "upcoming", label: "Yaklaşan" }, { value: "finished", label: "Tamamlanan" }]}
             value={statusFilter}

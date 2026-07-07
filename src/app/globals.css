@@ -506,3 +506,8 @@ footer {
 .by-tabs { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .by-tabs::-webkit-scrollbar { display: none; }
 .by-tabs [role="tab"] { white-space: nowrap; flex: none; }
+
+/* Fikstür araç çubuğu: dar ekranda maç sayacı gizlenir, arama + filtre tek satırda kalır */
+@media (max-width: 560px) {
+  .fx-count { display: none; }
+}

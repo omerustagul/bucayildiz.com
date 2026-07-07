@@ -7,13 +7,17 @@ import { IconButton } from "@/components/ui/IconButton";
 import { Icon } from "@/lib/icons";
 import { statusMeta } from "@/lib/trainingMeta";
 import { useOverlayDismiss } from "@/components/ui/useOverlayDismiss";
+import { FullScreenCalendar, type FSEvent } from "@/components/ui/FullScreenCalendar";
 
 export type CalDrill = { id: string; text: string; done: boolean };
 export type CalTraining = {
   id: string; date: string; time: string; scope: string; duration: number | null;
   status: string; pitch: string; notes: string; drills: CalDrill[];
 };
-export type CalFixture = { id: string; competition: string; opponent: string; isHome: boolean; date: string; time: string; venue: string };
+export type CalFixture = {
+  id: string; competition: string; opponent: string; isHome: boolean; date: string; time: string;
+  venue: string; status: string; ourScore: number | null; oppScore: number | null;
+};
 
 const MONTHS = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 const DOW = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
@@ -89,12 +93,17 @@ function EventDetailCard({ ev, plain }: { ev: CalEvent; plain?: boolean }) {
           <span style={{ marginLeft: "auto" }}><Badge tone="gold">{f.isHome ? "Ev Sahibi" : "Deplasman"}</Badge></span>
         </div>
         <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-800)", marginBottom: 6 }}>
-          {f.isHome ? `Buca Yıldız – ${f.opponent}` : `${f.opponent} – Buca Yıldız`}
+          {f.status === "finished"
+            ? (f.isHome
+                ? `Buca Yıldız ${f.ourScore ?? "-"}–${f.oppScore ?? "-"} ${f.opponent}`
+                : `${f.opponent} ${f.oppScore ?? "-"}–${f.ourScore ?? "-"} Buca Yıldız`)
+            : (f.isHome ? `Buca Yıldız – ${f.opponent}` : `${f.opponent} – Buca Yıldız`)}
         </div>
         <div style={metaRow}>
           <span>{f.competition}</span>
           <span>{fmtDate(f.date)}{f.time ? ` · ${f.time}` : ""}</span>
           {f.venue && <span>{f.venue}</span>}
+          {f.status === "finished" && <span>Tamamlandı</span>}
         </div>
       </div>
     );
@@ -144,6 +153,7 @@ export function TrainingCalendar({ trainings, fixtures = [], todayYmd, initialAn
   const [isMobile, setIsMobile] = useState(false);
   const [tip, setTip] = useState<{ ev: CalEvent; x: number; y: number; up: boolean } | null>(null);
   const [sheet, setSheet] = useState<CalEvent | null>(null);
+  const [fullOpen, setFullOpen] = useState(false);
   const hideTimer = useRef<number | null>(null);
   const today = parseYmd(todayYmd);
 
@@ -193,6 +203,34 @@ export function TrainingCalendar({ trainings, fixtures = [], todayYmd, initialAn
     else show(ev, e.currentTarget);
   };
 
+  // Büyük takvim için tarih → olay haritası.
+  const fsEvents: Record<string, FSEvent[]> = {};
+  for (const [date, list] of Object.entries(byDate)) {
+    fsEvents[date] = list.map((ev) => {
+      if (ev.kind === "training") {
+        const sc = scopeMeta(ev.t.scope);
+        return {
+          key: evKey(ev),
+          time: ev.t.time,
+          label: sc.label,
+          sub: [ev.t.pitch, ev.t.duration ? `${ev.t.duration} dk` : ""].filter(Boolean).join(" · ") || undefined,
+          color: sc.color,
+          soft: sc.soft,
+          onClick: (el: HTMLElement) => { if (isMobile) setSheet(ev); else show(ev, el); },
+        };
+      }
+      return {
+        key: evKey(ev),
+        time: ev.f.time,
+        label: "Maç",
+        sub: ev.f.isHome ? `Buca Yıldız – ${ev.f.opponent}` : `${ev.f.opponent} – Buca Yıldız`,
+        color: "var(--red-600)",
+        soft: "var(--red-100)",
+        onClick: (el: HTMLElement) => { if (isMobile) setSheet(ev); else show(ev, el); },
+      };
+    });
+  }
+
   return (
     <section>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
@@ -211,6 +249,9 @@ export function TrainingCalendar({ trainings, fixtures = [], todayYmd, initialAn
               {seg("week", "Hafta")}
               {seg("month", "Ay")}
             </div>
+            <IconButton label="Büyük takvim" variant="outline" size="sm" onClick={() => { setTip(null); setFullOpen(true); }}>
+              <Icon name="calendar-days" size={16} />
+            </IconButton>
           </div>
         </div>
 
@@ -276,6 +317,26 @@ export function TrainingCalendar({ trainings, fixtures = [], todayYmd, initialAn
           </span>
         </div>
       </div>
+
+      <FullScreenCalendar
+        open={fullOpen}
+        onClose={() => setFullOpen(false)}
+        title="Program Takvimi"
+        eventsByDate={fsEvents}
+        todayYmd={todayYmd}
+        legend={
+          <>
+            {Object.entries(SCOPES).map(([k, t]) => (
+              <span key={k} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--ink-500)" }}>
+                <span style={{ width: 10, height: 10, borderRadius: 3, background: t.color }} />{t.label}
+              </span>
+            ))}
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--ink-500)" }}>
+              <span style={{ width: 10, height: 10, borderRadius: 3, background: "var(--red-600)" }} />Maç
+            </span>
+          </>
+        }
+      />
 
       {/* Portal: transform'lu üst öğeler position:fixed'ı bozmasın diye body'ye taşınır. */}
       {tip && !isMobile && createPortal(

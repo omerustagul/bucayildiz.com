@@ -9,6 +9,7 @@ import { IconButton } from "@/components/ui/IconButton";
 import { Icon } from "@/lib/icons";
 import { statusMeta } from "@/lib/trainingMeta";
 import { useOverlayDismiss } from "@/components/ui/useOverlayDismiss";
+import { FullScreenCalendar, type FSEvent } from "@/components/ui/FullScreenCalendar";
 import type { SFixture, STeam, STraining } from "@/components/admin/views/ScheduleView";
 
 const MONTHS = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
@@ -29,6 +30,7 @@ export function ScheduleCalendar({ teams, trainings, fixtures, todayYmd }: { tea
   const [isMobile, setIsMobile] = useState(false);
   const [tip, setTip] = useState<{ item: ActiveItem; x: number; y: number; up: boolean } | null>(null);
   const [sheet, setSheet] = useState<ActiveItem | null>(null);
+  const [fullOpen, setFullOpen] = useState(false);
   const hideTimer = useRef<number | null>(null);
 
   useEffect(() => {
@@ -75,14 +77,49 @@ export function ScheduleCalendar({ teams, trainings, fixtures, todayYmd }: { tea
 
   const chipBase: React.CSSProperties = { font: "inherit", width: "100%", textAlign: "left", cursor: "pointer", border: "none", display: "flex", flexDirection: "column", gap: 2, padding: "7px 9px", borderRadius: "var(--radius-sm)", boxShadow: "var(--shadow-xs)" };
 
+  // Büyük takvim için tarih → olay haritası (takım filtresi uygulanmış).
+  /* eslint-disable react-hooks/refs -- onClick closure'ları yalnız olay anında
+     çalışır (show → hideTimer ref'i); render sırasında ref OKUNMAZ. */
+  const fsEvents: Record<string, FSEvent[]> = {};
+  for (const t of trs) {
+    const indiv = t.scope === "individual";
+    (fsEvents[t.date] ??= []).push({
+      key: `t-${t.id}`,
+      time: t.time,
+      label: indiv ? "Bireysel Antrenman" : "Takım Antrenmanı",
+      sub: [t.pitch, t.duration ? `${t.duration} dk` : ""].filter(Boolean).join(" · ") || undefined,
+      color: indiv ? "var(--gold-600)" : "var(--navy-600)",
+      soft: indiv ? "var(--gold-100)" : "var(--navy-50)",
+      onClick: (el) => { if (isMobile) setSheet({ kind: "training", t }); else show({ kind: "training", t }, el); },
+    });
+  }
+  for (const f of fxs) {
+    (fsEvents[f.date] ??= []).push({
+      key: `f-${f.id}`,
+      time: f.time,
+      label: "Maç",
+      sub: f.isHome ? `Buca Yıldız – ${f.opponent}` : `${f.opponent} – Buca Yıldız`,
+      color: "var(--red-600)",
+      soft: "var(--red-100)",
+      onClick: (el) => { if (isMobile) setSheet({ kind: "fixture", f }); else show({ kind: "fixture", f }, el); },
+    });
+  }
+  Object.values(fsEvents).forEach((l) => l.sort((a, b) => a.time.localeCompare(b.time)));
+  /* eslint-enable react-hooks/refs */
+
   return (
     <Panel
       title="Haftalık Program"
       action={
-        <select value={teamFilter} onChange={(e) => { setTeamFilter(e.target.value); setTip(null); }} style={{ font: "inherit", fontSize: 13, padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid var(--ink-200)", background: "#fff", color: "var(--ink-700)" }}>
-          <option value="all">Tüm Takımlar</option>
-          {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-        </select>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <select value={teamFilter} onChange={(e) => { setTeamFilter(e.target.value); setTip(null); }} style={{ font: "inherit", fontSize: 13, padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid var(--ink-200)", background: "#fff", color: "var(--ink-700)" }}>
+            <option value="all">Tüm Takımlar</option>
+            {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+          <IconButton label="Büyük takvim" variant="outline" size="sm" onClick={() => { setTip(null); setFullOpen(true); }}>
+            <Icon name="calendar-days" size={16} />
+          </IconButton>
+        </div>
       }
     >
       {/* cal-container: container query — dar alanda hafta ızgarası dikey ajandaya döner (globals.css) */}
@@ -153,6 +190,21 @@ export function ScheduleCalendar({ teams, trainings, fixtures, todayYmd }: { tea
       </div>
       </div>
 
+      <FullScreenCalendar
+        open={fullOpen}
+        onClose={() => setFullOpen(false)}
+        title="Program Takvimi"
+        eventsByDate={fsEvents}
+        todayYmd={todayYmd}
+        legend={
+          <>
+            <LegendDot color="var(--navy-600)" label="Takım Antrenmanı" />
+            <LegendDot color="var(--gold-600)" label="Bireysel Antrenman" />
+            <LegendDot color="var(--red-600)" label="Maç" />
+          </>
+        }
+      />
+
       {/* Portal: PageTransition'ın transform'u position:fixed'ı kendine bağlar (containing
           block); popover/sheet body'ye taşınarak gerçek viewport koordinatları kullanılır. */}
       {tip && !isMobile && createPortal(
@@ -209,13 +261,18 @@ function ProgramDetailCard({ item, teams, plain }: { item: ActiveItem; teams: ST
           <span style={{ marginLeft: "auto" }}><Badge tone="gold">{f.isHome ? "Ev Sahibi" : "Deplasman"}</Badge></span>
         </div>
         <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-800)", marginBottom: 6 }}>
-          {f.isHome ? `Buca Yıldız – ${f.opponent}` : `${f.opponent} – Buca Yıldız`}
+          {f.status === "finished"
+            ? (f.isHome
+                ? `Buca Yıldız ${f.ourScore ?? "-"}–${f.oppScore ?? "-"} ${f.opponent}`
+                : `${f.opponent} ${f.oppScore ?? "-"}–${f.ourScore ?? "-"} Buca Yıldız`)
+            : (f.isHome ? `Buca Yıldız – ${f.opponent}` : `${f.opponent} – Buca Yıldız`)}
         </div>
         <div style={metaRow}>
           <span>{f.competition}</span>
           <span>{fmtDate(f.date)}{f.time ? ` · ${f.time}` : ""}</span>
           {f.venue && <span>{f.venue}</span>}
           {f.teamId && <span>{teamName(f.teamId)}</span>}
+          {f.status === "finished" && <span>Tamamlandı</span>}
         </div>
         <Link href="/admin/fikstur" style={{ fontSize: 13, fontWeight: 600, color: "var(--navy-700)", display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none" }}>
           Fikstür&apos;de Yönet <Icon name="external-link" size={13} />

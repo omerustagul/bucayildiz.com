@@ -11,7 +11,10 @@ export type STraining = {
   id: string; teamId: string; scope: string; status: string; date: string; time: string;
   duration: number | null; pitch: string; notes: string; drills: SDrill[]; participants: string[];
 };
-export type SFixture = { id: string; competition: string; opponent: string; isHome: boolean; date: string; time: string; venue: string; teamId: string | null };
+export type SFixture = {
+  id: string; competition: string; opponent: string; isHome: boolean; date: string; time: string;
+  venue: string; teamId: string | null; status: string; ourScore: number | null; oppScore: number | null;
+};
 
 export function ScheduleView({ teams, athletes, trainings, fixtures, todayYmd }: {
   teams: STeam[]; athletes: SAthlete[]; trainings: STraining[]; fixtures: SFixture[]; todayYmd: string;

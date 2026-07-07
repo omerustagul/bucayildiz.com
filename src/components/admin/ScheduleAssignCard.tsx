@@ -107,26 +107,7 @@ export function ScheduleAssignCard({ teams, athletes, fixtures }: { teams: STeam
           <>
             <Select label="Takım" required options={teams.map((t) => ({ value: t.id, label: t.name }))} value={team} onChange={(e) => { setTeam(e.target.value); setSelAthletes(new Set()); }} />
             {kind === "individual" && (
-              <Field label="Sporcular" required hint={`${selAthletes.size} sporcu seçili`}>
-                {teamAthletes.length > 0 && (
-                  <div style={{ display: "flex", gap: 14, marginBottom: 2 }}>
-                    <button
-                      type="button"
-                      onClick={() => setSelAthletes(new Set(teamAthletes.map((a) => a.id)))}
-                      style={{ font: "inherit", cursor: "pointer", border: "none", background: "none", padding: 0, fontSize: 12.5, fontWeight: 600, color: "var(--navy-700)" }}
-                    >
-                      Tümünü Seç
-                    </button>
-                    <button
-                      type="button"
-                      disabled={selAthletes.size === 0}
-                      onClick={() => setSelAthletes(new Set())}
-                      style={{ font: "inherit", cursor: selAthletes.size ? "pointer" : "default", border: "none", background: "none", padding: 0, fontSize: 12.5, fontWeight: 600, color: selAthletes.size ? "var(--ink-500)" : "var(--ink-300)" }}
-                    >
-                      Seçimi Temizle
-                    </button>
-                  </div>
-                )}
+              <Field label="Sporcular" required>
                 <div style={{ maxHeight: 190, overflowY: "auto", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", padding: 6, display: "flex", flexDirection: "column", gap: 2 }}>
                   {teamAthletes.length === 0 && <span style={{ padding: 8, fontSize: 13, color: "var(--ink-400)" }}>Bu takımda sporcu bulunmuyor.</span>}
                   {teamAthletes.map((a) => (
@@ -135,6 +116,29 @@ export function ScheduleAssignCard({ teams, athletes, fixtures }: { teams: STeam
                       {a.name}
                     </label>
                   ))}
+                </div>
+                {/* Sayaç + kısayollar: listenin altında tek satır, kısayollar sağa yaslı */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                  <span style={{ fontSize: 12.5, color: "var(--ink-400)" }}>{selAthletes.size} sporcu seçili</span>
+                  {teamAthletes.length > 0 && (
+                    <div style={{ display: "flex", gap: 14 }}>
+                      <button
+                        type="button"
+                        onClick={() => setSelAthletes(new Set(teamAthletes.map((a) => a.id)))}
+                        style={{ font: "inherit", cursor: "pointer", border: "none", background: "none", padding: 0, fontSize: 12.5, fontWeight: 600, color: "var(--navy-700)" }}
+                      >
+                        Tümünü Seç
+                      </button>
+                      <button
+                        type="button"
+                        disabled={selAthletes.size === 0}
+                        onClick={() => setSelAthletes(new Set())}
+                        style={{ font: "inherit", cursor: selAthletes.size ? "pointer" : "default", border: "none", background: "none", padding: 0, fontSize: 12.5, fontWeight: 600, color: selAthletes.size ? "var(--ink-500)" : "var(--ink-300)" }}
+                      >
+                        Seçimi Temizle
+                      </button>
+                    </div>
+                  )}
                 </div>
               </Field>
             )}
@@ -181,7 +185,8 @@ export function ScheduleAssignCard({ teams, athletes, fixtures }: { teams: STeam
   );
 }
 
-function MacPanel({ fixtures, selFx, onSelect, fx }: { fixtures: SFixture[]; selFx: string | null; onSelect: (id: string) => void; fx: SFixture | null }) {
+function MacPanel({ fixtures: allFixtures, selFx, onSelect, fx }: { fixtures: SFixture[]; selFx: string | null; onSelect: (id: string) => void; fx: SFixture | null }) {
+  const fixtures = allFixtures.filter((f) => f.status === "upcoming"); // bilgi panelinde yalnız yaklaşanlar
   const fmt = (d: string) => {
     const [y, m, day] = d.split("-");
     return day && m && y ? `${day}.${m}.${y}` : d;

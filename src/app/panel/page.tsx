@@ -24,10 +24,10 @@ export default async function PanelDashboard() {
       orderBy: [{ date: "asc" }, { time: "asc" }],
       include: { drills: { orderBy: { sort: "asc" }, select: { id: true, text: true, done: true } } },
     }),
+    // Tüm maçlar (geçmiş dahil) — büyük takvimde geçmişe dönük gezinme için.
     prisma.fixture.findMany({
-      where: { status: "upcoming" },
       orderBy: { date: "asc" },
-      select: { id: true, competition: true, opponent: true, isHome: true, date: true, time: true, venue: true },
+      select: { id: true, competition: true, opponent: true, isHome: true, date: true, time: true, venue: true, status: true, ourScore: true, oppScore: true },
     }),
   ]);
   const trainings: CalTraining[] = rawTrainings.map((t) => ({
