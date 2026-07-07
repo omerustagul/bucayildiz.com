@@ -29,3 +29,37 @@ export const applicationSchema = z.object({
 
 export type ApplicationInput = z.input<typeof applicationSchema>;
 export type ApplicationData = z.output<typeof applicationSchema>;
+
+// --- Takvim Programı / Antrenman ---
+export const TRAINING_SCOPES = ["team", "individual"] as const;
+export const TRAINING_STATUSES = ["planned", "completed", "cancelled", "partial"] as const;
+export const ATTENDANCE_STATUSES = ["present", "absent", "excused", "unknown"] as const;
+
+export const trainingCreateSchema = z
+  .object({
+    teamId: z.string().min(1, "Takım seçiniz."),
+    scope: z.enum(TRAINING_SCOPES).default("team"),
+    date: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçerli bir tarih seçiniz."),
+    time: z.string().trim().max(5).optional().or(z.literal("")),
+    duration: z.number().int().min(0).max(300).nullable().optional(),
+    pitch: z.string().trim().max(80).optional().or(z.literal("")),
+    notes: z.string().trim().max(500).optional().or(z.literal("")),
+    drills: z.array(z.string().trim().min(1, "Boş madde olamaz.").max(200)).max(30).default([]),
+    athleteIds: z.array(z.string().min(1)).max(40).default([]),
+  })
+  .superRefine((v, ctx) => {
+    if (v.scope === "individual" && v.athleteIds.length === 0) {
+      ctx.addIssue({ code: "custom", message: "Bireysel antrenman için en az bir sporcu seçiniz.", path: ["athleteIds"] });
+    }
+  });
+
+export const attendanceRowSchema = z.object({
+  athleteId: z.string().min(1),
+  status: z.enum(ATTENDANCE_STATUSES),
+  note: z.string().trim().max(300).optional().or(z.literal("")),
+});
+
+export const attendanceSaveSchema = z.object({
+  trainingId: z.string().min(1),
+  rows: z.array(attendanceRowSchema).min(1, "En az bir satır gerekli.").max(60),
+});
