@@ -160,6 +160,22 @@ export function NutritionAdminView({
 
       {!selectedAthlete ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 18, minWidth: 0 }}>
+          {/* Hızlı sporcu seçimi — programı olan sporcuya da rapordan tek adımda gidilir */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-600)" }}>Sporcu seç:</span>
+            <select
+              value=""
+              onChange={(e) => { if (e.target.value) setSelectedAthleteId(e.target.value); }}
+              style={{ font: "inherit", fontSize: 13.5, padding: "8px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--ink-200)", background: "#fff", color: "var(--ink-700)", minWidth: 220 }}
+            >
+              <option value="">Sporcu seçiniz…</option>
+              {athletes.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name} — {teamNameById.get(a.teamId) ?? ""}
+                </option>
+              ))}
+            </select>
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
             <StatTile label="Toplam Sporcu" value={athletes.length} icon="users" accent />
             <StatTile label="Aktif Program" value={plans.filter((p) => p.active).length} icon="clipboard-list" />
@@ -210,9 +226,11 @@ export function NutritionAdminView({
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {recentLogs.map((l) => (
-                  <div
+                  <button
                     key={l.id}
-                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}
+                    type="button"
+                    onClick={() => setSelectedAthleteId(l.athleteId)}
+                    style={{ font: "inherit", textAlign: "left", cursor: "pointer", background: "transparent", display: "flex", alignItems: "center", gap: 12, padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}
                   >
                     <div style={{ flex: "none", width: 84, fontFamily: "var(--font-stat)", fontWeight: 700, fontSize: 13, color: "var(--navy-700)" }}>
                       {fmtDate(l.date)}
@@ -223,7 +241,7 @@ export function NutritionAdminView({
                     <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 13, color: "var(--ink-500)" }}>
                       {l.note || "—"}
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
