@@ -55,3 +55,12 @@ export async function recordConsents(
   await prisma.consentRecord.createMany({ data: rows });
   return rows.length;
 }
+
+/** Sporcunun 'saglik-verisi' onayı aktif mi? (en yeni kayıt granted && geri alınmamış) */
+export async function hasHealthConsent(athleteId: string): Promise<boolean> {
+  const rec = await prisma.consentRecord.findFirst({
+    where: { athleteId, documentKey: "saglik-verisi" },
+    orderBy: { createdAt: "desc" },
+  });
+  return Boolean(rec && rec.granted && !rec.withdrawnAt);
+}

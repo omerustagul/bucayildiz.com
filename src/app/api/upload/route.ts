@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { saveUpload } from "@/lib/storage";
 
-/** Görsel yükleme uç noktası — yalnızca oturumlu yöneticiler. */
+/** Görsel yükleme uç noktası — oturumlu yöneticiler veya sporcular (yalnızca görsel). */
 export async function POST(req: Request) {
   const session = await getSession();
-  if (!session || session.role !== "admin") return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
+  const isAdmin = session?.role === "admin";
+  const isAthlete = Boolean(session?.athleteId);
+  if (!session || (!isAdmin && !isAthlete)) return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
 
   const form = await req.formData();
   const file = form.get("file");

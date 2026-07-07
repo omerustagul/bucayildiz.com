@@ -63,3 +63,41 @@ export const attendanceSaveSchema = z.object({
   trainingId: z.string().min(1),
   rows: z.array(attendanceRowSchema).min(1, "En az bir satır gerekli.").max(60),
 });
+
+// --- Sporcu Takip: Beslenme + Atama ---
+const macroField = z.number().int().min(0).max(10000).nullable().optional();
+
+export const nutritionMealSchema = z.object({
+  name: z.string().trim().min(1, "Öğün adı zorunlu.").max(60),
+  time: z.string().trim().max(5).optional().or(z.literal("")),
+  content: z.string().trim().max(500).optional().or(z.literal("")),
+  kcal: macroField, protein: macroField, carbs: macroField, fat: macroField,
+});
+
+export const nutritionPlanSchema = z.object({
+  athleteId: z.string().min(1, "Sporcu seçiniz."),
+  title: z.string().trim().min(1, "Başlık zorunlu.").max(120),
+  startDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçerli bir tarih seçiniz."),
+  endDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
+  notes: z.string().trim().max(500).optional().or(z.literal("")),
+  meals: z.array(nutritionMealSchema).min(1, "En az bir öğün ekleyin.").max(12),
+});
+
+export const mealLogSchema = z.object({
+  mealId: z.string().min(1),
+  date: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçerli bir tarih seçiniz."),
+  photoUrl: z.string().trim().nullable().optional(),
+  note: z.string().trim().max(400).optional().or(z.literal("")),
+  kcal: macroField, protein: macroField, carbs: macroField, fat: macroField,
+});
+
+export const assignmentCreateSchema = z.object({
+  athleteIds: z.array(z.string().min(1)).min(1, "En az bir sporcu seçiniz.").max(60),
+  kind: z.enum(["message", "document"] as const).default("message"),
+  title: z.string().trim().min(1, "Başlık zorunlu.").max(120),
+  body: z.string().trim().max(2000).optional().or(z.literal("")),
+  fileUrl: z.string().trim().nullable().optional(),
+}).superRefine((v, ctx) => {
+  if (v.kind === "document" && !v.fileUrl)
+    ctx.addIssue({ code: "custom", message: "Doküman için dosya yükleyiniz.", path: ["fileUrl"] });
+});
