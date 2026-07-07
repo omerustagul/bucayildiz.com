@@ -20,7 +20,9 @@ export async function middleware(req: NextRequest) {
     const isLogin = pathname === "/admin/giris";
     if (!session && !isLogin) return redirectTo("/admin/giris", true);
     if (session?.role === "admin" && isLogin) return redirectTo("/admin");
-    if (session && session.role !== "admin" && !isLogin) return redirectTo("/panel"); // sporcu admin'e giremez
+    // Sporcu oturumu admin'e giremez; ama /panel'e geri atmak yerine admin
+    // GİRİŞİNE gider (portallar ayrı — isteyen admin hesabıyla giriş yapar).
+    if (session && session.role !== "admin" && !isLogin) return redirectTo("/admin/giris", true);
     return NextResponse.next();
   }
 

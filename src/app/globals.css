@@ -529,3 +529,19 @@ footer {
 @media (prefers-reduced-motion: reduce) {
   .by-tap-ring, .by-icon-pop { animation: none; }
 }
+
+/* --- Sporcu paneli sidebar: konum/animasyon CSS'te (ilk boyamada doğru; JS flaşı yok) --- */
+.pl-sidebar { position: sticky; top: 0; height: 100vh; transition: transform var(--dur-base) var(--ease-out); }
+.pl-menu-btn { display: none; }
+@media (max-width: 900px) {
+  .pl-sidebar { position: fixed; left: 0; top: 0; bottom: 0; z-index: 60; transform: translateX(-100%); }
+  .pl-sidebar.pl-sidebar-open { transform: translateX(0); }
+  .pl-menu-btn { display: grid; }
+}
+
+/* --- Giriş kartı: mobilde kompakt --- */
+@media (max-width: 760px) {
+  .login-form-side { padding: 30px 22px !important; }
+  .login-form-side h2 { font-size: 24px !important; }
+  .login-card { width: min(440px, 100%) !important; }
+}

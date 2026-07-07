@@ -36,7 +36,7 @@ export default async function GirisPage({ searchParams }: { searchParams: Promis
         </div>
 
         {/* Form side */}
-        <div style={{ padding: "52px 48px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+        <div className="login-form-side" style={{ padding: "52px 48px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
           <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 30, textTransform: "uppercase", color: "var(--text-strong)", margin: "0 0 6px" }}>Panele Giriş</h2>
           <p style={{ fontSize: 14.5, color: "var(--text-muted)", margin: "0 0 28px" }}>Kullanıcı adı veya e-posta ile giriş yapın.</p>
           <PanelLoginForm next={next} />

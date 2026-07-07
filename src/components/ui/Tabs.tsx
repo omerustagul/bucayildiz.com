@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export type TabItem = { id: string; label: string; icon?: React.ReactNode; count?: number };
 
@@ -29,10 +29,47 @@ export function Tabs({
   };
 
   const pill = variant === "pill";
+
+  // Fare ile sürükleyerek kaydırma (dokunmatikte native scroll zaten çalışır)
+  // + dikey tekerleği yatay kaydırmaya çevirme. Küçük eşik, tab tıklamasını bozmaz.
+  const listRef = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ startX: number; startLeft: number; moved: boolean } | null>(null);
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") return; // dokunmatik: native scroll
+    const el = listRef.current;
+    if (!el || el.scrollWidth <= el.clientWidth) return;
+    drag.current = { startX: e.clientX, startLeft: el.scrollLeft, moved: false };
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    const d = drag.current;
+    const el = listRef.current;
+    if (!d || !el) return;
+    const dx = e.clientX - d.startX;
+    if (Math.abs(dx) > 4) d.moved = true;
+    el.scrollLeft = d.startLeft - dx;
+  };
+  const endDrag = () => { drag.current = null; };
+  const onClickCapture = (e: React.MouseEvent) => {
+    // Sürükleme yapıldıysa bırakınca tab seçilmesin
+    if (drag.current?.moved) { e.preventDefault(); e.stopPropagation(); }
+  };
+  const onWheel = (e: React.WheelEvent) => {
+    const el = listRef.current;
+    if (!el || el.scrollWidth <= el.clientWidth) return;
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) el.scrollLeft += e.deltaY;
+  };
+
   return (
     <div
       role="tablist"
       className="by-tabs"
+      ref={listRef}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={endDrag}
+      onPointerLeave={endDrag}
+      onClickCapture={onClickCapture}
+      onWheel={onWheel}
       style={{
         display: "flex",
         gap: pill ? 4 : 2,

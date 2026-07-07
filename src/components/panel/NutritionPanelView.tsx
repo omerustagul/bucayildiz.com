@@ -232,7 +232,7 @@ function MealLogForm({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: 14, borderRadius: "var(--radius-md)", background: "var(--surface-subtle)", border: "1px solid var(--border-subtle)" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14, borderRadius: "var(--radius-md)", background: "var(--surface-subtle)", border: "1px solid var(--border-subtle)" }}>
       <PhotoPicker value={photoUrl} onChange={setPhotoUrl} />
       <div>
         <label style={labelStyle}>Not</label>
@@ -245,22 +245,23 @@ function MealLogForm({
           style={{ ...inputStyle, resize: "vertical", fontFamily: "var(--font-body)" }}
         />
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))", gap: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10 }}>
+        {/* inputMode+pattern: iOS'ta salt-rakam klavye; replace: harf girişini her platformda engeller */}
         <div style={{ minWidth: 0 }}>
           <label style={labelStyle}>Kcal</label>
-          <input style={inputStyle} inputMode="numeric" value={kcal} onChange={(e) => setKcal(e.target.value)} />
+          <input style={inputStyle} inputMode="numeric" pattern="[0-9]*" maxLength={5} value={kcal} onChange={(e) => setKcal(e.target.value.replace(/\D/g, ""))} />
         </div>
         <div style={{ minWidth: 0 }}>
           <label style={labelStyle}>Protein (g)</label>
-          <input style={inputStyle} inputMode="numeric" value={protein} onChange={(e) => setProtein(e.target.value)} />
+          <input style={inputStyle} inputMode="numeric" pattern="[0-9]*" maxLength={4} value={protein} onChange={(e) => setProtein(e.target.value.replace(/\D/g, ""))} />
         </div>
         <div style={{ minWidth: 0 }}>
           <label style={labelStyle}>Karb (g)</label>
-          <input style={inputStyle} inputMode="numeric" value={carbs} onChange={(e) => setCarbs(e.target.value)} />
+          <input style={inputStyle} inputMode="numeric" pattern="[0-9]*" maxLength={4} value={carbs} onChange={(e) => setCarbs(e.target.value.replace(/\D/g, ""))} />
         </div>
         <div style={{ minWidth: 0 }}>
           <label style={labelStyle}>Yağ (g)</label>
-          <input style={inputStyle} inputMode="numeric" value={fat} onChange={(e) => setFat(e.target.value)} />
+          <input style={inputStyle} inputMode="numeric" pattern="[0-9]*" maxLength={4} value={fat} onChange={(e) => setFat(e.target.value.replace(/\D/g, ""))} />
         </div>
       </div>
       {error && <div style={{ padding: "8px 11px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 12.5, color: "var(--red-600)" }}>{error}</div>}

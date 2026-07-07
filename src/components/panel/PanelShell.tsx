@@ -52,8 +52,10 @@ export function PanelShell({ athlete, unreadCount = 0, children }: { athlete: At
       {/* Mobile overlay */}
       {isMobile && mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.45)", zIndex: 55 }} />}
 
-      {/* Sidebar */}
+      {/* Sidebar — konum/transform CSS'te (.pl-sidebar): ilk boyamada bile doğru,
+          sayfa yüklenirken "açılıp kapanma" flaşı olmaz. */}
       <aside
+        className={`pl-sidebar${mobileOpen ? " pl-sidebar-open" : ""}`}
         style={{
           width: 252,
           flex: "none",
@@ -61,21 +63,13 @@ export function PanelShell({ athlete, unreadCount = 0, children }: { athlete: At
           borderRight: "1px solid rgba(255,255,255,.07)",
           display: "flex",
           flexDirection: "column",
-          position: isMobile ? "fixed" : "sticky",
-          top: 0,
-          left: 0,
-          bottom: isMobile ? 0 : undefined,
-          height: "100vh",
-          zIndex: isMobile ? 60 : undefined,
-          transform: isMobile ? (mobileOpen ? "translateX(0)" : "translateX(-100%)") : "none",
-          transition: "transform var(--dur-base) var(--ease-out)",
         }}
       >
         <div style={{ padding: "22px 22px 18px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid rgba(255,255,255,.07)" }}>
           <Image src="/brand/logo-emblem.png" alt="" width={40} height={40} style={{ objectFit: "contain" }} />
           <div style={{ lineHeight: 1 }}>
             <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 17, color: "#fff", textTransform: "uppercase", letterSpacing: ".02em" }}>Buca Yıldız</div>
-            <div style={{ fontSize: 10, letterSpacing: ".2em", textTransform: "uppercase", color: "var(--gold-400)", marginTop: 3, fontWeight: 600 }}>Sporcu Paneli</div>
+            <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--gold-400)", marginTop: 3, fontWeight: 600 }}>Sporcu Paneli</div>
           </div>
         </div>
         <nav style={{ padding: 12, display: "flex", flexDirection: "column", gap: 3, flex: 1 }}>
@@ -123,11 +117,10 @@ export function PanelShell({ athlete, unreadCount = 0, children }: { athlete: At
         <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(255,255,255,.88)", backdropFilter: "blur(8px)", borderBottom: "1px solid var(--border-subtle)" }}>
           <div style={{ padding: "14px clamp(14px, 4vw, 32px)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-              {isMobile && (
-                <button aria-label="Menü" onClick={() => setMobileOpen((o) => !o)} style={{ display: "grid", placeItems: "center", width: 38, height: 38, flex: "none", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", background: "var(--surface-card)", color: "var(--navy-700)", cursor: "pointer" }}>
-                  <Icon name="menu" size={18} />
-                </button>
-              )}
+              {/* Menü butonu CSS ile yalnız mobilde görünür (hydration beklemez) */}
+              <button aria-label="Menü" className="pl-menu-btn" onClick={() => setMobileOpen((o) => !o)} style={{ placeItems: "center", width: 38, height: 38, flex: "none", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", background: "var(--surface-card)", color: "var(--navy-700)", cursor: "pointer" }}>
+                <Icon name="menu" size={18} />
+              </button>
               <div style={{ minWidth: 0 }}>
                 <h1 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(19px, 5vw, 26px)", textTransform: "uppercase", color: "var(--text-strong)", margin: 0, lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</h1>
                 {subtitle && <div style={{ fontSize: 13.5, color: "var(--ink-500)", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{subtitle}</div>}
@@ -136,17 +129,18 @@ export function PanelShell({ athlete, unreadCount = 0, children }: { athlete: At
             <div style={{ display: "flex", alignItems: "center", gap: 14, flex: "none" }}>
               <IconButton label="Bildirimler" variant="outline"><Icon name="bell" size={18} /></IconButton>
               <span className="pl-header-divider" style={{ width: 1, height: 30, background: "var(--ink-200)" }} />
-              <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+              {/* Kullanıcı bloğu → profil sayfası */}
+              <Link href="/panel/profil" title="Profilim" style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none", borderRadius: "var(--radius-sm)" }}>
                 <Avatar name={athlete.name} src={athlete.photoUrl} size={40} />
                 <div className="pl-header-identity" style={{ lineHeight: 1.2 }}>
                   <div style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 14, color: "var(--text-strong)", whiteSpace: "nowrap" }}>{athlete.name}</div>
                   <div style={{ fontSize: 12, color: "var(--ink-400)" }}>{athlete.teamName} · {numberLabel}</div>
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
         </header>
-        <main style={{ padding: "24px clamp(14px, 4vw, 32px) 48px", display: "flex", flexDirection: "column", gap: 24, maxWidth: 1240, width: "100%" }}>
+        <main style={{ padding: "24px clamp(14px, 4vw, 32px) 48px", display: "flex", flexDirection: "column", gap: 24, width: "100%" }}>
           <InstallHint />
           <PageTransition style={{ display: "flex", flexDirection: "column", gap: 24 }}>{children}</PageTransition>
         </main>
