@@ -16,6 +16,7 @@ type Athlete = { name: string; teamName: string; number: number | null; position
 const NAV: { href: string; label: string; icon: IconName; ready?: boolean }[] = [
   { href: "/panel", label: "Genel Bakış", icon: "layout-dashboard", ready: true },
   { href: "/panel/antrenmanlar", label: "Antrenmanlar", icon: "calendar-days", ready: true },
+  { href: "/panel/beslenme", label: "Beslenme", icon: "apple", ready: true },
   { href: "/panel/performans", label: "Performans", icon: "heart-pulse", ready: true },
   { href: "/panel/izinler", label: "İzinler", icon: "shield-check", ready: true },
   { href: "/panel/maclar", label: "Maçlar", icon: "trophy", ready: true },

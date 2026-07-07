@@ -57,6 +57,7 @@ import {
   TrafficCone,
   ArrowUpFromLine,
   FileText,
+  Apple,
   type LucideIcon,
 } from "lucide-react";
 
@@ -116,6 +117,7 @@ const ICONS: Record<string, LucideIcon> = {
   "traffic-cone": TrafficCone,
   "arrow-up-from-line": ArrowUpFromLine,
   "file-text": FileText,
+  apple: Apple,
 };
 
 export type IconName = keyof typeof ICONS;
