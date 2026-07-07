@@ -217,11 +217,11 @@ function FixtureCards({ rows, onOpen }: { rows: FixtureRow[]; onOpen: (r: Fixtur
               </span>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 8, fontWeight: 600, fontSize: 13.5 }}>
-              <span style={{ textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: home === "Buca Yıldız" ? "var(--navy-700)" : "var(--ink-700)" }}>{home}</span>
+              <span style={{ minWidth: 0, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: home === "Buca Yıldız" ? "var(--navy-700)" : "var(--ink-700)" }}>{home}</span>
               <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, background: "var(--ink-100)", borderRadius: "var(--radius-sm)", padding: "2px 9px", fontVariantNumeric: "tabular-nums" }}>
                 {finished ? `${hs ?? 0}–${as ?? 0}` : "vs"}
               </span>
-              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: away === "Buca Yıldız" ? "var(--navy-700)" : "var(--ink-700)" }}>{away}</span>
+              <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: away === "Buca Yıldız" ? "var(--navy-700)" : "var(--ink-700)" }}>{away}</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--ink-500)", minWidth: 0 }}>
               <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, color: "var(--text-strong)", flex: "none" }}>{fmtDate(r.date)}</span>
