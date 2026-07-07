@@ -107,13 +107,13 @@ if (existingFx === 0) {
 const existingTr = await prisma.training.count();
 if (existingTr === 0) {
   const TR = [
-    { team: "u17", type: "Saha", date: "2026-06-15", time: "18:00", duration: 90, pitch: "Saha 1", notes: "Pas ve oyun kurma." },
-    { team: "u17", type: "Kondisyon", date: "2026-06-17", time: "18:00", duration: 75, pitch: "Saha 2", notes: "Dayanıklılık." },
-    { team: "u18", type: "Taktik", date: "2026-06-16", time: "19:00", duration: 80, pitch: "Saha 1", notes: "Maç hazırlığı." },
-    { team: "a-takim", type: "Saha", date: "2026-06-16", time: "20:00", duration: 90, pitch: "Saha 1", notes: "" },
-    { team: "u15", type: "Bireysel", date: "2026-06-18", time: "17:00", duration: 60, pitch: "Saha 2", notes: "Teknik gelişim." },
+    { team: "u17", date: "2026-06-15", time: "18:00", duration: 90, pitch: "Saha 1", notes: "Pas ve oyun kurma." },
+    { team: "u17", date: "2026-06-17", time: "18:00", duration: 75, pitch: "Saha 2", notes: "Dayanıklılık." },
+    { team: "u18", date: "2026-06-16", time: "19:00", duration: 80, pitch: "Saha 1", notes: "Maç hazırlığı." },
+    { team: "a-takim", date: "2026-06-16", time: "20:00", duration: 90, pitch: "Saha 1", notes: "" },
+    { team: "u15", date: "2026-06-18", time: "17:00", duration: 60, pitch: "Saha 2", notes: "Teknik gelişim." },
   ];
-  for (const t of TR) await prisma.training.create({ data: { teamId: teamBySlug[t.team], type: t.type, date: t.date, time: t.time, duration: t.duration, pitch: t.pitch, notes: t.notes } });
+  for (const t of TR) await prisma.training.create({ data: { teamId: teamBySlug[t.team], scope: "team", date: t.date, time: t.time, duration: t.duration, pitch: t.pitch, notes: t.notes } });
   console.log(`✔ Antrenmanlar: ${TR.length}`);
 } else {
   console.log(`• Antrenmanlar zaten var (${existingTr}), atlandı.`);

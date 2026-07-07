@@ -1,6 +1,6 @@
 // Buca Yıldız — Prisma schema
 //
-// PostgreSQL (dev: yerel Homebrew :5433, prod: Türkiye'de barındırılacak).
+// PostgreSQL (dev: bu makinede native PG18 :5432, prod: Türkiye'de barındırılacak).
 // Şema sade tutuldu (enum yok, status String) — taşıma ve bakım kolaylığı için.
 
 generator client {
@@ -121,6 +121,7 @@ model Athlete {
   consents     ConsentRecord[]
   pushSubs     PushSubscription[]
   payments     Payment[]
+  trainingAttendance TrainingAttendance[]
   createdAt    DateTime @default(now())
 
   @@index([teamId])
@@ -246,12 +247,14 @@ model Post {
   @@index([createdAt])
 }
 
-/// Antrenman planı.
+/// Antrenman programı kaydı (Takvim Programı). Maçlar burada TUTULMAZ —
+/// takvim, yaklaşan maçları Fixture tablosundan otomatik gösterir.
 model Training {
   id        String   @id @default(cuid())
   teamId    String
   team      Team     @relation(fields: [teamId], references: [id])
-  type      String   @default("Saha") // Saha | Kondisyon | Taktik | Bireysel | Maç
+  scope     String   @default("team") // team | individual
+  status    String   @default("planned") // planned | completed | cancelled | partial
   date      String // "YYYY-MM-DD"
   time      String   @default("") // "HH:MM"
   duration  Int? // dakika
@@ -259,8 +262,41 @@ model Training {
   notes     String   @default("")
   createdAt DateTime @default(now())
 
+  drills     TrainingDrill[]
+  attendance TrainingAttendance[]
+
   @@index([teamId])
   @@index([date])
+  @@index([status])
+}
+
+/// Antrenman içeriği maddesi (yapılacak çalışma). done = tamamlandı tiki.
+model TrainingDrill {
+  id         String   @id @default(cuid())
+  trainingId String
+  training   Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  text       String
+  done       Boolean  @default(false)
+  sort       Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([trainingId])
+}
+
+/// Yoklama + sporcuya özel not. Takım antrenmanında kadrodan türetilir
+/// (kaydedildikçe upsert); bireyselde oluşturmada katılımcı olarak açılır.
+model TrainingAttendance {
+  id         String   @id @default(cuid())
+  trainingId String
+  training   Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  athleteId  String
+  athlete    Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  status     String   @default("unknown") // present | absent | excused | unknown
+  note       String   @default("") // sporcuya özel direktif/not
+  createdAt  DateTime @default(now())
+
+  @@unique([trainingId, athleteId])
+  @@index([athleteId])
 }
 
 /// Maç / fikstür. Kulüp (Buca Yıldız) sabit; rakip manuel girilir.
