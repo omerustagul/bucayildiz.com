@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Panel } from "@/components/admin/kit";
 import { Badge } from "@/components/ui/Badge";
@@ -28,6 +28,25 @@ const fmtDate = (d: string) => { const [y, m, day] = d.split("-"); return day &&
 
 type ActiveItem = { kind: "training"; t: STraining } | { kind: "fixture"; f: SFixture };
 
+/** Overlay için Escape ile kapatma + arka plan scroll kilidi.
+    src/components/admin/controls.tsx'teki useOverlayDismiss ile birebir aynı kalıp;
+    hook orada modül-içi (export edilmemiş) olduğundan burada tekrarlanır. */
+function useOverlayDismiss(open: boolean, onClose: () => void) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open, onClose]);
+}
+
 export function ScheduleCalendar({ teams, trainings, fixtures, todayYmd }: { teams: STeam[]; trainings: STraining[]; fixtures: SFixture[]; todayYmd: string }) {
   const [teamFilter, setTeamFilter] = useState("all");
   const [anchor, setAnchor] = useState<Date>(() => parseYmd(todayYmd));
@@ -44,6 +63,14 @@ export function ScheduleCalendar({ teams, trainings, fixtures, todayYmd }: { tea
     return () => mq.removeEventListener("change", on);
   }, []);
 
+  const cancelHide = useCallback(() => {
+    if (hideTimer.current) { window.clearTimeout(hideTimer.current); hideTimer.current = null; }
+  }, []);
+  useEffect(() => () => cancelHide(), [cancelHide]);
+
+  const closeSheet = useCallback(() => setSheet(null), []);
+  useOverlayDismiss(isMobile && sheet != null, closeSheet);
+
   const today = parseYmd(todayYmd);
   const mon = startOfWeek(anchor);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(mon, i));
@@ -57,7 +84,6 @@ export function ScheduleCalendar({ teams, trainings, fixtures, todayYmd }: { tea
   const fxByDate: Record<string, SFixture[]> = {};
   for (const f of fxs) (fxByDate[f.date] ??= []).push(f);
 
-  const cancelHide = () => { if (hideTimer.current) { window.clearTimeout(hideTimer.current); hideTimer.current = null; } };
   const scheduleHide = () => { cancelHide(); hideTimer.current = window.setTimeout(() => setTip(null), 140); };
   const show = (item: ActiveItem, el: HTMLElement) => {
     cancelHide();
@@ -77,15 +103,15 @@ export function ScheduleCalendar({ teams, trainings, fixtures, todayYmd }: { tea
     <Panel
       title="Haftalık Program"
       action={
-        <select value={teamFilter} onChange={(e) => setTeamFilter(e.target.value)} style={{ font: "inherit", fontSize: 13, padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid var(--ink-200)", background: "#fff", color: "var(--ink-700)" }}>
+        <select value={teamFilter} onChange={(e) => { setTeamFilter(e.target.value); setTip(null); }} style={{ font: "inherit", fontSize: 13, padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid var(--ink-200)", background: "#fff", color: "var(--ink-700)" }}>
           <option value="all">Tüm Takımlar</option>
           {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
       }
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-        <IconButton label="Önceki hafta" variant="outline" size="sm" onClick={() => setAnchor((a) => addDays(a, -7))}><Icon name="chevron-down" size={16} style={{ transform: "rotate(90deg)" }} /></IconButton>
-        <IconButton label="Sonraki hafta" variant="outline" size="sm" onClick={() => setAnchor((a) => addDays(a, 7))}><Icon name="chevron-down" size={16} style={{ transform: "rotate(-90deg)" }} /></IconButton>
+        <IconButton label="Önceki hafta" variant="outline" size="sm" onClick={() => { setAnchor((a) => addDays(a, -7)); setTip(null); }}><Icon name="chevron-down" size={16} style={{ transform: "rotate(90deg)" }} /></IconButton>
+        <IconButton label="Sonraki hafta" variant="outline" size="sm" onClick={() => { setAnchor((a) => addDays(a, 7)); setTip(null); }}><Icon name="chevron-down" size={16} style={{ transform: "rotate(-90deg)" }} /></IconButton>
         <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 18, textTransform: "uppercase", color: "var(--text-strong)", margin: 0 }}>{title}</h3>
       </div>
 
@@ -160,8 +186,8 @@ export function ScheduleCalendar({ teams, trainings, fixtures, todayYmd }: { tea
 
       {sheet && isMobile && (
         <>
-          <div onClick={() => setSheet(null)} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.45)", zIndex: 70 }} />
-          <div role="dialog" aria-modal="true" style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 71, maxHeight: "72vh", overflowY: "auto", borderRadius: "16px 16px 0 0", background: "var(--surface-card)", boxShadow: "var(--shadow-lg)", padding: "8px 0 22px" }}>
+          <div onClick={closeSheet} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.45)", zIndex: 70 }} />
+          <div role="dialog" aria-modal="true" aria-label="Program detayı" style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 71, maxHeight: "72vh", overflowY: "auto", borderRadius: "16px 16px 0 0", background: "var(--surface-card)", boxShadow: "var(--shadow-lg)", padding: "8px 0 22px" }}>
             <div style={{ width: 44, height: 4, borderRadius: 2, background: "var(--ink-200)", margin: "8px auto 10px" }} />
             <ProgramDetailCard item={sheet} teams={teams} plain />
           </div>
