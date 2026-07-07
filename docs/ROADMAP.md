@@ -107,6 +107,23 @@ Antrenman altyapısı yeniden kurgulandı (spec: `docs/superpowers/specs/2026-07
 - 13 commit, subagent-driven; her görevde spec+kalite incelemesi; typecheck +
   10/10 test temiz. **Sonraki faz:** sporcu panelinde antrenman detay görünürlüğü.
 
+### F. Sporcu Takip Modülü (Beslenme + Mesaj/Doküman) — ✅ TAMAMLANDI (2026-07-07)
+Antrenörün sporcuyu birebir izlediği sistemin ilk ayağı
+(spec: `docs/superpowers/specs/2026-07-07-sporcu-takip-beslenme-design.md`):
+- **Şema:** `NutritionPlan`/`NutritionMeal` (hedef makrolu öğün şablonu),
+  `MealLog` (öğün+gün başına tek fotoğraflı günlük, gerçekleşen makrolar),
+  `AthleteAssignment` (mesaj/doküman + okundu takibi).
+- **Admin:** `/admin/beslenme` (plan editörü + gün gezinmeli günlük takip),
+  `/admin/mesajlar` (toplu gönderim + okundu durumu).
+- **Sporcu:** `/panel/beslenme` (öğün kartları, fotoğraf çek/yükle, gerçekleşen
+  makrolar; **KVKK kapısı:** sağlık onayı yoksa günlük kapalı, program salt-okunur),
+  `/panel/mesajlar` (okunmamış rozeti, açınca okundu).
+- Güvenlik: sahiplik session'dan, upload URL'leri whitelist'li (`javascript:`
+  engelli), tarih penceresi (−14/+1 gün), sporcu upload izni magic-byte korumalı.
+- Uçtan uca Playwright ile doğrulandı; bütünsel inceleme: SHIP.
+- **Sonraki fırsatlar:** antrenör rolü, beslenme uyum raporları, mesajlara
+  push bildirimi tetikleyicisi, PDF doküman desteği (upload şu an yalnız görsel).
+
 ### D. İyileştirme fikirleri (öncelik sonrası)
 - Push bildirim tetikleyicileri (yeni antrenman/maç otomatik bildirim)
 - E-posta şablonlarının zenginleştirilmesi
