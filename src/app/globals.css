@@ -511,3 +511,21 @@ footer {
 @media (max-width: 560px) {
   .fx-count { display: none; }
 }
+
+/* --- iOS "Ana Ekrana Ekle" eğitim animasyonu --- */
+@keyframes byTapRing {
+  0% { transform: scale(.4); opacity: .9; }
+  70% { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@keyframes byIconPop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.15); }
+  80% { transform: scale(.95); }
+  100% { transform: scale(1); }
+}
+.by-tap-ring { position: absolute; inset: -10px; border: 3px solid var(--gold-400); border-radius: 50%; animation: byTapRing 1.3s var(--ease-out) infinite; pointer-events: none; }
+.by-icon-pop { animation: byIconPop .55s var(--ease-out) both; }
+@media (prefers-reduced-motion: reduce) {
+  .by-tap-ring, .by-icon-pop { animation: none; }
+}

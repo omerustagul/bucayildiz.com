@@ -11,7 +11,9 @@ export const metadata: Metadata = { title: "Panele Giriş" };
 export default async function GirisPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;
   const session = await getSession();
-  if (session) redirect(session.role === "admin" ? "/admin" : "/panel");
+  // Paneller ayrı: yalnız SPORCU oturumu panele yönlenir. Yönetici oturumu
+  // varken bu sayfa yine sporcu giriş formunu gösterir (admin'e atmaz).
+  if (session?.athleteId) redirect("/panel");
 
   return (
     <div style={{ minHeight: "100dvh", background: "var(--navy-950)", display: "grid", placeItems: "center", padding: 20 }}>

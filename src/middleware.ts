@@ -15,18 +15,19 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   };
 
-  // --- /admin ---
+  // --- /admin --- (paneller tamamen ayrı: yalnız admin oturumu)
   if (pathname.startsWith("/admin")) {
     const isLogin = pathname === "/admin/giris";
     if (!session && !isLogin) return redirectTo("/admin/giris", true);
-    if (session && isLogin) return redirectTo("/admin");
+    if (session?.role === "admin" && isLogin) return redirectTo("/admin");
     if (session && session.role !== "admin" && !isLogin) return redirectTo("/panel"); // sporcu admin'e giremez
     return NextResponse.next();
   }
 
-  // --- /panel ---
+  // --- /panel --- (yalnız sporcu oturumu; admin kendi paneline)
   if (pathname.startsWith("/panel")) {
     if (!session) return redirectTo("/giris", true);
+    if (!session.athleteId) return redirectTo("/admin");
     return NextResponse.next();
   }
 

@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from "react";
 import { Icon } from "@/lib/icons";
+import { InstallTutorial } from "@/components/panel/InstallTutorial";
 
 const DISMISS_KEY = "by_install_hint_dismissed";
 
@@ -25,6 +26,7 @@ function ShareGlyph({ size = 16 }: { size?: number }) {
  */
 export function InstallHint() {
   const [show, setShow] = useState(false);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
 
   useEffect(() => {
     const ua = window.navigator.userAgent;
@@ -68,7 +70,16 @@ export function InstallHint() {
           Safari&apos;de alttaki <span style={{ display: "inline-flex", verticalAlign: "-2px" }}><ShareGlyph size={13} /></span> <strong style={{ color: "#fff" }}>Paylaş</strong> simgesine dokun,{" "}
           <strong style={{ color: "#fff" }}>“Ana Ekrana Ekle”</strong>yi seç. Buca Yıldız ana ekranında bir uygulama gibi açılır.
         </div>
+        <button
+          type="button"
+          onClick={() => setTutorialOpen(true)}
+          style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(201,162,39,.5)", background: "rgba(201,162,39,.12)", color: "var(--gold-400)", fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 12.5, cursor: "pointer" }}
+        >
+          Nasıl yapılır? İzle
+          <Icon name="chevron-right" size={13} />
+        </button>
       </div>
+      <InstallTutorial open={tutorialOpen} onClose={() => setTutorialOpen(false)} />
       <button
         onClick={dismiss}
         aria-label="Kapat"
