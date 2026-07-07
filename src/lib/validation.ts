@@ -67,6 +67,16 @@ export const attendanceSaveSchema = z.object({
 // --- Sporcu Takip: Beslenme + Atama ---
 const macroField = z.number().int().min(0).max(10000).nullable().optional();
 
+/** Yükleme URL'i güvenlik kısıtı: yalnız kendi upload yolumuz (/uploads/...)
+ *  veya https:// (S3 public base). javascript:/data: gibi şemaları engeller —
+ *  bu alanlar sonradan <img src> / <a href> olarak render edilir. */
+const uploadUrlField = z
+  .string()
+  .trim()
+  .regex(/^(\/uploads\/|https:\/\/)/, "Geçersiz dosya adresi.")
+  .nullable()
+  .optional();
+
 export const nutritionMealSchema = z.object({
   name: z.string().trim().min(1, "Öğün adı zorunlu.").max(60),
   time: z.string().trim().max(5).optional().or(z.literal("")),
@@ -86,7 +96,7 @@ export const nutritionPlanSchema = z.object({
 export const mealLogSchema = z.object({
   mealId: z.string().min(1),
   date: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçerli bir tarih seçiniz."),
-  photoUrl: z.string().trim().nullable().optional(),
+  photoUrl: uploadUrlField,
   note: z.string().trim().max(400).optional().or(z.literal("")),
   kcal: macroField, protein: macroField, carbs: macroField, fat: macroField,
 });
@@ -96,7 +106,7 @@ export const assignmentCreateSchema = z.object({
   kind: z.enum(["message", "document"] as const).default("message"),
   title: z.string().trim().min(1, "Başlık zorunlu.").max(120),
   body: z.string().trim().max(2000).optional().or(z.literal("")),
-  fileUrl: z.string().trim().nullable().optional(),
+  fileUrl: uploadUrlField,
 }).superRefine((v, ctx) => {
   if (v.kind === "document" && !v.fileUrl)
     ctx.addIssue({ code: "custom", message: "Doküman için dosya yükleyiniz.", path: ["fileUrl"] });

@@ -40,6 +40,13 @@ describe("mealLogSchema", () => {
     const r = mealLogSchema.safeParse({ ...base, kcal: 300, protein: -1, carbs: 30, fat: 8 });
     expect(r.success).toBe(false);
   });
+
+  it("photoUrl yalnız /uploads/ veya https kabul eder (javascript: reddedilir)", () => {
+    expect(mealLogSchema.safeParse({ ...base, photoUrl: "/uploads/meals/x.jpg" }).success).toBe(true);
+    expect(mealLogSchema.safeParse({ ...base, photoUrl: "https://cdn.example.com/x.jpg" }).success).toBe(true);
+    expect(mealLogSchema.safeParse({ ...base, photoUrl: "javascript:alert(1)" }).success).toBe(false);
+    expect(mealLogSchema.safeParse({ ...base, photoUrl: "data:text/html,x" }).success).toBe(false);
+  });
 });
 
 describe("assignmentCreateSchema", () => {

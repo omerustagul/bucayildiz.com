@@ -56,7 +56,11 @@ export async function recordConsents(
   return rows.length;
 }
 
-/** Sporcunun 'saglik-verisi' onayı aktif mi? (en yeni kayıt granted && geri alınmamış) */
+/** Sporcunun 'saglik-verisi' onayı aktif mi? (en yeni kayıt granted && geri alınmamış)
+ *  DEĞİŞMEZ KURAL: onay yazan her akış (bkz. panel/izinler/actions.ts) her
+ *  ver/geri-al işleminde YENİ bir satır ekler (kayıtlar değişmez/immutable);
+ *  bu yardımcı o kurala dayanır. Mevcut satırı mutasyonla güncelleyen bir akış
+ *  eklenirse burayı birlikte gözden geçirin. */
 export async function hasHealthConsent(athleteId: string): Promise<boolean> {
   const rec = await prisma.consentRecord.findFirst({
     where: { athleteId, documentKey: "saglik-verisi" },
