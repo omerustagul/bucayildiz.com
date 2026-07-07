@@ -7,18 +7,12 @@ import { Panel } from "@/components/admin/kit";
 import { Badge } from "@/components/ui/Badge";
 import { IconButton } from "@/components/ui/IconButton";
 import { Icon } from "@/lib/icons";
+import { statusMeta } from "@/lib/trainingMeta";
+import { useOverlayDismiss } from "@/components/ui/useOverlayDismiss";
 import type { SFixture, STeam, STraining } from "@/components/admin/views/ScheduleView";
 
 const MONTHS = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 const DOW = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
-
-export const TRAINING_STATUS_META: Record<string, { label: string; tone: "navy" | "success" | "live" | "gold" }> = {
-  planned: { label: "Planlandı", tone: "navy" },
-  completed: { label: "Tamamlandı", tone: "success" },
-  cancelled: { label: "İptal Edildi", tone: "live" },
-  partial: { label: "Yarım Kaldı", tone: "gold" },
-};
-export const statusMeta = (s: string) => TRAINING_STATUS_META[s] ?? TRAINING_STATUS_META.planned;
 
 const parseYmd = (s: string) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -28,25 +22,6 @@ const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.g
 const fmtDate = (d: string) => { const [y, m, day] = d.split("-"); return day && m && y ? `${day}.${m}.${y}` : d; };
 
 type ActiveItem = { kind: "training"; t: STraining } | { kind: "fixture"; f: SFixture };
-
-/** Overlay için Escape ile kapatma + arka plan scroll kilidi.
-    src/components/admin/controls.tsx'teki useOverlayDismiss ile birebir aynı kalıp;
-    hook orada modül-içi (export edilmemiş) olduğundan burada tekrarlanır. */
-function useOverlayDismiss(open: boolean, onClose: () => void) {
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [open, onClose]);
-}
 
 export function ScheduleCalendar({ teams, trainings, fixtures, todayYmd }: { teams: STeam[]; trainings: STraining[]; fixtures: SFixture[]; todayYmd: string }) {
   const [teamFilter, setTeamFilter] = useState("all");
@@ -186,15 +161,17 @@ export function ScheduleCalendar({ teams, trainings, fixtures, todayYmd }: { tea
           onMouseLeave={scheduleHide}
           style={{ position: "fixed", left: tip.x, top: tip.y, transform: `translate(-50%, ${tip.up ? "-100%" : "0"})`, zIndex: 80, width: 300, maxWidth: "calc(100vw - 24px)" }}
         >
-          <ProgramDetailCard item={tip.item} teams={teams} />
+          <div className="by-anim-pop">
+            <ProgramDetailCard item={tip.item} teams={teams} />
+          </div>
         </div>,
         document.body,
       )}
 
       {sheet && isMobile && createPortal(
         <>
-          <div onClick={closeSheet} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.45)", zIndex: 70 }} />
-          <div role="dialog" aria-modal="true" aria-label="Program detayı" style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 71, maxHeight: "72vh", overflowY: "auto", borderRadius: "16px 16px 0 0", background: "var(--surface-card)", boxShadow: "var(--shadow-lg)", padding: "8px 0 22px" }}>
+          <div className="by-anim-fade" onClick={closeSheet} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.45)", zIndex: 70 }} />
+          <div className="by-anim-sheet" role="dialog" aria-modal="true" aria-label="Program detayı" style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 71, maxHeight: "72vh", overflowY: "auto", borderRadius: "16px 16px 0 0", background: "var(--surface-card)", boxShadow: "var(--shadow-lg)", padding: "8px 0 22px" }}>
             <div style={{ width: 44, height: 4, borderRadius: 2, background: "var(--ink-200)", margin: "8px auto 10px" }} />
             <ProgramDetailCard item={sheet} teams={teams} plain />
           </div>

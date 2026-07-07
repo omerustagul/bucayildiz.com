@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { Tabs } from "@/components/ui/Tabs";
 import { Icon } from "@/lib/icons";
-import { TRAINING_STATUS_META, statusMeta } from "@/components/admin/ScheduleCalendar";
+import { TRAINING_STATUS_META, statusMeta } from "@/lib/trainingMeta";
 import {
   setTrainingStatus, updateTrainingBasics, toggleDrill, addDrill, removeDrill, saveAttendance,
 } from "@/app/admin/(panel)/antrenmanlar/actions";

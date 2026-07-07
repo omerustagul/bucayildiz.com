@@ -489,3 +489,20 @@ footer {
   .match-date { font-size: 11.5px; }
   .match-card { padding: 11px 13px; }
 }
+/* --- Overlay animasyonları: popover / bottom-sheet / drawer / modal --- */
+@keyframes byFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes byPopIn { from { opacity: 0; transform: translateY(5px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes bySheetUp { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes byDrawerIn { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+.by-anim-fade { animation: byFadeIn .18s var(--ease-out) both; }
+.by-anim-pop { animation: byPopIn .16s var(--ease-out) both; }
+.by-anim-sheet { animation: bySheetUp .26s var(--ease-out) both; }
+.by-anim-drawer { animation: byDrawerIn .22s var(--ease-out) both; }
+@media (prefers-reduced-motion: reduce) {
+  .by-anim-fade, .by-anim-pop, .by-anim-sheet, .by-anim-drawer { animation: none; }
+}
+
+/* --- Tabs: dar ekranda alt satıra sarmak yerine yatay kaydırma --- */
+.by-tabs { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.by-tabs::-webkit-scrollbar { display: none; }
+.by-tabs [role="tab"] { white-space: nowrap; flex: none; }

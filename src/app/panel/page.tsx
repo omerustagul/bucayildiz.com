@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AthleteCard } from "@/components/panel/AthleteCard";
-import { TrainingCalendar, type CalTraining } from "@/components/panel/TrainingCalendar";
+import { TrainingCalendar, type CalFixture, type CalTraining } from "@/components/panel/TrainingCalendar";
 import { PerformanceMatrix } from "@/components/panel/PerformanceMatrix";
 import { PushToggle } from "@/components/panel/PushToggle";
 import { measurementsToPerf } from "@/lib/perf";
@@ -13,11 +13,28 @@ export default async function PanelDashboard() {
   const session = await getSession();
   const athlete = await prisma.athlete.findUnique({
     where: { id: session!.athleteId! },
-    include: { team: { include: { trainings: { orderBy: { date: "asc" } } } }, measurements: { orderBy: { measuredAt: "asc" } } },
+    include: { team: true, measurements: { orderBy: { measuredAt: "asc" } } },
   });
   if (!athlete) return null;
 
-  const trainings: CalTraining[] = athlete.team.trainings.map((t) => ({ id: t.id, date: t.date, time: t.time, scope: t.scope, duration: t.duration }));
+  // Takım antrenmanları + yalnız bu sporcunun katılımcı olduğu bireysel antrenmanlar.
+  const [rawTrainings, rawFixtures] = await Promise.all([
+    prisma.training.findMany({
+      where: { teamId: athlete.teamId, OR: [{ scope: "team" }, { attendance: { some: { athleteId: athlete.id } } }] },
+      orderBy: [{ date: "asc" }, { time: "asc" }],
+      include: { drills: { orderBy: { sort: "asc" }, select: { id: true, text: true, done: true } } },
+    }),
+    prisma.fixture.findMany({
+      where: { status: "upcoming" },
+      orderBy: { date: "asc" },
+      select: { id: true, competition: true, opponent: true, isHome: true, date: true, time: true, venue: true },
+    }),
+  ]);
+  const trainings: CalTraining[] = rawTrainings.map((t) => ({
+    id: t.id, date: t.date, time: t.time, scope: t.scope, duration: t.duration,
+    status: t.status, pitch: t.pitch, notes: t.notes, drills: t.drills,
+  }));
+  const fixtures: CalFixture[] = rawFixtures;
 
   const now = new Date();
   const todayYmd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
@@ -41,7 +58,7 @@ export default async function PanelDashboard() {
         }}
       />
       <PushToggle />
-      <TrainingCalendar trainings={trainings} todayYmd={todayYmd} initialAnchor={initialAnchor} />
+      <TrainingCalendar trainings={trainings} fixtures={fixtures} todayYmd={todayYmd} initialAnchor={initialAnchor} />
       <PerformanceMatrix perf={measurementsToPerf(athlete.measurements)} />
     </>
   );

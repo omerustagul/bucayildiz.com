@@ -32,6 +32,7 @@ export function Tabs({
   return (
     <div
       role="tablist"
+      className="by-tabs"
       style={{
         display: "flex",
         gap: pill ? 4 : 2,
@@ -39,7 +40,7 @@ export function Tabs({
         background: pill ? "var(--ink-100)" : "transparent",
         padding: pill ? 3 : 0,
         borderRadius: pill ? "var(--radius-md)" : 0,
-        flexWrap: "wrap",
+        flexWrap: "nowrap", // dar ekranda sarmak yerine .by-tabs ile yatay kaydırılır
         ...style,
       }}
     >

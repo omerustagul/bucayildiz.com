@@ -1,10 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { Badge } from "@/components/ui/Badge";
 import { IconButton } from "@/components/ui/IconButton";
 import { Icon } from "@/lib/icons";
+import { statusMeta } from "@/lib/trainingMeta";
+import { useOverlayDismiss } from "@/components/ui/useOverlayDismiss";
 
-export type CalTraining = { id: string; date: string; time: string; scope: string; duration: number | null };
+export type CalDrill = { id: string; text: string; done: boolean };
+export type CalTraining = {
+  id: string; date: string; time: string; scope: string; duration: number | null;
+  status: string; pitch: string; notes: string; drills: CalDrill[];
+};
+export type CalFixture = { id: string; competition: string; opponent: string; isHome: boolean; date: string; time: string; venue: string };
 
 const MONTHS = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 const DOW = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
@@ -24,47 +33,165 @@ const startOfWeek = (d: Date) => { const x = new Date(d); const wd = (x.getDay()
 const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
 const addMonths = (d: Date, n: number) => { const x = new Date(d); x.setMonth(x.getMonth() + n, 1); return x; };
 const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+const fmtDate = (d: string) => { const [y, m, day] = d.split("-"); return day && m && y ? `${day}.${m}.${y}` : d; };
 
-function EventChip({ time, scope, compact }: { time: string; scope: string; compact?: boolean }) {
-  const t = scopeMeta(scope);
+/** Takvim olayı: antrenman veya (fikstürden otomatik) maç. */
+type CalEvent = { kind: "training"; t: CalTraining } | { kind: "fixture"; f: CalFixture };
+const evTime = (e: CalEvent) => (e.kind === "training" ? e.t.time : e.f.time);
+const evKey = (e: CalEvent) => (e.kind === "training" ? `t-${e.t.id}` : `f-${e.f.id}`);
+
+function EventChip({ ev, compact, onActivate, onEnter, onLeave }: {
+  ev: CalEvent;
+  compact?: boolean;
+  onActivate: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onEnter?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onLeave?: () => void;
+}) {
+  const meta = ev.kind === "training" ? scopeMeta(ev.t.scope) : { label: "Maç", color: "var(--red-600)", soft: "var(--red-100)" };
+  const time = evTime(ev);
   if (compact) {
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--ink-700)", overflow: "hidden", whiteSpace: "nowrap" }}>
-        <span style={{ width: 6, height: 6, borderRadius: 2, background: t.color, flex: "none" }} />
+        <span style={{ width: 6, height: 6, borderRadius: 2, background: meta.color, flex: "none" }} />
         <span className="cal-chip-txt" style={{ fontVariantNumeric: "tabular-nums", color: "var(--ink-400)" }}>{time}</span>
-        <span className="cal-chip-txt" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{t.label}</span>
+        <span className="cal-chip-txt" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{meta.label}</span>
       </div>
     );
   }
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 10px", borderRadius: "var(--radius-sm)", background: t.soft, borderLeft: `3px solid ${t.color}` }}>
-      <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, fontSize: 12.5, color: "var(--ink-700)", fontVariantNumeric: "tabular-nums" }}>{time}</span>
-      <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink-800)", lineHeight: 1.15 }}>{t.label}</span>
+    <button
+      type="button"
+      onClick={onActivate}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      style={{ font: "inherit", width: "100%", textAlign: "left", cursor: "pointer", border: "none", display: "flex", flexDirection: "column", gap: 2, padding: "8px 10px", borderRadius: "var(--radius-sm)", background: meta.soft, borderLeft: `3px solid ${meta.color}` }}
+    >
+      <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, fontSize: 12.5, color: "var(--ink-700)", fontVariantNumeric: "tabular-nums" }}>{time || "—"}</span>
+      <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink-800)", lineHeight: 1.15 }}>{meta.label}</span>
+    </button>
+  );
+}
+
+/** Popover (masaüstü hover) ve bottom-sheet (mobil) ortak detay içeriği. */
+function EventDetailCard({ ev, plain }: { ev: CalEvent; plain?: boolean }) {
+  const box: React.CSSProperties = plain
+    ? { padding: "4px 20px 0" }
+    : { background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", boxShadow: "var(--shadow-lg)", padding: 16 };
+  const metaRow: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "4px 14px", fontSize: 12.5, color: "var(--ink-500)", marginBottom: 10 };
+
+  if (ev.kind === "fixture") {
+    const f = ev.f;
+    return (
+      <div style={box}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <span style={{ width: 9, height: 9, borderRadius: 3, background: "var(--red-600)" }} />
+          <strong style={{ fontSize: 14, color: "var(--text-strong)" }}>Maç</strong>
+          <span style={{ marginLeft: "auto" }}><Badge tone="gold">{f.isHome ? "Ev Sahibi" : "Deplasman"}</Badge></span>
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-800)", marginBottom: 6 }}>
+          {f.isHome ? `Buca Yıldız – ${f.opponent}` : `${f.opponent} – Buca Yıldız`}
+        </div>
+        <div style={metaRow}>
+          <span>{f.competition}</span>
+          <span>{fmtDate(f.date)}{f.time ? ` · ${f.time}` : ""}</span>
+          {f.venue && <span>{f.venue}</span>}
+        </div>
+      </div>
+    );
+  }
+
+  const t = ev.t;
+  const st = statusMeta(t.status);
+  const sc = scopeMeta(t.scope);
+  return (
+    <div style={box}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        <span style={{ width: 9, height: 9, borderRadius: 3, background: sc.color }} />
+        <strong style={{ fontSize: 14, color: "var(--text-strong)" }}>{sc.label}</strong>
+        <span style={{ marginLeft: "auto" }}><Badge tone={st.tone}>{st.label}</Badge></span>
+      </div>
+      <div style={metaRow}>
+        <span>{fmtDate(t.date)}{t.time ? ` · ${t.time}` : ""}</span>
+        {t.duration != null && <span>{t.duration} dk</span>}
+        {t.pitch && <span>{t.pitch}</span>}
+      </div>
+      {t.drills.length > 0 && (
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--ink-500)", marginBottom: 6 }}>Antrenman İçeriği</div>
+          <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
+            {t.drills.map((d) => (
+              <li key={d.id} style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 13, color: d.done ? "var(--ink-400)" : "var(--ink-700)" }}>
+                <Icon name={d.done ? "calendar-check" : "chevron-right"} size={13} style={{ marginTop: 2, flex: "none", color: d.done ? "var(--green-600)" : "var(--ink-300)" }} />
+                <span style={{ textDecoration: d.done ? "line-through" : "none" }}>{d.text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {t.notes && <div style={{ fontSize: 12.5, color: "var(--ink-500)" }}><strong style={{ color: "var(--ink-600)" }}>Not:</strong> {t.notes}</div>}
     </div>
   );
 }
 
-export function TrainingCalendar({ trainings, todayYmd, initialAnchor }: { trainings: CalTraining[]; todayYmd: string; initialAnchor: string }) {
+export function TrainingCalendar({ trainings, fixtures = [], todayYmd, initialAnchor }: {
+  trainings: CalTraining[];
+  fixtures?: CalFixture[];
+  todayYmd: string;
+  initialAnchor: string;
+}) {
   const [view, setView] = useState<"week" | "month">("week");
   const [anchor, setAnchor] = useState<Date>(parseYmd(initialAnchor));
+  const [isMobile, setIsMobile] = useState(false);
+  const [tip, setTip] = useState<{ ev: CalEvent; x: number; y: number; up: boolean } | null>(null);
+  const [sheet, setSheet] = useState<CalEvent | null>(null);
+  const hideTimer = useRef<number | null>(null);
   const today = parseYmd(todayYmd);
 
-  const byDate: Record<string, CalTraining[]> = {};
-  for (const t of trainings) (byDate[t.date] ??= []).push(t);
-  Object.values(byDate).forEach((list) => list.sort((a, b) => a.time.localeCompare(b.time)));
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 760px)");
+    const on = () => { setIsMobile(mq.matches); if (mq.matches) setTip(null); };
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+
+  const cancelHide = useCallback(() => {
+    if (hideTimer.current) { window.clearTimeout(hideTimer.current); hideTimer.current = null; }
+  }, []);
+  useEffect(() => () => cancelHide(), [cancelHide]);
+  const scheduleHide = () => { cancelHide(); hideTimer.current = window.setTimeout(() => setTip(null), 140); };
+  const show = (ev: CalEvent, el: HTMLElement) => {
+    cancelHide();
+    const r = el.getBoundingClientRect();
+    const up = window.innerHeight - r.bottom < 340;
+    const x = Math.min(Math.max(r.left + r.width / 2, 160), window.innerWidth - 160);
+    setTip({ ev, x, y: up ? r.top - 8 : r.bottom + 8, up });
+  };
+  const closeSheet = useCallback(() => setSheet(null), []);
+  useOverlayDismiss(isMobile && sheet != null, closeSheet);
+
+  const byDate: Record<string, CalEvent[]> = {};
+  for (const t of trainings) (byDate[t.date] ??= []).push({ kind: "training", t });
+  for (const f of fixtures) (byDate[f.date] ??= []).push({ kind: "fixture", f });
+  Object.values(byDate).forEach((list) => list.sort((a, b) => evTime(a).localeCompare(evTime(b))));
   const eventsFor = (d: Date) => byDate[ymd(d)] ?? [];
 
-  const go = (dir: number) => setAnchor((a) => (view === "week" ? addDays(a, dir * 7) : addMonths(a, dir)));
+  const go = (dir: number) => { setTip(null); setAnchor((a) => (view === "week" ? addDays(a, dir * 7) : addMonths(a, dir))); };
   const mon = startOfWeek(anchor);
   const title = view === "week" ? `${mon.getDate()} – ${addDays(mon, 6).getDate()} ${MONTHS[addDays(mon, 6).getMonth()]} ${anchor.getFullYear()}` : `${MONTHS[anchor.getMonth()]} ${anchor.getFullYear()}`;
 
   const seg = (id: "week" | "month", label: string) => (
-    <button key={id} onClick={() => setView(id)} style={{ font: "inherit", cursor: "pointer", padding: "7px 16px", borderRadius: "var(--radius-sm)", border: "none", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 13, background: view === id ? "var(--navy-700)" : "transparent", color: view === id ? "#fff" : "var(--ink-500)" }}>{label}</button>
+    <button key={id} onClick={() => { setView(id); setTip(null); }} style={{ font: "inherit", cursor: "pointer", padding: "7px 16px", borderRadius: "var(--radius-sm)", border: "none", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 13, background: view === id ? "var(--navy-700)" : "transparent", color: view === id ? "#fff" : "var(--ink-500)" }}>{label}</button>
   );
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(mon, i));
   const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
   const monthCells = Array.from({ length: 42 }, (_, i) => addDays(startOfWeek(first), i));
+
+  const activate = (ev: CalEvent) => (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (isMobile) setSheet(ev);
+    else show(ev, e.currentTarget);
+  };
 
   return (
     <section>
@@ -100,7 +227,15 @@ export function TrainingCalendar({ trainings, todayYmd, initialAnchor }: { train
                   </div>
                   <div className="cal-day-body" style={{ padding: 8, display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
                     {evs.length === 0 && <span style={{ margin: "auto", fontSize: 11, color: "var(--ink-300)" }}>—</span>}
-                    {evs.map((ev) => <EventChip key={ev.id} time={ev.time} scope={ev.scope} />)}
+                    {evs.map((ev) => (
+                      <EventChip
+                        key={evKey(ev)}
+                        ev={ev}
+                        onActivate={activate(ev)}
+                        onEnter={isMobile ? undefined : (e) => show(ev, e.currentTarget)}
+                        onLeave={isMobile ? undefined : scheduleHide}
+                      />
+                    ))}
                   </div>
                 </div>
               );
@@ -120,7 +255,7 @@ export function TrainingCalendar({ trainings, todayYmd, initialAnchor }: { train
                   <button key={i} className="cal-month-cell" onClick={() => { setAnchor(day); setView("week"); }} style={{ textAlign: "left", cursor: "pointer", font: "inherit", background: isToday ? "var(--navy-50)" : "var(--surface-card)", border: `1px solid ${isToday ? "var(--navy-300)" : "var(--border-subtle)"}`, borderRadius: "var(--radius-sm)", padding: "7px 8px", minHeight: 92, opacity: inMonth ? 1 : 0.42, display: "flex", flexDirection: "column", gap: 5 }}>
                     <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, fontSize: 14, color: isToday ? "var(--navy-700)" : "var(--text-strong)", fontVariantNumeric: "tabular-nums", alignSelf: "flex-start", background: isToday ? "var(--gold-300)" : "transparent", borderRadius: 3, padding: isToday ? "0 5px" : 0 }}>{day.getDate()}</span>
                     <div style={{ display: "flex", flexDirection: "column", gap: 3, overflow: "hidden" }}>
-                      {evs.slice(0, 2).map((ev) => <EventChip key={ev.id} time={ev.time} scope={ev.scope} compact />)}
+                      {evs.slice(0, 2).map((ev) => <EventChip key={evKey(ev)} ev={ev} compact onActivate={() => {}} />)}
                       {evs.length > 2 && <span style={{ fontSize: 10.5, color: "var(--ink-400)", fontWeight: 600 }}>+{evs.length - 2} daha</span>}
                     </div>
                   </button>
@@ -136,8 +271,36 @@ export function TrainingCalendar({ trainings, todayYmd, initialAnchor }: { train
               <span style={{ width: 10, height: 10, borderRadius: 3, background: t.color }} />{t.label}
             </span>
           ))}
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--ink-500)" }}>
+            <span style={{ width: 10, height: 10, borderRadius: 3, background: "var(--red-600)" }} />Maç
+          </span>
         </div>
       </div>
+
+      {/* Portal: transform'lu üst öğeler position:fixed'ı bozmasın diye body'ye taşınır. */}
+      {tip && !isMobile && createPortal(
+        <div
+          onMouseEnter={cancelHide}
+          onMouseLeave={scheduleHide}
+          style={{ position: "fixed", left: tip.x, top: tip.y, transform: `translate(-50%, ${tip.up ? "-100%" : "0"})`, zIndex: 80, width: 300, maxWidth: "calc(100vw - 24px)" }}
+        >
+          <div className="by-anim-pop">
+            <EventDetailCard ev={tip.ev} />
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      {sheet && isMobile && createPortal(
+        <>
+          <div className="by-anim-fade" onClick={closeSheet} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.45)", zIndex: 70 }} />
+          <div className="by-anim-sheet" role="dialog" aria-modal="true" aria-label="Program detayı" style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 71, maxHeight: "72vh", overflowY: "auto", borderRadius: "16px 16px 0 0", background: "var(--surface-card)", boxShadow: "var(--shadow-lg)", padding: "8px 0 22px" }}>
+            <div style={{ width: 44, height: 4, borderRadius: 2, background: "var(--ink-200)", margin: "8px auto 10px" }} />
+            <EventDetailCard ev={sheet} plain />
+          </div>
+        </>,
+        document.body,
+      )}
     </section>
   );
 }

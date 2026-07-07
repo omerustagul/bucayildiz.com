@@ -108,6 +108,25 @@ export function ScheduleAssignCard({ teams, athletes, fixtures }: { teams: STeam
             <Select label="Takım" required options={teams.map((t) => ({ value: t.id, label: t.name }))} value={team} onChange={(e) => { setTeam(e.target.value); setSelAthletes(new Set()); }} />
             {kind === "individual" && (
               <Field label="Sporcular" required hint={`${selAthletes.size} sporcu seçili`}>
+                {teamAthletes.length > 0 && (
+                  <div style={{ display: "flex", gap: 14, marginBottom: 2 }}>
+                    <button
+                      type="button"
+                      onClick={() => setSelAthletes(new Set(teamAthletes.map((a) => a.id)))}
+                      style={{ font: "inherit", cursor: "pointer", border: "none", background: "none", padding: 0, fontSize: 12.5, fontWeight: 600, color: "var(--navy-700)" }}
+                    >
+                      Tümünü Seç
+                    </button>
+                    <button
+                      type="button"
+                      disabled={selAthletes.size === 0}
+                      onClick={() => setSelAthletes(new Set())}
+                      style={{ font: "inherit", cursor: selAthletes.size ? "pointer" : "default", border: "none", background: "none", padding: 0, fontSize: 12.5, fontWeight: 600, color: selAthletes.size ? "var(--ink-500)" : "var(--ink-300)" }}
+                    >
+                      Seçimi Temizle
+                    </button>
+                  </div>
+                )}
                 <div style={{ maxHeight: 190, overflowY: "auto", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", padding: 6, display: "flex", flexDirection: "column", gap: 2 }}>
                   {teamAthletes.length === 0 && <span style={{ padding: 8, fontSize: 13, color: "var(--ink-400)" }}>Bu takımda sporcu bulunmuyor.</span>}
                   {teamAthletes.map((a) => (

@@ -1,29 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { IconButton } from "@/components/ui/IconButton";
 import { Icon, type IconName } from "@/lib/icons";
+import { useOverlayDismiss } from "@/components/ui/useOverlayDismiss";
 
 /** Buca Yıldız Admin — interaktif kontroller. */
-
-/** Overlay (Drawer/Modal) için Escape ile kapatma + arka plan scroll kilidi. */
-function useOverlayDismiss(open: boolean, onClose: () => void) {
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [open, onClose]);
-}
 
 export function TextInput({ style, ...rest }: React.InputHTMLAttributes<HTMLInputElement>) {
   const [f, setF] = useState(false);
@@ -111,8 +95,8 @@ export function Drawer({ open, onClose, title, subtitle, children, footer, width
   if (!open || typeof document === "undefined") return null;
   return createPortal(
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.45)", zIndex: 200 }} />
-      <aside role="dialog" aria-modal="true" aria-label={title} style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: `min(${width}px, 94vw)`, background: "var(--surface-page)", boxShadow: "var(--shadow-xl)", zIndex: 201, display: "flex", flexDirection: "column" }}>
+      <div className="by-anim-fade" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.45)", zIndex: 200 }} />
+      <aside className="by-anim-drawer" role="dialog" aria-modal="true" aria-label={title} style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: `min(${width}px, 94vw)`, background: "var(--surface-page)", boxShadow: "var(--shadow-xl)", zIndex: 201, display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-subtle)", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
           <div>
             <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 22, textTransform: "uppercase", color: "var(--text-strong)", margin: 0, lineHeight: 1.05 }}>{title}</h2>
@@ -134,8 +118,8 @@ export function Modal({ open, onClose, title, children, footer, width = 460 }: {
   useOverlayDismiss(open, onClose);
   if (!open || typeof document === "undefined") return null;
   return createPortal(
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.5)", display: "grid", placeItems: "center", zIndex: 210, padding: 20 }}>
-      <div onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={title} style={{ width: `min(${width}px, 96vw)`, background: "var(--surface-page)", borderRadius: "var(--radius-xl)", boxShadow: "var(--shadow-xl)", overflow: "hidden" }}>
+    <div className="by-anim-fade" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.5)", display: "grid", placeItems: "center", zIndex: 210, padding: 20 }}>
+      <div className="by-anim-pop" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={title} style={{ width: `min(${width}px, 96vw)`, background: "var(--surface-page)", borderRadius: "var(--radius-xl)", boxShadow: "var(--shadow-xl)", overflow: "hidden" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 20, textTransform: "uppercase", color: "var(--text-strong)", margin: 0 }}>{title}</h2>
           <IconButton label="Kapat" variant="ghost" onClick={onClose}>
