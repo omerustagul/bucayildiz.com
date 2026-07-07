@@ -30,7 +30,7 @@ export function MatchList({ fixtures }: { fixtures: Fixture[] }) {
             </div>
             <div className="match-teams">
               <span className="match-team match-team-home">{f.home}</span>
-              <span className="match-score">{finished ? `${f.hs}–${f.as}` : f.time}</span>
+              <span className="match-score">{finished ? `${f.hs ?? "-"}–${f.as ?? "-"}` : f.time}</span>
               <span className="match-team">{f.away}</span>
             </div>
           </div>
