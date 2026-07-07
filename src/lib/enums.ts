@@ -1,5 +1,4 @@
 /** Paylaşılan sabit listeler (server action olmayan, hem client hem server kullanır). */
-export const TRAINING_TYPES = ["Saha", "Kondisyon", "Taktik", "Bireysel", "Maç"] as const;
 
 export const POSITIONS = ["Kaleci", "Stoper", "Bek", "Ön Libero", "Orta Saha", "Ofansif O.S.", "Kanat", "Forvet"] as const;
 

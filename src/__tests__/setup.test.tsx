@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { POST_TEMPLATES, POST_TEMPLATE_IDS, TRAINING_TYPES } from "@/lib/enums";
+import { POST_TEMPLATES, POST_TEMPLATE_IDS } from "@/lib/enums";
 
 function Greeting({ name }: { name: string }) {
   return <h1>Merhaba {name}</h1>;
@@ -9,7 +9,6 @@ function Greeting({ name }: { name: string }) {
 describe("vitest kurulumu", () => {
   describe("modül çözümleme (@/ alias)", () => {
     it("should resolve src modules when using the @/ alias", () => {
-      expect(TRAINING_TYPES).toContain("Saha");
       expect(POST_TEMPLATE_IDS).toHaveLength(POST_TEMPLATES.length);
     });
   });
