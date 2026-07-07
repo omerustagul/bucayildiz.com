@@ -31,7 +31,7 @@ Son güncelleme: 2026-06-16
   sporcu panelinde InstallHint ipucu kartı
 - **Mobil uyumluluk:** tüm sayfalar 375/320px'de taşmasız; iOS Safari
   `-webkit-text-size-adjust` kök neden düzeltmesi
-- **PostgreSQL geçişi:** dev (yerel Homebrew :5433) + prod-hazır; migration'lar
+- **PostgreSQL geçişi:** dev (native :5432) + prod-hazır; migration'lar
 - **KVKK dijital onay sistemi:** ayrı belgeler (aydınlatma/açık-rıza/sağlık/
   foto-video/pazarlama), denetim izi (hash+IP+veli), admin onay görünümü,
   veli geri-alma sayfası (`/panel/izinler`), sözleşme metin sayfaları
@@ -91,6 +91,22 @@ periyodik ölçüm girer; geçmiş korunur. **Sıradaki fırsat:** biriken serid
 **raporlama** (sporcu gelişim grafikleri, takım/dönem karşılaştırmaları, dışa
 aktarma) — artık veri buna hazır.
 
+### E. Takvim Programı + Antrenman Yönetimi — ✅ TAMAMLANDI (2026-07-07)
+Antrenman altyapısı yeniden kurgulandı (spec: `docs/superpowers/specs/2026-07-07-*`):
+- **Responsive fikstür tabloları:** `/panel/maclar` (`MatchList`) ve `/admin/fikstur`
+  (`FixturesView`) mobilde (≤560px) kaydırmasız kart görünümü.
+- **Şema:** `Training.type` kaldırıldı → `scope` (team|individual) + `status`
+  (planned|completed|cancelled|partial); yeni `TrainingDrill` (içerik maddeleri)
+  ve `TrainingAttendance` (yoklama + sporcuya özel not) modelleri. Maçlar takvimde
+  ayrı kayıt tutulmaz — `Fixture`'dan otomatik yansır.
+- **`/admin/takvim-programi`** (eski "Antrenmanlar" sayfası): Program Türü
+  (Takım/Bireysel/Maç), madde listesi, çok-seçimli sporcu; haftalık takvim +
+  masaüstü hover popover / mobil bottom-sheet; fikstürden otomatik maç çipleri.
+- **`/admin/antrenmanlar`** (yeni): durum yönetimi, madde kontrol listesi (tik),
+  yoklama tablosu (Katıldı/Katılmadı/İzinli) + sporcu başına not.
+- 13 commit, subagent-driven; her görevde spec+kalite incelemesi; typecheck +
+  10/10 test temiz. **Sonraki faz:** sporcu panelinde antrenman detay görünürlüğü.
+
 ### D. İyileştirme fikirleri (öncelik sonrası)
 - Push bildirim tetikleyicileri (yeni antrenman/maç otomatik bildirim)
 - E-posta şablonlarının zenginleştirilmesi
@@ -101,9 +117,11 @@ aktarma) — artık veri buna hazır.
 
 ## 🛠️ Çalışma notları (geliştirici)
 
-- **Veritabanı (dev):** Homebrew PostgreSQL 16, **port 5433** (5432'de başka
-  bir Postgres var). Başlat: `brew services start postgresql@16`.
-  Bağlantı: `postgresql://bucayildiz:bucayildiz_dev@127.0.0.1:5433/bucayildiz`.
+- **Veritabanı (dev, bu makine — Windows):** native **PostgreSQL 18, port 5432**
+  (Docker/5433 kullanılmıyor; Docker Desktop bu makinede bozuk).
+  Bağlantı: `postgresql://bucayildiz:bucayildiz_dev@127.0.0.1:5432/bucayildiz`.
+  > Not: eski notlarda geçen "Homebrew :5433" macOS ortamına aittir; bu depo
+  > artık Windows'ta 5432 üzerinde çalışıyor.
 - **Komutlar:** `npm run dev` · `db:migrate` · `db:seed` · `db:deploy` ·
   `db:studio` · `build` · `typecheck`.
 - **Admin giriş (dev):** admin@bucayildiz.com / BucaYildiz2026!
