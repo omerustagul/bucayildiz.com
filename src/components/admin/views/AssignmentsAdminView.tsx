@@ -66,7 +66,7 @@ export function AssignmentsAdminView({
 function SendPanel({ teams, athletes }: { teams: MTeam[]; athletes: MAthlete[] }) {
   const router = useRouter();
   const [kind, setKind] = useState<AssignmentKind>("message");
-  const [team, setTeam] = useState(teams[0]?.id ?? "");
+  const [team, setTeam] = useState("all");
   const [selAthletes, setSelAthletes] = useState<Set<string>>(new Set());
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -74,7 +74,16 @@ function SendPanel({ teams, athletes }: { teams: MTeam[]; athletes: MAthlete[] }
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const teamAthletes = useMemo(() => athletes.filter((a) => a.teamId === team), [athletes, team]);
+  const teamNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const t of teams) m.set(t.id, t.name);
+    return m;
+  }, [teams]);
+
+  const teamAthletes = useMemo(
+    () => (team === "all" ? athletes : athletes.filter((a) => a.teamId === team)),
+    [athletes, team],
+  );
 
   const toggleAthlete = (id: string) =>
     setSelAthletes((s) => {
@@ -155,7 +164,7 @@ function SendPanel({ teams, athletes }: { teams: MTeam[]; athletes: MAthlete[] }
         <Select
           label="Takım"
           required
-          options={teams.map((t) => ({ value: t.id, label: t.name }))}
+          options={[{ value: "all", label: "Tüm Takımlar" }, ...teams.map((t) => ({ value: t.id, label: t.name }))]}
           value={team}
           onChange={(e) => {
             setTeam(e.target.value);
@@ -182,7 +191,12 @@ function SendPanel({ teams, athletes }: { teams: MTeam[]; athletes: MAthlete[] }
                 }}
               >
                 <input type="checkbox" checked={selAthletes.has(a.id)} onChange={() => toggleAthlete(a.id)} />
-                {a.name}
+                <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {a.name}
+                  {team === "all" && (
+                    <span style={{ color: "var(--ink-400)", fontWeight: 500 }}> — {teamNameById.get(a.teamId) ?? ""}</span>
+                  )}
+                </span>
               </label>
             ))}
           </div>

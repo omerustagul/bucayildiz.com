@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ViewHeader, Panel, Field } from "@/components/admin/kit";
+import { ViewHeader, Panel, Field, StatTile } from "@/components/admin/kit";
 import { TextInput, TextArea, Drawer, Modal } from "@/components/admin/controls";
 import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
@@ -104,6 +104,37 @@ export function NutritionAdminView({
     return s;
   }, [plans]);
 
+  const athletesWithoutPlan = useMemo(
+    () => athletes.filter((a) => !athletesWithActivePlan.has(a.id)),
+    [athletes, athletesWithActivePlan],
+  );
+
+  const teamNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const t of teams) m.set(t.id, t.name);
+    return m;
+  }, [teams]);
+
+  const athleteNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const a of athletes) m.set(a.id, a.name);
+    return m;
+  }, [athletes]);
+
+  const todayLoggedAthleteCount = useMemo(() => {
+    const s = new Set<string>();
+    for (const l of mealLogs) if (l.date === todayYmd) s.add(l.athleteId);
+    return s.size;
+  }, [mealLogs, todayYmd]);
+
+  const recentLogs = useMemo(
+    () =>
+      [...mealLogs]
+        .sort((a, b) => (a.date === b.date ? 0 : a.date < b.date ? 1 : -1))
+        .slice(0, 10),
+    [mealLogs],
+  );
+
   const selectedAthlete = athletes.find((a) => a.id === selectedAthleteId) ?? null;
   const athletePlans = useMemo(
     () => (selectedAthleteId ? plans.filter((p) => p.athleteId === selectedAthleteId) : []),
@@ -127,23 +158,23 @@ export function NutritionAdminView({
         }
       />
 
-      <div className="hp-grid-2" style={{ display: "grid", gridTemplateColumns: "380px 1fr", gap: 18, alignItems: "start" }}>
-        <Panel title="Sporcu">
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <Select
-              label="Takım"
-              options={[{ value: "all", label: "Tüm Takımlar" }, ...teams.map((t) => ({ value: t.id, label: t.name }))]}
-              value={teamFilter}
-              onChange={(e) => setTeamFilter(e.target.value)}
-            />
-            <div style={{ maxHeight: 460, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
-              {visibleAthletes.length === 0 && (
-                <span style={{ padding: 8, fontSize: 13, color: "var(--ink-400)" }}>Bu takımda sporcu bulunmuyor.</span>
-              )}
-              {visibleAthletes.map((a) => {
-                const on = a.id === selectedAthleteId;
-                const hasActive = athletesWithActivePlan.has(a.id);
-                return (
+      {!selectedAthlete ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 18, minWidth: 0 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
+            <StatTile label="Toplam Sporcu" value={athletes.length} icon="users" accent />
+            <StatTile label="Aktif Program" value={plans.filter((p) => p.active).length} icon="clipboard-list" />
+            <StatTile label="Programsız Sporcu" value={athletesWithoutPlan.length} icon="heart-pulse" deltaTone={athletesWithoutPlan.length > 0 ? "down" : "neutral"} />
+            <StatTile label="Bugün Günlük Giren" value={todayLoggedAthleteCount} icon="calendar-days" deltaTone="neutral" />
+          </div>
+
+          <Panel title="Programsız Sporcular">
+            {athletesWithoutPlan.length === 0 ? (
+              <div style={{ padding: "8px 4px", fontSize: 13.5, color: "var(--ink-400)" }}>
+                Tüm sporcuların aktif programı var.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {athletesWithoutPlan.map((a) => (
                   <button
                     key={a.id}
                     type="button"
@@ -158,42 +189,121 @@ export function NutritionAdminView({
                       padding: "10px 11px",
                       borderRadius: "var(--radius-sm)",
                       border: "none",
-                      background: on ? "var(--navy-50)" : "transparent",
-                      color: on ? "var(--navy-800)" : "var(--ink-700)",
-                      fontWeight: on ? 600 : 500,
+                      background: "transparent",
+                      color: "var(--ink-700)",
+                      fontWeight: 500,
                       fontSize: 13.5,
                     }}
                   >
                     <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name}</span>
-                    {hasActive && (
-                      <span
-                        title="Aktif programı var"
-                        style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--gold-500)", flex: "none" }}
-                      />
-                    )}
+                    <span style={{ flex: "none", fontSize: 12, color: "var(--ink-400)" }}>{teamNameById.get(a.teamId) ?? ""}</span>
+                    <Icon name="chevron-right" size={14} />
                   </button>
-                );
-              })}
-            </div>
-          </div>
-        </Panel>
+                ))}
+              </div>
+            )}
+          </Panel>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
-          {!selectedAthlete ? (
-            <div style={{ padding: "44px 16px", textAlign: "center", color: "var(--ink-400)", fontSize: 14, background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)" }}>
-              Sporcu seçiniz.
-            </div>
-          ) : athletePlans.length === 0 ? (
-            <div style={{ padding: "44px 16px", textAlign: "center", color: "var(--ink-400)", fontSize: 14, background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)" }}>
-              Bu sporcuya ait program yok.
-            </div>
-          ) : (
-            athletePlans.map((p) => (
-              <PlanCard key={p.id} plan={p} mealLogs={mealLogs.filter((l) => l.athleteId === p.athleteId)} todayYmd={todayYmd} />
-            ))
-          )}
+          <Panel title="Son Günlük Kayıtları">
+            {recentLogs.length === 0 ? (
+              <div style={{ padding: "8px 4px", fontSize: 13.5, color: "var(--ink-400)" }}>Henüz günlük kaydı yok.</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {recentLogs.map((l) => (
+                  <div
+                    key={l.id}
+                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}
+                  >
+                    <div style={{ flex: "none", width: 84, fontFamily: "var(--font-stat)", fontWeight: 700, fontSize: 13, color: "var(--navy-700)" }}>
+                      {fmtDate(l.date)}
+                    </div>
+                    <div style={{ flex: "none", fontWeight: 600, fontSize: 13.5, color: "var(--ink-800)", maxWidth: 180, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {athleteNameById.get(l.athleteId) ?? "—"}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 13, color: "var(--ink-500)" }}>
+                      {l.note || "—"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
         </div>
-      </div>
+      ) : (
+        <div className="hp-grid-2" style={{ display: "grid", gridTemplateColumns: "380px 1fr", gap: 18, alignItems: "start" }}>
+          <Panel title="Sporcu">
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <Select
+                label="Takım"
+                options={[{ value: "all", label: "Tüm Takımlar" }, ...teams.map((t) => ({ value: t.id, label: t.name }))]}
+                value={teamFilter}
+                onChange={(e) => setTeamFilter(e.target.value)}
+              />
+              <div style={{ maxHeight: 460, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
+                {visibleAthletes.length === 0 && (
+                  <span style={{ padding: 8, fontSize: 13, color: "var(--ink-400)" }}>Bu takımda sporcu bulunmuyor.</span>
+                )}
+                {visibleAthletes.map((a) => {
+                  const on = a.id === selectedAthleteId;
+                  const hasActive = athletesWithActivePlan.has(a.id);
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => setSelectedAthleteId(on ? null : a.id)}
+                      style={{
+                        font: "inherit",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "10px 11px",
+                        borderRadius: "var(--radius-sm)",
+                        border: "none",
+                        background: on ? "var(--navy-50)" : "transparent",
+                        color: on ? "var(--navy-800)" : "var(--ink-700)",
+                        fontWeight: on ? 600 : 500,
+                        fontSize: 13.5,
+                      }}
+                    >
+                      <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name}</span>
+                      {hasActive && (
+                        <span
+                          title="Aktif programı var"
+                          style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--gold-500)", flex: "none" }}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </Panel>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
+            <div>
+              <Button
+                variant="secondary"
+                size="sm"
+                leftIcon={<Icon name="arrow-left" size={14} />}
+                onClick={() => setSelectedAthleteId(null)}
+              >
+                Rapora Dön
+              </Button>
+            </div>
+            {athletePlans.length === 0 ? (
+              <div style={{ padding: "44px 16px", textAlign: "center", color: "var(--ink-400)", fontSize: 14, background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)" }}>
+                Bu sporcuya ait program yok.
+              </div>
+            ) : (
+              athletePlans.map((p) => (
+                <PlanCard key={p.id} plan={p} mealLogs={mealLogs.filter((l) => l.athleteId === p.athleteId)} todayYmd={todayYmd} />
+              ))
+            )}
+          </div>
+        </div>
+      )}
 
       {drawerOpen && selectedAthleteId && (
         <PlanDrawer mode="create" athleteId={selectedAthleteId} onClose={() => setDrawerOpen(false)} />
