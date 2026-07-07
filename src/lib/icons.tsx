@@ -58,6 +58,7 @@ import {
   ArrowUpFromLine,
   FileText,
   Apple,
+  EyeOff,
   type LucideIcon,
 } from "lucide-react";
 
@@ -118,6 +119,7 @@ const ICONS: Record<string, LucideIcon> = {
   "arrow-up-from-line": ArrowUpFromLine,
   "file-text": FileText,
   apple: Apple,
+  "eye-off": EyeOff,
 };
 
 export type IconName = keyof typeof ICONS;

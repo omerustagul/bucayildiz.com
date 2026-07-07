@@ -4,7 +4,7 @@ import { ViewHeader } from "@/components/admin/ui";
 import { Toolbar } from "@/components/admin/kit";
 import { PerformanceMatrix } from "@/components/panel/PerformanceMatrix";
 import { measurementsToPerf } from "@/lib/perf";
-import { AthleteSelect, NewMeasurementButton, MeasurementHistory, type MeasurementRow } from "@/components/admin/MeasurementManager";
+import { AthletePickerTrigger, NewMeasurementButton, MeasurementHistory, type MeasurementRow } from "@/components/admin/MeasurementManager";
 import { PerformanceOverview } from "@/components/admin/PerformanceOverview";
 
 export const metadata: Metadata = { title: "Performans Ölçümleri" };
@@ -12,11 +12,14 @@ export const metadata: Metadata = { title: "Performans Ölçümleri" };
 export default async function PerformansPage({ searchParams }: { searchParams: Promise<{ athlete?: string }> }) {
   const { athlete: selectedId } = await searchParams;
 
-  const athletes = await prisma.athlete.findMany({
-    orderBy: [{ team: { sort: "asc" } }, { name: "asc" }],
-    select: { id: true, name: true, team: { select: { name: true } } },
-  });
-  const athleteOpts = athletes.map((a) => ({ id: a.id, name: a.name, teamName: a.team.name }));
+  const [teams, athletes] = await Promise.all([
+    prisma.team.findMany({ orderBy: { sort: "asc" }, select: { id: true, name: true } }),
+    prisma.athlete.findMany({
+      orderBy: [{ team: { sort: "asc" } }, { name: "asc" }],
+      select: { id: true, name: true, teamId: true, team: { select: { name: true } } },
+    }),
+  ]);
+  const athleteOpts = athletes.map((a) => ({ id: a.id, name: a.name, teamId: a.teamId, teamName: a.team.name }));
 
   // ---- Sporcu seçili: matris + "Yeni Ölçüm Gir" + geçmiş ----
   if (selectedId) {
@@ -41,7 +44,7 @@ export default async function PerformansPage({ searchParams }: { searchParams: P
           subtitle={athlete ? `${athlete.name} · ${athlete.team.name}` : "Sporcu performans matrisi"}
           action={<NewMeasurementButton athleteId={selectedId} />}
         />
-        <Toolbar><AthleteSelect athletes={athleteOpts} selectedId={selectedId} /></Toolbar>
+        <Toolbar><AthletePickerTrigger teams={teams} athletes={athleteOpts} selectedId={selectedId} /></Toolbar>
         <PerformanceMatrix perf={perf} />
         <MeasurementHistory measurements={rows} />
       </>
@@ -79,7 +82,7 @@ export default async function PerformansPage({ searchParams }: { searchParams: P
   return (
     <>
       <ViewHeader title="Performans Ölçümleri" subtitle="Takım geneli ölçüm durumu — detay için bir sporcu seçin" />
-      <Toolbar><AthleteSelect athletes={athleteOpts} selectedId={null} /></Toolbar>
+      <Toolbar><AthletePickerTrigger teams={teams} athletes={athleteOpts} selectedId={null} /></Toolbar>
       <PerformanceOverview
         athletesTotal={athleteOpts.length}
         measuredCount={grouped.length}

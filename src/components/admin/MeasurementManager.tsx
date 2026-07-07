@@ -4,12 +4,14 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { TextInput, Modal } from "@/components/admin/controls";
 import { Field } from "@/components/admin/kit";
+import { AthletePickerModal } from "@/components/admin/AthletePickerModal";
 import { Button } from "@/components/ui/Button";
 import { Icon, type IconName } from "@/lib/icons";
 import { computeVo2, YOYO_LEVELS, TESTS, TEST_BY_KEY, type TestKey } from "@/lib/perf";
 import { addMeasurement, deleteMeasurement } from "@/app/admin/(panel)/performans/actions";
 
-type AthleteOpt = { id: string; name: string; teamName: string };
+type TeamOpt = { id: string; name: string };
+type AthleteOpt = { id: string; name: string; teamId: string; teamName: string };
 export type MeasurementRow = {
   id: string; measuredAt: string;
   yoyoLevel: string | null; yoyoDistance: number | null; repeatedSprint: number | null;
@@ -52,19 +54,28 @@ const numOrNull = (s: string | undefined) => (s == null || s.trim() === "" ? nul
 
 /* ---------------------------------------------------------------- Sporcu seçici */
 
-export function AthleteSelect({ athletes, selectedId }: { athletes: AthleteOpt[]; selectedId: string | null }) {
+export function AthletePickerTrigger({ teams, athletes, selectedId }: { teams: TeamOpt[]; athletes: AthleteOpt[]; selectedId: string | null }) {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const selected = athletes.find((a) => a.id === selectedId) ?? null;
+
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
       <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-strong)" }}>Sporcu:</label>
-      <select
-        style={selStyle}
-        value={selectedId ?? ""}
-        onChange={(e) => router.push(`/admin/performans${e.target.value ? `?athlete=${e.target.value}` : ""}`)}
-      >
-        <option value="">Seçiniz…</option>
-        {athletes.map((a) => <option key={a.id} value={a.id}>{a.name} ({a.teamName})</option>)}
-      </select>
+      <Button variant="secondary" size="sm" leftIcon={<Icon name="users" size={15} />} onClick={() => setOpen(true)}>
+        {selected ? `${selected.name} (${selected.teamName})` : "Sporcu Seç"}
+      </Button>
+      {open && (
+        <AthletePickerModal
+          open={open}
+          onClose={() => setOpen(false)}
+          teams={teams}
+          athletes={athletes}
+          mode="single"
+          selectedIds={selectedId ? [selectedId] : []}
+          onSelect={(id) => router.push(`/admin/performans?athlete=${id}`)}
+        />
+      )}
     </div>
   );
 }

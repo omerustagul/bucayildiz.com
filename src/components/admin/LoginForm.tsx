@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Icon } from "@/lib/icons";
 import { loginAction } from "@/app/admin/giris/actions";
 
@@ -45,12 +46,14 @@ export function LoginForm({ next }: { next?: string }) {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-strong)" }}>Şifre</label>
-        <div style={{ position: "relative" }}>
-          <span style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", color: "var(--ink-400)" }}>
-            <Icon name="lock" size={16} />
-          </span>
-          <input type="password" autoComplete="current-password" style={fieldBase} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        </div>
+        <PasswordInput
+          value={password}
+          onChange={setPassword}
+          autoComplete="current-password"
+          placeholder="••••••••"
+          leftIcon={<Icon name="lock" size={16} />}
+          required
+        />
       </div>
 
       {error && (

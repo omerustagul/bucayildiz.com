@@ -122,7 +122,7 @@ export function AdminShell({ user, children }: { user: { name: string; role: str
           {showLabels && (
             <div style={{ lineHeight: 1 }}>
               <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 16, color: "#fff", textTransform: "uppercase", letterSpacing: ".02em" }}>Buca Yıldız</div>
-              <div style={{ fontSize: 9.5, letterSpacing: ".2em", textTransform: "uppercase", color: "var(--gold-400)", marginTop: 3, fontWeight: 600 }}>Yönetim Paneli</div>
+              <div style={{ fontSize: 9.5, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--gold-400)", marginTop: 3, fontWeight: 600 }}>Yönetim Paneli</div>
             </div>
           )}
         </Link>
@@ -198,13 +198,13 @@ export function AdminShell({ user, children }: { user: { name: string; role: str
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flex: "none" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <Link href="/admin/profil" title="Profilim" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
                 <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--grad-gold)", display: "grid", placeItems: "center", color: "var(--navy-900)", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 15 }}>{initials(user.name)}</div>
                 <div className="admin-user-text" style={{ lineHeight: 1.2 }}>
                   <div style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 13.5, color: "var(--text-strong)", whiteSpace: "nowrap" }}>{user.name}</div>
                   <div style={{ fontSize: 11.5, color: "var(--ink-400)" }}>{roleLabel}</div>
                 </div>
-              </div>
+              </Link>
               <span className="admin-user-text" style={{ width: 1, height: 30, background: "var(--ink-200)" }} />
               <form action={logoutAction}>
                 <button type="submit" title="Çıkış" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", background: "var(--surface-card)", color: "var(--text-muted)", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
