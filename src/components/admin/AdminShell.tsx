@@ -37,7 +37,10 @@ const NAV: NavGroup[] = [
   },
   {
     group: "İletişim",
-    items: [{ href: "/admin/bildirimler", label: "Bildirimler", icon: "bell", ready: true }],
+    items: [
+      { href: "/admin/mesajlar", label: "Mesaj & Doküman", icon: "send", ready: true },
+      { href: "/admin/bildirimler", label: "Bildirimler", icon: "bell", ready: true },
+    ],
   },
   {
     group: "Sistem",
