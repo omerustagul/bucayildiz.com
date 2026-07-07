@@ -17,6 +17,7 @@ const NAV: { href: string; label: string; icon: IconName; ready?: boolean }[] = 
   { href: "/panel", label: "Genel Bakış", icon: "layout-dashboard", ready: true },
   { href: "/panel/antrenmanlar", label: "Antrenmanlar", icon: "calendar-days", ready: true },
   { href: "/panel/beslenme", label: "Beslenme", icon: "apple", ready: true },
+  { href: "/panel/mesajlar", label: "Mesajlar", icon: "mail", ready: true },
   { href: "/panel/performans", label: "Performans", icon: "heart-pulse", ready: true },
   { href: "/panel/izinler", label: "İzinler", icon: "shield-check", ready: true },
   { href: "/panel/maclar", label: "Maçlar", icon: "trophy", ready: true },
@@ -24,7 +25,7 @@ const NAV: { href: string; label: string; icon: IconName; ready?: boolean }[] = 
   { href: "/panel/profil", label: "Profil", icon: "user-round", ready: true },
 ];
 
-export function PanelShell({ athlete, children }: { athlete: Athlete; children: React.ReactNode }) {
+export function PanelShell({ athlete, unreadCount = 0, children }: { athlete: Athlete; unreadCount?: number; children: React.ReactNode }) {
   const pathname = usePathname();
   const numberLabel = athlete.number != null ? `${athlete.number} Numara` : athlete.position;
   const title = NAV.find((n) => n.href === pathname)?.label ?? "Genel Bakış";
@@ -86,6 +87,11 @@ export function PanelShell({ athlete, children }: { athlete: Athlete; children: 
                 {on && <span style={{ position: "absolute", left: 0, top: 8, bottom: 8, width: 3, background: "var(--grad-gold)", borderRadius: "0 2px 2px 0" }} />}
                 <span style={{ color: on ? "var(--gold-400)" : "var(--navy-300)", display: "inline-flex" }}><Icon name={n.icon} size={18} /></span>
                 <span style={{ flex: 1 }}>{n.label}</span>
+                {n.href === "/panel/mesajlar" && unreadCount > 0 && (
+                  <span style={{ fontSize: 11, fontWeight: 700, lineHeight: 1, color: "var(--navy-900)", background: "var(--grad-gold)", borderRadius: "var(--radius-pill)", padding: "3px 7px", minWidth: 18, textAlign: "center" }}>
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
                 {disabled && <span style={{ fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--navy-400)", border: "1px solid var(--navy-600)", borderRadius: 4, padding: "1px 5px" }}>Yakında</span>}
               </>
             );

@@ -8,7 +8,10 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   if (!session) redirect("/giris");
   if (!session.athleteId) redirect("/admin");
 
-  const athlete = await prisma.athlete.findUnique({ where: { id: session.athleteId }, include: { team: true } });
+  const [athlete, unreadCount] = await Promise.all([
+    prisma.athlete.findUnique({ where: { id: session.athleteId }, include: { team: true } }),
+    prisma.athleteAssignment.count({ where: { athleteId: session.athleteId, readAt: null } }),
+  ]);
   if (!athlete) redirect("/giris");
 
   return (
@@ -20,6 +23,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         position: athlete.position,
         photoUrl: athlete.photoUrl,
       }}
+      unreadCount={unreadCount}
     >
       {children}
     </PanelShell>
