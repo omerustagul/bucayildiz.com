@@ -59,7 +59,7 @@ export function SiteFooter() {
       >
         <Image src="/brand/logo-emblem.png" alt="Buca Yıldız" width={78} height={78} style={{ objectFit: "contain" }} />
       </div>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "78px 32px 28px" }}>
+      <div style={{ maxWidth: 1540, margin: "0 auto", padding: "78px 32px 28px" }}>
         <div className="hp-grid-footer" style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 1fr 1.4fr", gap: 40 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div

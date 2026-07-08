@@ -36,7 +36,7 @@ export async function MediaSection() {
 
   return (
     <section style={{ background: "var(--surface-subtle)" }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "88px clamp(16px, 5vw, 32px)" }}>
+      <div style={{ maxWidth: 1540, margin: "0 auto", padding: "88px clamp(16px, 5vw, 32px)" }}>
         <SectionHeading
           kicker="Medya"
           title="Görseller & Videolar"

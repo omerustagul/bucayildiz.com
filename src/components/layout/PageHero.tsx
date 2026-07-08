@@ -36,7 +36,7 @@ export function PageHero({
       >
         ★
       </span>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "clamp(36px,5vw,64px) 32px", position: "relative" }}>
+      <div style={{ maxWidth: 1540, margin: "0 auto", padding: "clamp(36px,5vw,64px) 32px", position: "relative" }}>
         {breadcrumb.length > 0 && (
           <nav aria-label="breadcrumb" style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
             <Link href="/" className="footer-link" style={{ fontSize: 13, color: "var(--navy-200)" }}>

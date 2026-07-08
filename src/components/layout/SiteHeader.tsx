@@ -167,95 +167,95 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
             </span>
           </IconButton>
         </div>
-          <div
-            className="by-scroll-on-dark"
-            aria-hidden={!mobileOpen}
-            style={{
-              borderTop: mobileOpen ? "1px solid rgba(255,255,255,0.08)" : "1px solid transparent",
-              maxHeight: mobileOpen ? "calc(100vh - 66px)" : "0px",
-              opacity: mobileOpen ? 1 : 0,
-              overflowY: mobileOpen ? "auto" : "hidden",
-              pointerEvents: mobileOpen ? "auto" : "none",
-              transition: "max-height .34s var(--ease-out), opacity .26s ease",
-            }}
-          >
-            <div style={{ padding: "14px 18px", display: "flex", flexDirection: "column", gap: 10, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-              <Button as="a" href="/giris" variant="on-navy" size="md" fullWidth leftIcon={navIcon("lock", 16)}>
-                Sporcu Girişi
-              </Button>
-              <Button as="a" href="/basvuru" variant="accent" size="md" fullWidth leftIcon={navIcon("clipboard-list", 16)}>
-                Başvuru Formu
-              </Button>
-            </div>
-            <nav style={{ padding: "8px 10px" }}>
-              {MENU.map((m) => {
-                const expandable = m.items.length > 0;
-                const isOpen = acc === m.label;
-                return (
-                  <div key={m.label}>
-                    <Link
-                      href={m.href}
-                      onClick={(e) => {
-                        if (expandable) {
-                          e.preventDefault();
-                          setAcc(isOpen ? null : m.label);
-                        }
-                      }}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "13px 12px",
-                        textDecoration: "none",
-                        fontFamily: "var(--font-heading)",
-                        fontWeight: 600,
-                        fontSize: 18,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.03em",
-                        color: m.label === active ? "var(--gold-400)" : "#fff",
-                      }}
-                    >
-                      {m.label}
-                      {expandable && (
-                        <span
+        <div
+          className="by-scroll-on-dark"
+          aria-hidden={!mobileOpen}
+          style={{
+            borderTop: mobileOpen ? "1px solid rgba(255,255,255,0.08)" : "1px solid transparent",
+            maxHeight: mobileOpen ? "calc(100vh - 66px)" : "0px",
+            opacity: mobileOpen ? 1 : 0,
+            overflowY: mobileOpen ? "auto" : "hidden",
+            pointerEvents: mobileOpen ? "auto" : "none",
+            transition: "max-height .34s var(--ease-out), opacity .26s ease",
+          }}
+        >
+          <div style={{ padding: "14px 18px", display: "flex", flexDirection: "column", gap: 10, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <Button as="a" href="/giris" variant="on-navy" size="md" fullWidth leftIcon={navIcon("lock", 16)}>
+              Sporcu Girişi
+            </Button>
+            <Button as="a" href="/basvuru" variant="accent" size="md" fullWidth leftIcon={navIcon("clipboard-list", 16)}>
+              Başvuru Formu
+            </Button>
+          </div>
+          <nav style={{ padding: "8px 10px" }}>
+            {MENU.map((m) => {
+              const expandable = m.items.length > 0;
+              const isOpen = acc === m.label;
+              return (
+                <div key={m.label}>
+                  <Link
+                    href={m.href}
+                    onClick={(e) => {
+                      if (expandable) {
+                        e.preventDefault();
+                        setAcc(isOpen ? null : m.label);
+                      }
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "13px 12px",
+                      textDecoration: "none",
+                      fontFamily: "var(--font-heading)",
+                      fontWeight: 600,
+                      fontSize: 18,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.03em",
+                      color: m.label === active ? "var(--gold-400)" : "#fff",
+                    }}
+                  >
+                    {m.label}
+                    {expandable && (
+                      <span
+                        style={{
+                          color: "var(--navy-300)",
+                          display: "inline-flex",
+                          transform: isOpen ? "rotate(180deg)" : "none",
+                          transition: "transform .2s",
+                        }}
+                      >
+                        {navIcon("chevron-down", 16)}
+                      </span>
+                    )}
+                  </Link>
+                  {expandable && (
+                    <div style={{ display: "flex", flexDirection: "column", overflow: "hidden", maxHeight: isOpen ? 480 : 0, opacity: isOpen ? 1 : 0, paddingBottom: isOpen ? 6 : 0, transition: "max-height .3s var(--ease-out), opacity .24s ease, padding .3s ease" }}>
+                      {m.items.map((it) => (
+                        <Link
+                          key={it.label}
+                          href={it.href}
                           style={{
-                            color: "var(--navy-300)",
-                            display: "inline-flex",
-                            transform: isOpen ? "rotate(180deg)" : "none",
-                            transition: "transform .2s",
+                            padding: "10px 12px 10px 24px",
+                            textDecoration: "none",
+                            fontFamily: "var(--font-body)",
+                            fontSize: 14.5,
+                            color: "var(--navy-200)",
                           }}
                         >
-                          {navIcon("chevron-down", 16)}
-                        </span>
-                      )}
-                    </Link>
-                    {expandable && (
-                      <div style={{ display: "flex", flexDirection: "column", overflow: "hidden", maxHeight: isOpen ? 480 : 0, opacity: isOpen ? 1 : 0, paddingBottom: isOpen ? 6 : 0, transition: "max-height .3s var(--ease-out), opacity .24s ease, padding .3s ease" }}>
-                        {m.items.map((it) => (
-                          <Link
-                            key={it.label}
-                            href={it.href}
-                            style={{
-                              padding: "10px 12px 10px 24px",
-                              textDecoration: "none",
-                              fontFamily: "var(--font-body)",
-                              fontSize: 14.5,
-                              color: "var(--navy-200)",
-                            }}
-                          >
-                            {it.label}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </nav>
-            <div style={{ padding: "14px 18px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <Social size="md" />
-            </div>
+                          {it.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+          <div style={{ padding: "14px 18px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <Social size="md" />
           </div>
+        </div>
       </header>
 
       {/* ---------- DESKTOP (≥901px) ---------- */}
@@ -269,91 +269,91 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
           borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "14px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
-          <Brand />
-          <span style={{ width: 1, height: 34, background: "rgba(255,255,255,0.12)" }} />
-          <Social />
+        <div style={{ maxWidth: 1680, margin: "0 auto", padding: "14px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
+            <Brand />
+            <span style={{ width: 1, height: 34, background: "rgba(255,255,255,0.12)" }} />
+            <Social />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Button as="a" href="/giris" variant="on-navy" size="sm" leftIcon={navIcon("lock")}>
+              Sporcu Girişi
+            </Button>
+            <Button as="a" href="/basvuru" variant="accent" size="sm" leftIcon={navIcon("clipboard-list")}>
+              Başvuru Formu
+            </Button>
+          </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Button as="a" href="/giris" variant="on-navy" size="sm" leftIcon={navIcon("lock")}>
-            Sporcu Girişi
-          </Button>
-          <Button as="a" href="/basvuru" variant="accent" size="sm" leftIcon={navIcon("clipboard-list")}>
-            Başvuru Formu
-          </Button>
-        </div>
-      </div>
-      <nav style={{ background: "var(--navy-900)", borderTop: "1px solid rgba(255,255,255,0.06)" }} onMouseLeave={() => setOpen(null)}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 32px", display: "flex", gap: 2, flexWrap: "wrap" }}>
-          {MENU.map((m) => {
-            const isActive = m.label === active;
-            const isOpen = open === m.label;
-            return (
-              <div key={m.label} style={{ position: "relative" }} onMouseEnter={() => setOpen(m.items.length ? m.label : null)}>
-                <Link
-                  href={m.href}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "14px 18px",
-                    fontFamily: "var(--font-heading)",
-                    fontWeight: 600,
-                    fontSize: 16,
-                    letterSpacing: "0.04em",
-                    textTransform: "uppercase",
-                    color: isActive ? "#fff" : "var(--navy-200)",
-                    borderBottom: `2px solid ${isActive || isOpen ? "var(--gold-500)" : "transparent"}`,
-                    transition: "color .15s, border-color .15s",
-                    textDecoration: "none",
-                  }}
-                >
-                  {m.label}
-                  {m.items.length > 0 && navIcon("chevron-down")}
-                </Link>
-                {isOpen && m.items.length > 0 && (
-                  <div
+        <nav style={{ background: "var(--navy-900)", borderTop: "1px solid rgba(255,255,255,0.06)" }} onMouseLeave={() => setOpen(null)}>
+          <div style={{ maxWidth: 1680, margin: "0 auto", padding: "0 32px", display: "flex", gap: 32, flexWrap: "wrap" }}>
+            {MENU.map((m) => {
+              const isActive = m.label === active;
+              const isOpen = open === m.label;
+              return (
+                <div key={m.label} style={{ position: "relative" }} onMouseEnter={() => setOpen(m.items.length ? m.label : null)}>
+                  <Link
+                    href={m.href}
                     style={{
-                      position: "absolute",
-                      top: "100%",
-                      left: 0,
-                      minWidth: 210,
-                      background: "#fff",
-                      border: "1px solid var(--ink-200)",
-                      borderTop: "2px solid var(--gold-500)",
-                      borderRadius: "0 0 var(--radius-md) var(--radius-md)",
-                      boxShadow: "var(--shadow-lg)",
-                      padding: 6,
-                      zIndex: 60,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "14px 4px",
+                      fontFamily: "var(--font-heading)",
+                      fontWeight: 600,
+                      fontSize: 16,
+                      letterSpacing: "0.04em",
+                      textTransform: "uppercase",
+                      color: isActive ? "#fff" : "var(--navy-200)",
+                      borderBottom: `2px solid ${isActive || isOpen ? "var(--gold-500)" : "transparent"}`,
+                      transition: "color .15s, border-color .15s",
+                      textDecoration: "none",
                     }}
                   >
-                    {m.items.map((it) => (
-                      <Link
-                        key={it.label}
-                        href={it.href}
-                        className="mega-link"
-                        style={{
-                          display: "block",
-                          padding: "10px 14px",
-                          fontFamily: "var(--font-body)",
-                          fontSize: 14.5,
-                          fontWeight: 500,
-                          color: "var(--ink-700)",
-                          textDecoration: "none",
-                          borderRadius: "var(--radius-sm)",
-                        }}
-                      >
-                        {it.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </nav>
+                    {m.label}
+                    {m.items.length > 0 && navIcon("chevron-down")}
+                  </Link>
+                  {isOpen && m.items.length > 0 && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: 0,
+                        minWidth: 210,
+                        background: "#fff",
+                        border: "1px solid var(--ink-200)",
+                        borderTop: "2px solid var(--gold-500)",
+                        borderRadius: "0 0 var(--radius-md) var(--radius-md)",
+                        boxShadow: "var(--shadow-lg)",
+                        padding: 6,
+                        zIndex: 60,
+                      }}
+                    >
+                      {m.items.map((it) => (
+                        <Link
+                          key={it.label}
+                          href={it.href}
+                          className="mega-link"
+                          style={{
+                            display: "block",
+                            padding: "10px 14px",
+                            fontFamily: "var(--font-body)",
+                            fontSize: 14.5,
+                            fontWeight: 500,
+                            color: "var(--ink-700)",
+                            textDecoration: "none",
+                            borderRadius: "var(--radius-sm)",
+                          }}
+                        >
+                          {it.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </nav>
       </header>
     </>
   );

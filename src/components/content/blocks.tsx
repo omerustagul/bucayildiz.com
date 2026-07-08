@@ -62,7 +62,7 @@ export function Section({
 }) {
   return (
     <section style={{ background: BG[background], ...style }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "clamp(48px,6vw,88px) 32px" }}>{children}</div>
+      <div style={{ maxWidth: 1540, margin: "0 auto", padding: "clamp(48px,6vw,88px) 32px" }}>{children}</div>
     </section>
   );
 }

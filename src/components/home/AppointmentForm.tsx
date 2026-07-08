@@ -13,6 +13,7 @@ import { AGE_GROUPS } from "@/lib/validation";
  */
 const inputStyle: React.CSSProperties = {
   width: "100%",
+  height: "44px",
   fontFamily: "var(--font-body)",
   fontSize: 14.5,
   padding: "10px 15px",

@@ -60,7 +60,7 @@ export default async function BasvuruPage() {
   }));
 
   return (
-    <div style={{ maxWidth: 1280, margin: "20px auto", padding: "0 16px" }}>
+    <div style={{ maxWidth: 1540, margin: "20px auto", padding: "0 16px" }}>
       <div
         className="basvuru-grid"
         style={{

@@ -39,7 +39,7 @@ export async function FixtureSection() {
   return (
     <section style={{ background: "var(--grad-navy-deep)", position: "relative", overflow: "hidden" }}>
       <span style={{ position: "absolute", right: -80, top: -60, fontSize: 420, lineHeight: 1, color: "rgba(201,162,39,0.04)", pointerEvents: "none" }}>★</span>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "88px clamp(16px, 5vw, 32px)", position: "relative" }}>
+      <div style={{ maxWidth: 1540, margin: "0 auto", padding: "88px clamp(16px, 5vw, 32px)", position: "relative" }}>
         <SectionHeading
           kicker="Fikstür"
           title="Güncel Maç Programı"

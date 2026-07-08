@@ -79,7 +79,7 @@ function Radar({ size = 168 }: { size?: number }) {
 function SampleReportCard() {
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", borderRadius: "var(--radius-xl)", border: "1.5px solid var(--gold-500)", background: "var(--surface-card)", padding: 6, boxShadow: "var(--shadow-lg)" }}>
-      <div style={{ textAlign: "center", padding: "6px 10px 7px", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 12, letterSpacing: ".16em", textTransform: "uppercase", color: "var(--gold-700)" }}>
+      <div style={{ textAlign: "center", padding: "6px 10px 7px", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 18, letterSpacing: ".16em", textTransform: "uppercase", color: "var(--gold-700)" }}>
         Örnek Rapor
       </div>
       <div style={{ flex: 1, background: "#f7f4ea", borderRadius: "var(--radius-lg)", padding: "12px 16px 11px", color: "var(--navy-900)" }}>

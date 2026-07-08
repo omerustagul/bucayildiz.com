@@ -61,7 +61,7 @@ export async function JerseySection() {
       </div>
 
       <div>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "44px clamp(16px, 5vw, 32px) 8px" }}>
+        <div style={{ maxWidth: 1540, margin: "0 auto", padding: "44px clamp(16px, 5vw, 32px) 8px" }}>
           <SectionHeading
             kicker="Mağaza"
             title="2025/26 Formalarımız"
