@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Icon } from "@/lib/icons";
 
 /**
  * Buca Yıldız — AgeGroupCard
- * Yaş grubu kartı (A Takım, U-15…U-18). Photo + navy scrim + big label.
+ * Yaş grubu kartı (A Takım, U-15…U-18). FC Barcelona "Barça Tickets"
+ * stili: bordersız görsel kart, alt gradyan scrim, sol altta başlık +
+ * sağa çift ok. Hover'da görsel hafif yakınlaşır, oklar sağa kayar.
  */
 export function AgeGroupCard({
   label,
-  title,
-  count,
   image,
   href = "#",
   style = {},
@@ -33,8 +34,7 @@ export function AgeGroupCard({
         aspectRatio: "3 / 4",
         borderRadius: "var(--radius-lg)",
         textDecoration: "none",
-        border: "1px solid var(--navy-700)",
-        background: image ? `center/cover no-repeat url("${image}")` : "var(--grad-navy)",
+        background: "var(--grad-navy)",
         boxShadow: hover ? "var(--shadow-lg)" : "var(--shadow-sm)",
         transition: "box-shadow var(--dur-base) var(--ease-out)",
         ...style,
@@ -42,7 +42,18 @@ export function AgeGroupCard({
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
-      {!image && (
+      {/* Görsel katmanı — hover'da hafif zoom (background'a transform işlemez, ayrı katman gerekir) */}
+      {image ? (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: `center/cover no-repeat url("${image}")`,
+            transform: hover ? "scale(1.05)" : "scale(1)",
+            transition: "transform .45s var(--ease-out)",
+          }}
+        />
+      ) : (
         <div
           style={{
             position: "absolute",
@@ -50,60 +61,48 @@ export function AgeGroupCard({
             display: "grid",
             placeItems: "center",
             color: "rgba(255,255,255,0.06)",
-            fontFamily: "var(--font-heading)",
-            fontWeight: 700,
             fontSize: 120,
-            textTransform: "uppercase",
           }}
         >
           ★
         </div>
       )}
-      <div style={{ position: "absolute", inset: 0, background: "var(--scrim-navy)" }} />
-      <span
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 3,
-          background: "var(--grad-gold)",
-          transform: hover ? "scaleX(1)" : "scaleX(0)",
-          transformOrigin: "left",
-          transition: "transform var(--dur-base) var(--ease-out)",
-        }}
-      />
-      <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "var(--space-5)", display: "flex", flexDirection: "column", gap: 4 }}>
+
+      {/* Alt scrim: başlık okunabilirliği */}
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(6,12,28,0.05) 45%, rgba(6,12,28,0.88))" }} />
+
+      {/* Sol altta başlık + çift ok */}
+      <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "var(--space-5)", display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
         <span
           style={{
             fontFamily: "var(--font-heading)",
             fontWeight: 700,
-            fontSize: 40,
-            lineHeight: 0.95,
-            letterSpacing: "-0.01em",
+            fontSize: "clamp(21px, 1.9vw, 28px)",
+            lineHeight: 1,
+            letterSpacing: ".01em",
             textTransform: "uppercase",
             color: "#fff",
+            minWidth: 0,
           }}
         >
           {label}
         </span>
-        {title && <span style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "var(--navy-100)" }}>{title}</span>}
         <span
+          aria-hidden
           style={{
-            marginTop: 8,
             display: "inline-flex",
             alignItems: "center",
-            gap: 7,
-            fontFamily: "var(--font-body)",
-            fontWeight: 600,
-            fontSize: 12,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: "var(--gold-400)",
+            flex: "none",
+            color: "#fff",
+            transform: hover ? "translateX(5px)" : "none",
+            transition: "transform var(--dur-fast) var(--ease-out)",
           }}
         >
-          {count ? `${count} Sporcu` : "Kadroyu Gör"}
-          <span style={{ transition: "transform var(--dur-fast)", transform: hover ? "translateX(4px)" : "none" }}>→</span>
+          {/* çift ok: iki chevron üst üste bindirilir (») */}
+          <Icon name="chevron-right" size={20} />
+          <span style={{ marginLeft: -12, display: "inline-flex" }}>
+            <Icon name="chevron-right" size={20} />
+          </span>
         </span>
       </div>
     </Link>
