@@ -30,9 +30,9 @@ export function TrialHero({ href = "/ucretsiz-deneme" }: { href?: string }) {
   const fadeUp = reduce
     ? { hidden: {}, show: {} }
     : {
-        hidden: { opacity: 0, y: 16 },
-        show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const } },
-      };
+      hidden: { opacity: 0, y: 16 },
+      show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const } },
+    };
   const stagger = {
     hidden: {},
     show: { transition: { staggerChildren: reduce ? 0 : 0.07, delayChildren: reduce ? 0 : 0.15 } },
@@ -40,53 +40,66 @@ export function TrialHero({ href = "/ucretsiz-deneme" }: { href?: string }) {
 
   return (
     <section className="trial-hero" style={{ position: "relative", overflow: "hidden", color: "#fff" }}>
-      {/* 8-18 yaş rozeti */}
       <div
-        style={{
-          position: "absolute",
-          top: "clamp(16px, 4vw, 40px)",
-          right: "clamp(16px, 4vw, 56px)",
-          width: "clamp(70px, 13vw, 104px)",
-          height: "clamp(70px, 13vw, 104px)",
-          borderRadius: "50%",
-          background: "var(--grad-gold)",
-          color: "var(--navy-900)",
-          display: "grid",
-          placeItems: "center",
-          textAlign: "center",
-          boxShadow: "0 8px 28px rgba(0,0,0,.45)",
-          zIndex: 2,
-        }}
-      >
-        <span style={{ lineHeight: 1 }}>
-          <span style={{ display: "block", fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(17px, 3vw, 26px)" }}>8-18</span>
-          <span style={{ display: "block", fontWeight: 700, fontSize: "clamp(8px, 1.4vw, 11px)", letterSpacing: ".1em", marginTop: 3 }}>YAŞ ARASI</span>
-        </span>
-      </div>
-
-      <div
+        className="trial-hero-inner"
         style={{
           maxWidth: 1540,
+          width: "100%",
           margin: "0 auto",
           padding: "clamp(36px, 2vw, 56px) clamp(16px, 5vw, 32px)",
           position: "relative",
           zIndex: 1,
         }}
       >
+        {/* 8-18 yaş arması — konteyner içeriğine hizalı, kulüp kalkanı formunda */}
         <motion.div
+          className="trial-hero-badge"
+          initial={reduce ? false : { opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            position: "absolute",
+            top: "clamp(36px, 2vw, 56px)",
+            right: "clamp(16px, 5vw, 32px)",
+            width: "clamp(88px, 9vw, 118px)",
+            zIndex: 2,
+            filter: "drop-shadow(0 10px 26px rgba(0,0,0,.5))",
+          }}
+        >
+          <svg viewBox="0 0 120 138" style={{ display: "block", width: "100%", height: "auto" }} role="img" aria-label="8-18 yaş arası">
+            <defs>
+              <linearGradient id="byShieldGold" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stopColor="#E9C860" />
+                <stop offset=".5" stopColor="#C9A227" />
+                <stop offset="1" stopColor="#8F6E14" />
+              </linearGradient>
+            </defs>
+            {/* kalkan gövdesi + altın çerçeve */}
+            <path d="M60 6 L106 20 V66 C106 98 88 118 60 132 C32 118 14 98 14 66 V20 Z" fill="rgba(8,15,33,0.8)" stroke="url(#byShieldGold)" strokeWidth="2.5" strokeLinejoin="round" />
+            {/* iç kontur */}
+            <path d="M60 14 L98 26.5 V66 C98 93 83 110 60 122.5 C37 110 22 93 22 66 V26.5 Z" fill="none" stroke="rgba(201,162,39,0.35)" strokeWidth="1" strokeLinejoin="round" />
+            <text x="60" y="46" textAnchor="middle" style={{ fontSize: 21, fill: "url(#byShieldGold)" }}>★</text>
+            <text x="60" y="82" textAnchor="middle" style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 30, fill: "#fff", letterSpacing: ".01em" }}>8-18</text>
+            <text x="60" y="102" textAnchor="middle" style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 9.5, letterSpacing: ".24em", fill: "#DDBB4E" }}>YAŞ ARASI</text>
+          </svg>
+        </motion.div>
+
+        <motion.div
+          className="trial-hero-content"
           variants={stagger}
           initial="hidden"
           animate="show"
           style={{ maxWidth: 620, display: "flex", flexDirection: "column", gap: "clamp(18px, 3vw, 26px)" }}
         >
           <motion.h1
+            className="trial-hero-title"
             variants={fadeUp}
             style={{
               fontFamily: "var(--font-heading)",
               fontWeight: 800,
-              fontSize: "clamp(26px, 5.2vw, 46px)",
-              lineHeight: 0.98,
-              letterSpacing: "-0.01em",
+              fontSize: "clamp(26px, 5.2vw, 36px)",
+              lineHeight: 1.28,
+              letterSpacing: "0.01em",
               textTransform: "uppercase",
               color: "rgba(255,255,255,0.85)",
               margin: 0,
