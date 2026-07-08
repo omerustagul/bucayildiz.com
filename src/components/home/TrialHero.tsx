@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/Button";
 import { Icon, type IconName } from "@/lib/icons";
-import { he } from "zod/locales";
 
 /**
  * Buca Yıldız — Anasayfa üst hero: "Ücretsiz Futbolcu Gelişim Analizi".
@@ -10,17 +9,19 @@ import { he } from "zod/locales";
  */
 
 const TESTS: { icon: IconName; label: string }[] = [
-  { icon: "gauge", label: "Hız Testi" },
-  { icon: "traffic-cone", label: "Çeviklik Testi" },
-  { icon: "arrow-up-from-line", label: "Dikey Sıçrama Testi" },
-  { icon: "clipboard-list", label: "Teknik Analiz" },
-  { icon: "file-text", label: "Kişisel Rapor" },
+  { icon: "heart-pulse", label: "Yo-Yo IR1" },
+  { icon: "traffic-cone", label: "T Testi" },
+  { icon: "zap", label: "505 Çeviklik" },
+  { icon: "user-round", label: "Boy-Kilo Analizi" },
+  { icon: "dumbbell", label: "Yağ-Kas Oranı Ölçümü" },
+  { icon: "arrow-up-from-line", label: "Dikey Sıçrama" },
+  { icon: "gauge", label: "10-20-30 m Sprint" },
 ];
 
 export function TrialHero({ href = "/ucretsiz-deneme" }: { href?: string }) {
   return (
     <section className="trial-hero" style={{ position: "relative", overflow: "hidden", color: "#fff" }}>
-      {/* 8-15 yaş rozeti */}
+      {/* 8-18 yaş rozeti */}
       <div
         style={{
           position: "absolute",
@@ -39,16 +40,16 @@ export function TrialHero({ href = "/ucretsiz-deneme" }: { href?: string }) {
         }}
       >
         <span style={{ lineHeight: 1 }}>
-          <span style={{ display: "block", fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(17px, 3vw, 26px)" }}>8-15</span>
+          <span style={{ display: "block", fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(17px, 3vw, 26px)" }}>8-18</span>
           <span style={{ display: "block", fontWeight: 700, fontSize: "clamp(8px, 1.4vw, 11px)", letterSpacing: ".1em", marginTop: 3 }}>YAŞ ARASI</span>
         </span>
       </div>
 
       <div
         style={{
-          maxWidth: 1280,
+          maxWidth: 1540,
           margin: "0 auto",
-          padding: "clamp(40px, 7vw, 84px) clamp(20px, 5vw, 56px)",
+          padding: "clamp(36px, 2vw, 56px) clamp(16px, 5vw, 32px)",
           position: "relative",
           zIndex: 1,
         }}
@@ -93,9 +94,10 @@ export function TrialHero({ href = "/ucretsiz-deneme" }: { href?: string }) {
             >
               Ücretsiz Futbolcu Gelişim Analizi
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: "2px" }}>
+            {/* 7 test: 4+3 dizilim — son satırın ortalanması için flex (grid'de mümkün değil) */}
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", rowGap: 12 }}>
               {TESTS.map((t) => (
-                <div key={t.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, textAlign: "center" }}>
+                <div key={t.label} style={{ flex: "0 0 25%", minWidth: 0, boxSizing: "border-box", padding: "0 4px", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, textAlign: "center" }}>
                   <span style={{ color: "var(--gold-400)", display: "inline-flex" }}>
                     <Icon name={t.icon} size={24} />
                   </span>
