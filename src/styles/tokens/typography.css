@@ -1,14 +1,15 @@
 /* ============================================================
    Buca Yıldız — Typography tokens
-   Display: Barlow Condensed (uppercase headlines, sporty)
+   Display: Anton (condensed-black uppercase — Densa Black'in ücretsiz
+            ikizi; lisans alınırsa next/font/local ile değiştirilir)
    Body:    Barlow
    Stats:   Barlow Semi Condensed (tabular numerals)
    ============================================================ */
 :root {
   /* Families — bound to next/font self-hosted variables (see layout.tsx).
      Fallbacks kept for SSR / font-loading. */
-  --font-display: var(--font-barlow-condensed), 'Arial Narrow', 'Oswald', sans-serif;
-  --font-heading: var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
+  --font-display: var(--font-anton), var(--font-barlow-condensed), 'Arial Narrow', 'Oswald', sans-serif;
+  --font-heading: var(--font-anton), var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
   --font-body:    var(--font-barlow), system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-stat:    var(--font-barlow-semicondensed), var(--font-barlow), sans-serif;
 
@@ -46,6 +47,13 @@
   --ls-normal:  0; /* @kind other */
   --ls-label:   0.14em; /* @kind other */
   --ls-wide:    0.18em; /* @kind other */
+}
+
+/* Anton tek ağırlıklıdır (görünümü zaten black). fontWeight 700/800
+   istendiğinde tarayıcının uyguladığı sahte kalınlaştırma harf formunu
+   bozar — sentetik ağırlık site genelinde kapalı. */
+* {
+  font-synthesis-weight: none;
 }
 
 /* ---- Specimen helper classes (used by cards & kits) ---- */

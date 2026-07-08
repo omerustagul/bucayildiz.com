@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow, Barlow_Condensed, Barlow_Semi_Condensed } from "next/font/google";
+import { Anton, Barlow, Barlow_Condensed, Barlow_Semi_Condensed } from "next/font/google";
 import "./globals.css";
 import { getSettings, activeCursor } from "@/lib/settings";
 
@@ -23,6 +23,16 @@ const barlowSemiCondensed = Barlow_Semi_Condensed({
   variable: "--font-barlow-semicondensed",
   subsets: ["latin", "latin-ext"],
   weight: ["500", "600", "700"],
+  display: "swap",
+});
+
+/* Başlık fontu: Densa Black lisanslı olduğundan ücretsiz ikizi Anton
+   kullanılır (condensed-black, FC Barcelona görünümü). Densa lisansı
+   alınırsa next/font/local ile bu değişkene bağlanıp değiştirilir. */
+const anton = Anton({
+  variable: "--font-anton",
+  subsets: ["latin", "latin-ext"],
+  weight: "400", // tek ağırlık; görünümü zaten "black"
   display: "swap",
 });
 
@@ -85,7 +95,7 @@ export default async function RootLayout({
       lang="tr"
       data-scroll-behavior="smooth"
       data-cursor={activeCursor(settings)}
-      className={`${barlow.variable} ${barlowCondensed.variable} ${barlowSemiCondensed.variable}`}
+      className={`${barlow.variable} ${barlowCondensed.variable} ${barlowSemiCondensed.variable} ${anton.variable}`}
     >
       <body>{children}</body>
     </html>
