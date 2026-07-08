@@ -3,110 +3,11 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Icon, type IconName } from "@/lib/icons";
+import { SceneBody, SceneSprint, SceneLadder, SceneDribble, SceneRoad, SceneStar } from "./TrialScenes";
 import "@/styles/trial-journey.css";
 
-/** Buca Yıldız — Ücretsiz Deneme "Yolculuk" ekranı (veli gözünden). */
-
-function Runner({ run = false, fast = false, stand = false }: { run?: boolean; fast?: boolean; stand?: boolean }) {
-  const cls = ["tj-fig", run && "run", fast && "fast", stand && "stand"].filter(Boolean).join(" ");
-  return (
-    <div className={cls}>
-      <div className="face">
-        <div className="body">
-          <i className="head" />
-          <i className="neck" />
-          <i className="torso" />
-          <i className="arm back" />
-          <i className="arm front" />
-          <i className="leg back" />
-          <i className="leg front" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SceneBody() {
-  return (
-    <div className="tj-scene s-body">
-      <div className="tj-flood" />
-      <div className="bracket"><span className="tl" /><span className="tr" /><span className="bl" /><span className="br" /></div>
-      <Runner stand />
-      <div className="tj-scan" />
-      <div className="s-chip c1"><b>%12,4</b><span>Yağ</span></div>
-      <div className="s-chip c2"><b>%41</b><span>Kas</span></div>
-      <div className="s-chip c3"><b>19,8</b><span>VKİ</span></div>
-      <div className="pitch-lines" /><div className="tj-grass" />
-    </div>
-  );
-}
-function SceneSprint() {
-  return (
-    <div className="tj-scene s-sprint">
-      <div className="tj-flood" />
-      <div className="cone l" /><div className="cone r" />
-      <div className="streak a" /><div className="streak b" />
-      <Runner run fast />
-      <div className="hr"><span className="dot" /><b>168</b></div>
-      <div className="pitch-lines" /><div className="tj-grass" />
-    </div>
-  );
-}
-function SceneLadder() {
-  const rungs = [10, 22, 34, 46, 58, 70, 82, 94];
-  return (
-    <div className="tj-scene s-ladder">
-      <div className="tj-flood" />
-      <div className="ladder">
-        <span className="side l" /><span className="side r" />
-        {rungs.map((p) => <span key={p} className="rung" style={{ left: p + "%" }} />)}
-      </div>
-      <Runner run fast />
-      <div className="pitch-lines" /><div className="tj-grass" />
-    </div>
-  );
-}
-function SceneDribble() {
-  return (
-    <div className="tj-scene s-dribble">
-      <div className="tj-flood" />
-      <div className="goal" /><div className="net-flash" />
-      <div className="cone c1" /><div className="cone c2" /><div className="cone c3" />
-      <Runner run />
-      <div className="tj-ball" />
-      <div className="gol">GOL!</div>
-      <div className="pitch-lines" /><div className="tj-grass" />
-    </div>
-  );
-}
-function SceneRoad() {
-  return (
-    <div className="tj-scene s-road">
-      <div className="tj-flood" />
-      <div className="plan"><div className="ph" /><div className="pl m" /><div className="pl s" /><div className="pl m" /><div className="pg" /></div>
-      <svg viewBox="0 0 520 300" preserveAspectRatio="xMidYMid meet">
-        <path className="draw" d="M60,252 C140,252 150,188 220,188 C290,188 300,120 360,140 C405,155 412,150 432,150" />
-        <circle className="pin p1" cx="60" cy="252" r="7" fill="#fff" stroke="var(--gold-600)" strokeWidth="3" />
-        <circle className="pin p2" cx="220" cy="188" r="7" fill="#fff" stroke="var(--gold-600)" strokeWidth="3" />
-        <circle className="pin p3" cx="360" cy="140" r="7" fill="#fff" stroke="var(--gold-600)" strokeWidth="3" />
-        <text className="goalstar" x="432" y="162" textAnchor="middle" fontSize="40" fill="var(--gold-400)">★</text>
-      </svg>
-      <div className="pitch-lines" />
-    </div>
-  );
-}
-function SceneStar() {
-  return (
-    <div className="tj-scene s-star">
-      <div className="tj-flood" />
-      <span className="ray r1" /><span className="ray r2" /><span className="ray r3" /><span className="ray r4" /><span className="ray r5" /><span className="ray r6" />
-      <div className="star"><svg viewBox="0 0 24 24"><path d="M12 2l2.92 6.26 6.86.62-5.18 4.55 1.54 6.71L12 17.8l-6.14 3.34 1.54-6.71L2.22 8.88l6.86-.62z" fill="currentColor" /></svg></div>
-      <span className="spark s1" /><span className="spark s2" /><span className="spark s3" /><span className="spark s4" /><span className="spark s5" />
-      <Runner run />
-      <div className="pitch-lines" /><div className="tj-grass" />
-    </div>
-  );
-}
+/** Buca Yıldız — Ücretsiz Deneme "Yolculuk" ekranı (veli gözünden).
+ *  Sahne animasyonları framer-motion ile TrialScenes.tsx'te. */
 
 const TJ_STEPS: { kicker: string; title: string; scene: React.ComponentType; text: string; final?: boolean }[] = [
   { kicker: "Adım 01", title: "Vücut Profili Çıkarılır", scene: SceneBody, text: "Çocuğunuzun boyu, kilosu, vücut yağ ve kas oranı ölçülür; sağlıklı gelişim için başlangıç noktasını birlikte görürüz." },
