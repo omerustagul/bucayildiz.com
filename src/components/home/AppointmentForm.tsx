@@ -23,7 +23,7 @@ const inputStyle: React.CSSProperties = {
   outline: "none",
 };
 
-export function AppointmentForm() {
+export function AppointmentForm({ fill = false }: { fill?: boolean }) {
   const router = useRouter();
   const [v, setV] = useState({ parentName: "", phone: "", childName: "", age: "", ageGroup: "" });
   const [focus, setFocus] = useState<string | null>(null);
@@ -55,7 +55,8 @@ export function AppointmentForm() {
   });
 
   return (
-    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    // fill: sütun yüksekliğini doldurur, alanlar eşit aralıklarla dağılır (gap alt sınırdır)
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12, ...(fill ? { flex: 1, justifyContent: "space-between" } : {}) }}>
       {[
         { k: "parentName", ph: "Veli Adı Soyadı", mode: undefined },
         { k: "phone", ph: "Telefon Numarası", mode: "tel" as const },

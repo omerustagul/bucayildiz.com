@@ -31,16 +31,17 @@ const TESTS = [
 
 function StepsColumn() {
   return (
-    <div>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(26px, 3vw, 38px)", lineHeight: 1.05, textTransform: "uppercase", color: "var(--text-strong)", margin: "0 0 28px" }}>
         Nasıl Çalışıyoruz?
       </h2>
-      <div style={{ display: "flex", flexDirection: "column" }}>
+      {/* flex:1 + ara adımlar flex:1 → zaman çizgisi rapor yüksekliğine yayılır */}
+      <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
         {STEPS.map((s, i) => (
-          <div key={s.n} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+          <div key={s.n} style={{ display: "flex", gap: 10, alignItems: "stretch", flex: i < STEPS.length - 1 ? 1 : "none" }}>
             {/* numara + dikey çizgi */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "none" }}>
-              <span style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--grad-gold)", color: "var(--navy-900)", display: "grid", placeItems: "center", fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 14, boxShadow: "0 3px 12px rgba(201,162,39,.28)" }}>
+              <span style={{ width: 34, height: 34, flex: "none", borderRadius: "50%", background: "var(--grad-gold)", color: "var(--navy-900)", display: "grid", placeItems: "center", fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 14, boxShadow: "0 3px 12px rgba(201,162,39,.28)" }}>
                 {s.n}
               </span>
               {i < STEPS.length - 1 && <span style={{ width: 2, flex: 1, minHeight: 24, background: "linear-gradient(var(--gold-500), rgba(201,162,39,0.2))", margin: "2px 0" }} />}
@@ -77,11 +78,11 @@ function Radar({ size = 168 }: { size?: number }) {
 
 function SampleReportCard() {
   return (
-    <div style={{ borderRadius: "var(--radius-xl)", border: "1.5px solid var(--gold-500)", background: "var(--surface-card)", padding: 6, boxShadow: "var(--shadow-lg)" }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", borderRadius: "var(--radius-xl)", border: "1.5px solid var(--gold-500)", background: "var(--surface-card)", padding: 6, boxShadow: "var(--shadow-lg)" }}>
       <div style={{ textAlign: "center", padding: "6px 10px 7px", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 12, letterSpacing: ".16em", textTransform: "uppercase", color: "var(--gold-700)" }}>
         Örnek Rapor
       </div>
-      <div style={{ background: "#f7f4ea", borderRadius: "var(--radius-lg)", padding: "12px 16px 11px", color: "var(--navy-900)" }}>
+      <div style={{ flex: 1, background: "#f7f4ea", borderRadius: "var(--radius-lg)", padding: "12px 16px 11px", color: "var(--navy-900)" }}>
         {/* üst: oyuncu + radar */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
@@ -134,15 +135,34 @@ function SampleReportCard() {
 
 function FormColumn() {
   return (
-    <div>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(24px, 2.6vw, 34px)", lineHeight: 1.05, textTransform: "uppercase", color: "var(--text-strong)", margin: "0 0 8px" }}>
         Hemen Randevu Alın
       </h2>
       <p style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 14, letterSpacing: ".02em", textTransform: "uppercase", color: "var(--gold-700)", margin: "0 0 20px", lineHeight: 1.3 }}>
         Çocuğunuzun Potansiyelini Birlikte Keşfedelim!
       </p>
-      <AppointmentForm />
+      {/* flex:1 → form kalan yüksekliğe yayılır, alanlar eşit aralıklarla dağılır */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <AppointmentForm fill />
+      </div>
     </div>
+  );
+}
+
+/** Sütun ayırıcı: ortası belirgin, uçlara doğru saydamlaşan dikey çizgi (≤900px'te gizlenir). */
+function HowDivider() {
+  return (
+    <span
+      aria-hidden
+      className="how-divider"
+      style={{
+        width: 2,
+        alignSelf: "stretch",
+        borderRadius: 2,
+        background: "linear-gradient(to bottom, transparent, rgba(176,138,26,0.9) 50%, transparent)",
+      }}
+    />
   );
 }
 
@@ -150,10 +170,12 @@ export function HowItWorksSection() {
   return (
     <section style={{ background: "var(--surface-page)", position: "relative", overflow: "hidden" }}>
       <span aria-hidden style={{ position: "absolute", left: -60, top: -40, fontSize: 320, lineHeight: 1, color: "rgba(21,41,90,0.03)", pointerEvents: "none" }}>★</span>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "clamp(36px, 2vw, 56px) clamp(16px, 5vw, 32px)", position: "relative" }}>
-        <div className="how-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1.15fr 1fr", gap: "clamp(24px, 3vw, 36px)", alignItems: "start" }}>
+      <div style={{ maxWidth: 1540, margin: "0 auto", padding: "clamp(36px, 2vw, 56px) clamp(16px, 5vw, 32px)", position: "relative" }}>
+        <div className="how-grid" style={{ display: "grid", gridTemplateColumns: "1fr 2px 1.12fr 2px 1fr", gap: "clamp(24px, 3vw, 36px)", alignItems: "stretch" }}>
           <StepsColumn />
+          <HowDivider />
           <SampleReportCard />
+          <HowDivider />
           <FormColumn />
         </div>
       </div>
