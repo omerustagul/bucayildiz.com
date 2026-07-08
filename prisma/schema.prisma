@@ -93,6 +93,8 @@ model Team {
   born       String     @default("")
   coverImage String?
   sort       Int        @default(0)
+  /// Ana takım (A Takım) — anasayfa kartında geniş gösterilir; tek takımda true olur.
+  isMain     Boolean    @default(false)
   athletes   Athlete[]
   trainings  Training[]
   fixtures   Fixture[]

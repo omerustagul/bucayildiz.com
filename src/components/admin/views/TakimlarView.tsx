@@ -11,10 +11,41 @@ import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
 import { createTeam, updateTeam, deleteTeam, assignAthletesToTeam } from "@/app/admin/(panel)/takimlar/actions";
 
-export type TeamRow = { id: string; name: string; short: string; coach: string; born: string; coverImage: string | null; sort: number; athleteCount: number };
+export type TeamRow = { id: string; name: string; short: string; coach: string; born: string; coverImage: string | null; sort: number; isMain: boolean; athleteCount: number };
 export type AthleteLite = { id: string; name: string; teamId: string; teamName: string; number: number | null; position: string };
 
 const BORN_OPTIONS = ["Üst yapı", "2008", "2009", "2010", "2011", "2012", "2013"];
+
+/** "Ana Takım" seçimi — anasayfada geniş kart olarak öne çıkar; tek takımda açık olabilir. */
+function MainTeamToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        padding: "11px 13px",
+        border: `1px solid ${value ? "var(--gold-500)" : "var(--border-subtle)"}`,
+        background: value ? "rgba(201,162,39,0.08)" : "transparent",
+        borderRadius: "var(--radius-md)",
+        cursor: "pointer",
+        transition: "all var(--dur-fast)",
+      }}
+    >
+      <input
+        type="checkbox"
+        checked={value}
+        onChange={(e) => onChange(e.target.checked)}
+        style={{ width: 16, height: 16, accentColor: "var(--gold-600)", flex: "none" }}
+      />
+      <span style={{ display: "inline-flex", color: value ? "var(--gold-600)" : "var(--ink-400)", flex: "none" }}><Icon name="star" size={17} /></span>
+      <span style={{ lineHeight: 1.35 }}>
+        <span style={{ display: "block", fontWeight: 600, fontSize: 13.5, color: "var(--text-strong)" }}>Ana Takım (A Takım)</span>
+        <span style={{ display: "block", fontSize: 12, color: "var(--ink-400)" }}>Anasayfadaki takım kartlarında geniş gösterilir. Yalnız bir takım ana takım olabilir; seçince öncekinden alınır.</span>
+      </span>
+    </label>
+  );
+}
 
 function slugify(s: string) {
   return s
@@ -27,6 +58,7 @@ function NewTeamModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const [v, setV] = useState({ name: "", short: "", coach: "", born: "" });
   const [cover, setCover] = useState<string | null>(null);
+  const [isMain, setIsMain] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const set = <K extends keyof typeof v>(k: K, val: string) => setV((s) => ({ ...s, [k]: val }));
@@ -34,7 +66,7 @@ function NewTeamModal({ onClose }: { onClose: () => void }) {
   const save = () => {
     setError(null);
     startTransition(async () => {
-      const res = await createTeam({ name: v.name, short: v.short, coach: v.coach, born: v.born, coverImage: cover, slug: slugify(v.name), sort: 99 });
+      const res = await createTeam({ name: v.name, short: v.short, coach: v.coach, born: v.born, coverImage: cover, slug: slugify(v.name), sort: 99, isMain });
       if (res?.error) setError(res.error);
       else {
         onClose();
@@ -66,8 +98,9 @@ function NewTeamModal({ onClose }: { onClose: () => void }) {
           <Select label="Yaş Kategorisi" placeholder="Seç" options={BORN_OPTIONS} value={v.born} onChange={(e) => set("born", e.target.value)} />
         </div>
         <Field label="Kapak Görseli">
-          <FileDrop value={cover} onChange={setCover} label="Kapak görseli yükle" hint="Ana sayfa kartında görünür · 3:4 dikey önerilir" aspect="3 / 4" style={{ maxWidth: 200 }} />
+          <FileDrop value={cover} onChange={setCover} label="Kapak görseli yükle" hint="Ana sayfa kartında görünür · 2:3 dikey önerilir" aspect="2 / 3" style={{ maxWidth: 200 }} />
         </Field>
+        <MainTeamToggle value={isMain} onChange={setIsMain} />
         {error && <div style={{ padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>{error}</div>}
       </div>
     </Modal>
@@ -78,6 +111,8 @@ function TeamDrawer({ team, athletes, onClose }: { team: TeamRow; athletes: Athl
   const router = useRouter();
   const [v, setV] = useState({ name: team.name, short: team.short, coach: team.coach, born: team.born });
   const [cover, setCover] = useState<string | null>(team.coverImage);
+  // ?? false: eski RSC yükünde alan bulunmayabilir (uncontrolled input uyarısını önler)
+  const [isMain, setIsMain] = useState(team.isMain ?? false);
   const [addOpen, setAddOpen] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -90,7 +125,7 @@ function TeamDrawer({ team, athletes, onClose }: { team: TeamRow; athletes: Athl
   const save = () => {
     setError(null);
     startTransition(async () => {
-      const res = await updateTeam(team.id, { name: v.name, short: v.short, coach: v.coach, born: v.born, coverImage: cover, slug: slugify(v.name), sort: team.sort });
+      const res = await updateTeam(team.id, { name: v.name, short: v.short, coach: v.coach, born: v.born, coverImage: cover, slug: slugify(v.name), sort: team.sort, isMain });
       if (res?.error) setError(res.error);
       else { onClose(); router.refresh(); }
     });
@@ -136,8 +171,10 @@ function TeamDrawer({ team, athletes, onClose }: { team: TeamRow; athletes: Athl
         </div>
 
         <Field label="Kapak Görseli">
-          <FileDrop value={cover} onChange={setCover} label="Kapak görseli yükle" hint="Ana sayfa ve takımlar kartında görünür · 3:4 dikey önerilir" aspect="3 / 4" style={{ maxWidth: 220 }} />
+          <FileDrop value={cover} onChange={setCover} label="Kapak görseli yükle" hint="Ana sayfa ve takımlar kartında görünür · 2:3 dikey önerilir" aspect="2 / 3" style={{ maxWidth: 220 }} />
         </Field>
+
+        <MainTeamToggle value={isMain} onChange={setIsMain} />
 
         {error && <div style={{ padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>{error}</div>}
 
@@ -217,7 +254,10 @@ export function TakimlarView({ teams, athletes }: { teams: TeamRow[]; athletes: 
             <div style={{ background: t.coverImage ? `linear-gradient(rgba(8,18,38,.5), rgba(8,18,38,.8)), center/cover no-repeat url("${t.coverImage}")` : "var(--grad-navy)", padding: "18px", display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{ width: 52, height: 52, borderRadius: "var(--radius-md)", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.16)", display: "grid", placeItems: "center", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 18, color: "var(--gold-400)" }}>{t.short}</div>
               <div>
-                <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 24, textTransform: "uppercase", color: "#fff", lineHeight: 1 }}>{t.name}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 24, textTransform: "uppercase", color: "#fff", lineHeight: 1 }}>{t.name}</span>
+                  {t.isMain && <span title="Ana Takım" style={{ display: "inline-flex", color: "var(--gold-400)" }}><Icon name="star" size={15} /></span>}
+                </div>
                 <div style={{ fontSize: 12, color: "var(--navy-200)", marginTop: 4 }}>{t.born === "Üst yapı" ? "Üst yapı" : t.born ? `${t.born} doğumlular` : "—"}</div>
               </div>
             </div>

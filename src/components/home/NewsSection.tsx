@@ -21,7 +21,7 @@ export async function NewsSection() {
 
   return (
     <section style={{ background: "var(--surface-page)" }}>
-      <div style={{ maxWidth: 1540, margin: "0 auto", padding: "88px clamp(16px, 5vw, 32px)" }}>
+      <div style={{ maxWidth: 1540, margin: "0 auto", padding: "68px clamp(16px, 5vw, 32px)" }}>
         <SectionHeading
           kicker="Blog Yazıları"
           title="Son Haberler"

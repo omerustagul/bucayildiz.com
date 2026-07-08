@@ -25,13 +25,21 @@ export async function AgeGroupsSection() {
           }
           style={{ marginBottom: 32 }}
         />
-        <div className="hp-grid-ages" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 18 }}>
+        {/* Ana takım (isMain) 2 sütun kaplar; sütun sayısı = takım + 1 → satır
+            tam genişliği doldurur, diğer kartların 2:3 oranı bozulmaz. */}
+        <div
+          className="hp-grid-ages"
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${teams.length + (teams.some((t) => t.isMain) ? 1 : 0)}, 1fr)`,
+            gap: 12,
+          }}
+        >
           {teams.map((t) => (
             <AgeGroupCard
               key={t.id}
               label={t.name}
-              title={t.born === "Üst yapı" ? "Üst yapı kadrosu" : t.born ? `${t.born} doğumlular` : t.coach}
-              count={t._count.athletes}
+              wide={t.isMain}
               image={t.coverImage ?? undefined}
               href={`/takimlar/${t.slug}`}
             />

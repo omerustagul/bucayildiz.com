@@ -13,9 +13,17 @@ export default async function TakimlarPage() {
     <>
       <PageHero kicker="Akademi" title="Takımlarımız" lead="A Takım'dan U-15'e, her yaş grubunda gelişim ve rekabet." breadcrumb={[{ label: "Takımlar" }]} />
       <Section>
-        <div className="hp-grid-ages" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 18 }}>
+        {/* Anasayfa ile aynı düzen: ana takım 2 sütun, diğerleri 2:3 */}
+        <div
+          className="hp-grid-ages"
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${teams.length + (teams.some((t) => t.isMain) ? 1 : 0)}, 1fr)`,
+            gap: 12,
+          }}
+        >
           {teams.map((t) => (
-            <AgeGroupCard key={t.id} label={t.name} title={`${t.born === "Üst yapı" ? "Üst yapı" : t.born} · ${t.coach}`} count={t._count.athletes} image={t.coverImage ?? undefined} href={`/takimlar/${t.slug}`} />
+            <AgeGroupCard key={t.id} label={t.name} wide={t.isMain} image={t.coverImage ?? undefined} href={`/takimlar/${t.slug}`} />
           ))}
         </div>
       </Section>

@@ -18,6 +18,7 @@ const schema = z.object({
   born: z.string().trim().max(60).optional().or(z.literal("")),
   coverImage: z.string().trim().max(1000).nullish(),
   sort: z.coerce.number().int().min(0).max(999).default(0),
+  isMain: z.boolean().default(false),
 });
 
 export type TeamResult = { error: string };
@@ -28,16 +29,33 @@ async function requireAuth() {
   if (s.role !== "admin") redirect("/panel");
 }
 
+/** Ana takım tekildir: bir takım ana yapılırken diğerlerinin işareti kaldırılır. */
+async function clearOtherMains(exceptId?: string) {
+  await prisma.team.updateMany({
+    where: exceptId ? { id: { not: exceptId } } : {},
+    data: { isMain: false },
+  });
+}
+
+function revalidateTeamPages() {
+  revalidatePath("/admin/takimlar");
+  revalidatePath("/"); // anasayfa takım kartları
+  revalidatePath("/takimlar");
+}
+
 export async function createTeam(input: unknown): Promise<TeamResult | void> {
   await requireAuth();
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
-    await prisma.team.create({ data: parsed.data });
+    await prisma.$transaction(async (tx) => {
+      if (parsed.data.isMain) await tx.team.updateMany({ data: { isMain: false } });
+      await tx.team.create({ data: parsed.data });
+    });
   } catch {
     return { error: "Bu slug zaten kullanımda. Farklı bir slug deneyin." };
   }
-  revalidatePath("/admin/takimlar");
+  revalidateTeamPages();
 }
 
 export async function updateTeam(id: string, input: unknown): Promise<TeamResult | void> {
@@ -45,11 +63,12 @@ export async function updateTeam(id: string, input: unknown): Promise<TeamResult
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
+    if (parsed.data.isMain) await clearOtherMains(id);
     await prisma.team.update({ where: { id }, data: parsed.data });
   } catch {
     return { error: "Güncellenemedi. Slug benzersiz olmalı." };
   }
-  revalidatePath("/admin/takimlar");
+  revalidateTeamPages();
 }
 
 export async function deleteTeam(id: string): Promise<{ ok: boolean; error?: string }> {
