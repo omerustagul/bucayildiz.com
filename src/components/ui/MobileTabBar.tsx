@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { Icon, type IconName } from "@/lib/icons";
 
@@ -59,17 +60,26 @@ const itemKey = (it: TabBarItem) => (it.kind === "link" ? it.href : it.id);
 
 export function MobileTabBar({
   items,
-  pathname,
   homeHref,
   hidden = false,
 }: {
   items: TabBarItem[];
-  pathname: string;
   homeHref: string;
   hidden?: boolean;
 }) {
+  const pathname = usePathname();
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const close = () => setOpenGroup(null);
+
+  // K1/K2: rota değişince veya dock gizlenince (sidebar açıldı) grup menüsü
+  // kapanır. Render sırasında prop-türevi state sıfırlama deseni — effect
+  // gerektirmez (react-hooks/set-state-in-effect lint'ine takılmaz).
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
+    if (openGroup) setOpenGroup(null);
+  }
+  if (hidden && openGroup) setOpenGroup(null);
 
   const linkActive = (href: string) => (href === homeHref ? pathname === homeHref : pathname === href || pathname.startsWith(href + "/"));
   const routeActiveKey = items.map((it) => (it.kind === "link" ? (linkActive(it.href) ? it.href : null) : isGroupActive(it, pathname) ? it.id : null)).find(Boolean);
