@@ -36,11 +36,15 @@ const dockVariants = {
   },
 };
 
+const dockItemShow = (order: number) => ({
+  opacity: 1, scale: 1, y: 0,
+  transition: { type: "spring" as const, stiffness: 520, damping: 27, delay: order * 0.05 },
+});
+
 const dockItemVariants = {
-  show: (order: number) => ({
-    opacity: 1, scale: 1, y: 0,
-    transition: { type: "spring" as const, stiffness: 520, damping: 27, delay: order * 0.05 },
-  }),
+  show: dockItemShow,
+  showFlat: dockItemShow, // dock düz moddayken de öğeler görünür kalır
+
   hide: (order: number) => ({
     opacity: 0, scale: 0.45, y: 9,
     transition: { duration: 0.13, ease: "easeIn" as const, delay: (2 - order) * 0.03 },
@@ -104,7 +108,7 @@ export function MobileTabBar({
               position: "fixed",
               left: 0,
               right: 0,
-              bottom: "calc(65px + env(safe-area-inset-bottom))",
+              bottom: "calc(65px + env(safe-area-inset-bottom))", // dock içeriği ~65px + safe-area
               zIndex: 71,
               maxWidth: 478,
               margin: "0 auto",
@@ -185,7 +189,7 @@ export function MobileTabBar({
               position: "fixed",
               left: 0,
               right: 0,
-              bottom: "calc(env(safe-area-inset-bottom))",
+              bottom: 0,
               zIndex: 70,
               maxWidth: 478,
               margin: "0 auto",
@@ -194,7 +198,8 @@ export function MobileTabBar({
               borderTopLeftRadius: 12,
               borderTopRightRadius: 12,
               boxShadow: "0 10px 32px rgba(14,33,72,.18)",
-              padding: "12px 16px",
+              // safe-area (iOS home çubuğu) dock'un İÇİNDE kalır — havada uçmaz
+              padding: "12px 16px calc(12px + env(safe-area-inset-bottom))",
             }}
           >
             <LayoutGroup id="by-dock">
