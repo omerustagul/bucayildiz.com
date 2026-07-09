@@ -75,7 +75,7 @@ export function MobileTabBar({
               position: "fixed",
               left: 14,
               right: 14,
-              bottom: "calc(92px + env(safe-area-inset-bottom))",
+              bottom: "calc(82px + env(safe-area-inset-bottom))",
               zIndex: 71,
               maxWidth: 478,
               margin: "0 auto",
@@ -122,7 +122,7 @@ export function MobileTabBar({
                       >
                         <Icon name={sub.icon} size={15} />
                       </span>
-                      <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12.5, fontWeight: on ? 700 : 600, color: on ? "#fff" : "var(--ink-700)" }}>
+                      <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 14.5, fontWeight: on ? 700 : 600, color: on ? "#fff" : "var(--ink-700)" }}>
                         {sub.label}
                       </span>
                     </Link>
@@ -141,22 +141,23 @@ export function MobileTabBar({
             key="dock"
             className="by-tabbar"
             aria-label="Alt gezinme"
-            initial={{ y: 110, opacity: 0 }}
-            animate={{ y: 0, opacity: 1, transition: spring }}
-            exit={{ y: 110, opacity: 0, transition: { duration: 0.26, ease: [0.4, 0, 1, 1] } }}
+            initial={{ scale: 0.88, opacity: 0, y: 18 }}
+            animate={{ scale: 1, opacity: 1, y: 0, transition: spring }}
+            exit={{ scale: 0.72, opacity: 0, y: 6, transition: { duration: 0.22, ease: [0.4, 0, 0.7, 0.2] } }}
             style={{
               position: "fixed",
-              left: 14,
-              right: 14,
-              bottom: "calc(10px + env(safe-area-inset-bottom))",
+              left: 0,
+              right: 0,
+              bottom: "calc(env(safe-area-inset-bottom))",
               zIndex: 70,
               maxWidth: 478,
               margin: "0 auto",
               background: "var(--ink-100)",
               border: "1px solid var(--ink-200)",
-              borderRadius: 22,
+              borderTopLeftRadius: 12,
+              borderTopRightRadius: 12,
               boxShadow: "0 10px 32px rgba(14,33,72,.18)",
-              padding: "8px 10px",
+              padding: "12px 16px",
             }}
           >
             <LayoutGroup id="by-dock">
@@ -196,10 +197,10 @@ export function MobileTabBar({
                     alignItems: "center",
                     gap: 7,
                     padding: "9px 11px",
-                    borderRadius: 14,
+                    borderRadius: 8,
                     textDecoration: "none",
                     background: expanded ? "var(--paper)" : "transparent",
-                    boxShadow: expanded ? "0 2px 10px rgba(14,33,72,.12)" : "none",
+                    boxShadow: expanded ? "0 2px 10px rgba(14,33,72,.01)" : "none",
                     border: "none",
                     font: "inherit",
                     cursor: "pointer",
