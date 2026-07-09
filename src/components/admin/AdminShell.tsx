@@ -256,7 +256,7 @@ export function AdminShell({ user, mobileNav = true, children }: { user: { name:
         </main>
       </div>
 
-      {mobileNav && <MobileTabBar items={TABBAR_ITEMS} pathname={pathname} homeHref="/admin" />}
+      {mobileNav && <MobileTabBar items={TABBAR_ITEMS} pathname={pathname} homeHref="/admin" hidden={mobileOpen} />}
     </div>
   );
 }

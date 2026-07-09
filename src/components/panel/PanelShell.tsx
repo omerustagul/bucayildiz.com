@@ -156,7 +156,7 @@ export function PanelShell({ athlete, unreadCount = 0, mobileNav = true, childre
         </main>
       </div>
 
-      {mobileNav && <MobileTabBar items={TABBAR_ITEMS} pathname={pathname} homeHref="/panel" />}
+      {mobileNav && <MobileTabBar items={TABBAR_ITEMS} pathname={pathname} homeHref="/panel" hidden={mobileOpen} />}
     </div>
   );
 }

@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { Icon, type IconName } from "@/lib/icons";
 
-/** Mobil alt gezinme çubuğu (yalnız ≤900px; .by-tabbar CSS'i).
- *  - Orta slot: vurgulu ana sayfa butonu (altın daire).
- *  - "link" öğeleri doğrudan gider; "group" öğeleri üstüne doğru modern bir
- *    liste açar (framer spring). Aktif sekme noktası layoutId ile kayar. */
+/** Mobil dock (yalnız ≤900px; .by-tabbar CSS'i ile gizlenir/gösterilir).
+ *  Tasarım: açık sayfa zemininden bir ton koyu, yumuşak gölgeli yüzer kart.
+ *  - Aktif öğe genişler: ikon + etiket + altın alt çizgi (çizgi layoutId ile
+ *    öğeler arasında kayarak taşınır); pasifler yalnız ikon.
+ *  - "group" öğeleri dock'un hemen üstünde TAM GENİŞLİK kompakt bir sayfa açar.
+ *  - `hidden` (sidebar açıkken) dock ve sayfa tatlı bir animasyonla kapanır. */
 
 export type TabBarLink = { kind: "link"; href: string; label: string; icon: IconName };
 export type TabBarGroup = { kind: "group"; id: string; label: string; icon: IconName; items: { href: string; label: string; icon: IconName }[] };
@@ -20,113 +22,221 @@ function isGroupActive(g: TabBarGroup, pathname: string) {
   return g.items.some((i) => pathname === i.href || pathname.startsWith(i.href + "/"));
 }
 
-export function MobileTabBar({ items, pathname, homeHref }: { items: TabBarItem[]; pathname: string; homeHref: string }) {
+const itemKey = (it: TabBarItem) => (it.kind === "link" ? it.href : it.id);
+
+export function MobileTabBar({
+  items,
+  pathname,
+  homeHref,
+  hidden = false,
+}: {
+  items: TabBarItem[];
+  pathname: string;
+  homeHref: string;
+  hidden?: boolean;
+}) {
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const close = () => setOpenGroup(null);
 
   const linkActive = (href: string) => (href === homeHref ? pathname === homeHref : pathname === href || pathname.startsWith(href + "/"));
+  const routeActiveKey = items.map((it) => (it.kind === "link" ? (linkActive(it.href) ? it.href : null) : isGroupActive(it, pathname) ? it.id : null)).find(Boolean);
+  // Tek öğe genişler: açık grup önceliklidir, yoksa rotadaki aktif öğe.
+  const expandedKey = openGroup ?? routeActiveKey ?? null;
+
+  const openItem = items.find((it): it is TabBarGroup => it.kind === "group" && it.id === openGroup);
 
   return (
     <>
-      {/* Grup menüsü arkaplan kapatıcısı */}
+      {/* Grup sayfası arkaplan kapatıcısı */}
       <AnimatePresence>
-        {openGroup && (
+        {openItem && !hidden && (
           <motion.div
             key="tb-ovl"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={close}
-            style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.35)", zIndex: 68 }}
+            style={{ position: "fixed", inset: 0, background: "rgba(10,18,38,.30)", zIndex: 68 }}
           />
         )}
       </AnimatePresence>
 
-      <nav className="by-tabbar" aria-label="Alt gezinme" style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 70, background: "var(--navy-950)", borderTop: "1px solid rgba(201,162,39,.35)", paddingBottom: "env(safe-area-inset-bottom)" }}>
-        <div style={{ display: "grid", gridTemplateColumns: `repeat(${items.length}, 1fr)`, alignItems: "end", height: 62, maxWidth: 520, margin: "0 auto", position: "relative" }}>
-          {items.map((it) => {
-            const isCenter = it.kind === "link" && it.href === homeHref;
-            const active = it.kind === "link" ? linkActive(it.href) : isGroupActive(it, pathname);
-            const color = active ? "var(--gold-400)" : "var(--navy-300)";
-
-            const activeDot = active && (
-              <motion.span layoutId="by-tabbar-dot" transition={spring} style={{ position: "absolute", top: 6, width: 5, height: 5, borderRadius: "50%", background: "var(--gold-400)" }} />
-            );
-
-            if (it.kind === "link") {
-              if (isCenter) {
+      {/* Grup sayfası: dock'un hemen üstünde, tam genişlik, dock ile aynı dil */}
+      <AnimatePresence>
+        {openItem && !hidden && (
+          <motion.div
+            key={openItem.id}
+            className="by-tabbar"
+            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 16, scale: 0.98, transition: { duration: 0.18 } }}
+            transition={spring}
+            style={{
+              position: "fixed",
+              left: 14,
+              right: 14,
+              bottom: "calc(92px + env(safe-area-inset-bottom))",
+              zIndex: 71,
+              maxWidth: 478,
+              margin: "0 auto",
+              background: "var(--ink-100)",
+              border: "1px solid var(--ink-200)",
+              borderRadius: 18,
+              boxShadow: "0 18px 44px rgba(14,33,72,.22)",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ padding: "10px 14px 8px", fontSize: 10.5, fontWeight: 700, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--navy-600)", borderBottom: "1px solid var(--ink-200)" }}>
+              {openItem.label}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, padding: 8 }}>
+              {openItem.items.map((sub, i) => {
+                const on = pathname === sub.href || pathname.startsWith(sub.href + "/");
                 return (
-                  <Link key={it.href} href={it.href} onClick={close} aria-label={it.label} style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", textDecoration: "none", paddingBottom: 8 }}>
-                    <motion.span
-                      whileTap={{ scale: 0.9 }}
-                      style={{ width: 52, height: 52, marginTop: -18, borderRadius: "50%", background: "var(--grad-gold)", border: "4px solid var(--navy-950)", display: "grid", placeItems: "center", color: "var(--navy-900)", boxShadow: "0 6px 18px rgba(201,162,39,.4)" }}
+                  <motion.div key={sub.href} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.025 * i, ...spring }}>
+                    <Link
+                      href={sub.href}
+                      onClick={close}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 9,
+                        padding: "8px 10px",
+                        borderRadius: 12,
+                        textDecoration: "none",
+                        background: on ? "var(--navy-800)" : "transparent",
+                      }}
                     >
-                      <Icon name={it.icon} size={22} />
-                    </motion.span>
-                    <span style={{ marginTop: 3, fontSize: 9.5, fontWeight: 700, letterSpacing: ".04em", color: active ? "var(--gold-400)" : "var(--navy-200)" }}>{it.label}</span>
-                  </Link>
+                      <span
+                        style={{
+                          flex: "none",
+                          width: 27,
+                          height: 27,
+                          borderRadius: 9,
+                          display: "grid",
+                          placeItems: "center",
+                          background: on ? "rgba(233,200,96,.18)" : "var(--paper)",
+                          border: on ? "1px solid rgba(233,200,96,.4)" : "1px solid var(--ink-200)",
+                          color: on ? "var(--gold-300)" : "var(--navy-600)",
+                        }}
+                      >
+                        <Icon name={sub.icon} size={15} />
+                      </span>
+                      <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12.5, fontWeight: on ? 700 : 600, color: on ? "#fff" : "var(--ink-700)" }}>
+                        {sub.label}
+                      </span>
+                    </Link>
+                  </motion.div>
                 );
-              }
-              return (
-                <Link key={it.href} href={it.href} onClick={close} style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, textDecoration: "none", padding: "10px 2px 9px" }}>
-                  {activeDot}
-                  <motion.span whileTap={{ scale: 0.85 }} style={{ color, display: "inline-flex" }}><Icon name={it.icon} size={20} /></motion.span>
-                  <span style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: ".02em", color: active ? "#fff" : "var(--navy-300)", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.label}</span>
-                </Link>
-              );
-            }
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            const open = openGroup === it.id;
-            return (
-              <div key={it.id} style={{ position: "relative", display: "flex", justifyContent: "center" }}>
-                <button
-                  type="button"
-                  aria-expanded={open}
-                  onClick={() => setOpenGroup(open ? null : it.id)}
-                  style={{ position: "relative", font: "inherit", border: "none", background: "transparent", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 2px 9px", width: "100%" }}
-                >
-                  {activeDot}
-                  <motion.span animate={{ scale: open ? 1.12 : 1, color: open ? "var(--gold-400)" : color }} transition={spring} style={{ display: "inline-flex" }}>
-                    <Icon name={it.icon} size={20} />
-                  </motion.span>
-                  <span style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: ".02em", color: open || active ? "#fff" : "var(--navy-300)" }}>{it.label}</span>
-                </button>
+      {/* Dock */}
+      <AnimatePresence>
+        {!hidden && (
+          <motion.nav
+            key="dock"
+            className="by-tabbar"
+            aria-label="Alt gezinme"
+            initial={{ y: 110, opacity: 0 }}
+            animate={{ y: 0, opacity: 1, transition: spring }}
+            exit={{ y: 110, opacity: 0, transition: { duration: 0.26, ease: [0.4, 0, 1, 1] } }}
+            style={{
+              position: "fixed",
+              left: 14,
+              right: 14,
+              bottom: "calc(10px + env(safe-area-inset-bottom))",
+              zIndex: 70,
+              maxWidth: 478,
+              margin: "0 auto",
+              background: "var(--ink-100)",
+              border: "1px solid var(--ink-200)",
+              borderRadius: 22,
+              boxShadow: "0 10px 32px rgba(14,33,72,.18)",
+              padding: "8px 10px 5px",
+            }}
+          >
+            <LayoutGroup id="by-dock">
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
+                {items.map((it) => {
+                  const key = itemKey(it);
+                  const expanded = key === expandedKey;
+                  const iconColor = expanded ? "var(--navy-800)" : "var(--ink-500)";
 
-                {/* Yukarı açılan grup menüsü */}
-                <AnimatePresence>
-                  {open && (
-                    <motion.div
-                      key="menu"
-                      initial={{ opacity: 0, y: 14, scale: 0.92 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      transition={spring}
-                      style={{ position: "absolute", bottom: "calc(100% + 10px)", left: "50%", transform: "translateX(-50%)", transformOrigin: "bottom center", minWidth: 190, maxWidth: "calc(100vw - 24px)", background: "var(--navy-950)", border: "1px solid rgba(201,162,39,.4)", borderRadius: 14, boxShadow: "0 14px 40px rgba(5,12,28,.55)", overflow: "hidden", zIndex: 72 }}
-                    >
-                      <div style={{ padding: "9px 14px 7px", fontSize: 10, fontWeight: 700, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--gold-400)", borderBottom: "1px solid rgba(255,255,255,.08)" }}>{it.label}</div>
-                      {it.items.map((sub, i) => {
-                        const on = pathname === sub.href || pathname.startsWith(sub.href + "/");
-                        return (
-                          <motion.div key={sub.href} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.03 * i, ...spring }}>
-                            <Link
-                              href={sub.href}
-                              onClick={close}
-                              style={{ display: "flex", alignItems: "center", gap: 11, padding: "11px 14px", textDecoration: "none", fontSize: 13.5, fontWeight: on ? 700 : 500, color: on ? "#fff" : "var(--navy-200)", background: on ? "rgba(201,162,39,.14)" : "transparent" }}
-                            >
-                              <span style={{ color: on ? "var(--gold-400)" : "var(--navy-300)", display: "inline-flex" }}><Icon name={sub.icon} size={16} /></span>
-                              <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub.label}</span>
-                            </Link>
-                          </motion.div>
-                        );
-                      })}
+                  const inner = (
+                    <>
+                      <motion.span layout transition={spring} style={{ display: "inline-flex", color: iconColor }}>
+                        <Icon name={it.icon} size={21} />
+                      </motion.span>
+                      <AnimatePresence mode="popLayout" initial={false}>
+                        {expanded && (
+                          <motion.span
+                            key="lbl"
+                            layout
+                            initial={{ opacity: 0, x: -6 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -6, transition: { duration: 0.14 } }}
+                            transition={spring}
+                            style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}
+                          >
+                            <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--navy-800)", whiteSpace: "nowrap" }}>{it.label}</span>
+                            {/* altın alt çizgi — öğeler arasında kayarak taşınır */}
+                            <motion.span layoutId="by-dock-line" transition={spring} style={{ height: 2.5, width: "100%", marginTop: 3.5, borderRadius: 2, background: "var(--grad-gold)" }} />
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </>
+                  );
+
+                  const boxStyle: React.CSSProperties = {
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 7,
+                    padding: "9px 11px",
+                    borderRadius: 14,
+                    textDecoration: "none",
+                    background: expanded ? "var(--paper)" : "transparent",
+                    boxShadow: expanded ? "0 2px 10px rgba(14,33,72,.12)" : "none",
+                    border: "none",
+                    font: "inherit",
+                    cursor: "pointer",
+                  };
+
+                  if (it.kind === "link") {
+                    return (
+                      <motion.div key={key} layout transition={spring} whileTap={{ scale: 0.93 }}>
+                        <Link href={it.href} onClick={close} aria-label={it.label} aria-current={expanded ? "page" : undefined} style={boxStyle}>
+                          {inner}
+                        </Link>
+                      </motion.div>
+                    );
+                  }
+
+                  const open = openGroup === it.id;
+                  return (
+                    <motion.div key={key} layout transition={spring} whileTap={{ scale: 0.93 }}>
+                      <button
+                        type="button"
+                        aria-label={it.label}
+                        aria-expanded={open}
+                        onClick={() => setOpenGroup(open ? null : it.id)}
+                        style={boxStyle}
+                      >
+                        {inner}
+                      </button>
                     </motion.div>
-                  )}
-                </AnimatePresence>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
-      </nav>
+            </LayoutGroup>
+            {/* home-indicator çubuğu */}
+            <div aria-hidden style={{ width: 46, height: 4, borderRadius: 2, background: "var(--ink-300)", margin: "6px auto 2px" }} />
+          </motion.nav>
+        )}
+      </AnimatePresence>
     </>
   );
 }
