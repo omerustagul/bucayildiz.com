@@ -22,7 +22,12 @@ const spring = { type: "spring" as const, stiffness: 420, damping: 34 };
    merkezden dışa doğru zıplayarak gelir, kenardan içe sönerek gider. */
 const dockVariants = {
   show: {
-    opacity: 1, y: 0, scale: 1, rotateX: 0, filter: "blur(0px)",
+    opacity: 1, y: 0, scale: 1, rotateX: 0, filter: "blur(0px)", borderTopLeftRadius: 12, borderTopRightRadius: 12,
+    transition: { type: "spring" as const, stiffness: 380, damping: 30, when: "beforeChildren" as const },
+  },
+  // grup sayfası açıkken dock ile sayfa tek yüzey gibi birleşir
+  showFlat: {
+    opacity: 1, y: 0, scale: 1, rotateX: 0, filter: "blur(0px)", borderTopLeftRadius: 0, borderTopRightRadius: 0,
     transition: { type: "spring" as const, stiffness: 380, damping: 30, when: "beforeChildren" as const },
   },
   hide: {
@@ -105,29 +110,30 @@ export function MobileTabBar({
               margin: "0 auto",
               background: "var(--ink-100)",
               border: "1px solid var(--ink-200)",
+              borderBottom: "none", // dock ile tek yüzey: araya çizgi girmez
               borderTopLeftRadius: 12,
               borderTopRightRadius: 12,
-              boxShadow: "0 18px 44px rgba(14,33,72,.2)",
+              boxShadow: "0 -14px 36px rgba(14,33,72,.16)",
               overflow: "hidden",
             }}
           >
             <div style={{ padding: "10px 14px 8px", fontSize: 10.5, fontWeight: 700, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--navy-600)", borderBottom: "1px solid var(--ink-200)" }}>
               {openItem.label}
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, padding: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", padding: "4px 8px 6px" }}>
               {openItem.items.map((sub, i) => {
                 const on = pathname === sub.href || pathname.startsWith(sub.href + "/");
                 return (
-                  <motion.div key={sub.href} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.025 * i, ...spring }}>
+                  <motion.div key={sub.href} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.022 * i, ...spring }} style={{ borderTop: i === 0 ? "none" : "1px solid var(--ink-200)" }}>
                     <Link
                       href={sub.href}
                       onClick={close}
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: 9,
-                        padding: "8px 10px",
-                        borderRadius: 12,
+                        gap: 11,
+                        padding: "10px 8px",
+                        borderRadius: 10,
                         textDecoration: "none",
                         background: on ? "var(--navy-800)" : "transparent",
                       }}
@@ -147,8 +153,11 @@ export function MobileTabBar({
                       >
                         <Icon name={sub.icon} size={15} />
                       </span>
-                      <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 14.5, fontWeight: on ? 700 : 600, color: on ? "#fff" : "var(--ink-700)" }}>
+                      <span style={{ minWidth: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 14.5, fontWeight: on ? 700 : 600, color: on ? "#fff" : "var(--ink-700)" }}>
                         {sub.label}
+                      </span>
+                      <span style={{ flex: "none", display: "inline-flex", color: on ? "rgba(255,255,255,.55)" : "var(--ink-300)" }}>
+                        <Icon name="chevron-right" size={15} />
                       </span>
                     </Link>
                   </motion.div>
@@ -168,7 +177,7 @@ export function MobileTabBar({
             aria-label="Alt gezinme"
             variants={dockVariants}
             initial="hide"
-            animate="show"
+            animate={openItem ? "showFlat" : "show"}
             exit="hide"
             style={{
               transformOrigin: "50% 100%",
