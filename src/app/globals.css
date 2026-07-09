@@ -286,7 +286,7 @@ main:has(+ footer) .by-page-transition > :last-child {
 @media (min-width: 901px) {
   .trial-hero {
     display: flex;
-    min-height: calc(100svh - 130px);
+    min-height: calc(100svh - 135px); /* header 64+1+64 + renk şeridi 6 */
   }
 
   .trial-hero-inner {

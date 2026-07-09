@@ -76,44 +76,16 @@ const MENU: MenuEntry[] = [
   { label: "İletişim", href: "/iletisim", items: [] },
 ];
 
-function Brand({ compact }: { compact?: boolean }) {
+/** Takım renkleri şeridi — FCB'deki gibi ortadan bölünmüş: lacivert | altın. */
+function TeamStripe() {
   return (
-    <Link href="/" style={{ display: "flex", alignItems: "center", gap: compact ? 11 : 13, textDecoration: "none" }}>
-      <Image
-        src="/brand/logo-emblem.png"
-        alt="Buca Yıldız"
-        width={compact ? 42 : 50}
-        height={compact ? 42 : 50}
-        style={{ objectFit: "contain" }}
-      />
-      <span style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
-        <span
-          style={{
-            fontFamily: "var(--font-heading)",
-            fontWeight: 700,
-            fontSize: compact ? 20 : 23,
-            color: "#fff",
-            textTransform: "uppercase",
-            letterSpacing: "0.02em",
-          }}
-        >
-          Buca Yıldız
-        </span>
-        <span
-          style={{
-            fontFamily: "var(--font-body)",
-            fontWeight: 600,
-            fontSize: compact ? 9.5 : 10.5,
-            letterSpacing: "0.24em",
-            textTransform: "uppercase",
-            color: "var(--gold-400)",
-            marginTop: 3,
-          }}
-        >
-          Futbol Akademisi
-        </span>
-      </span>
-    </Link>
+    <div
+      aria-hidden
+      style={{
+        height: 6,
+        background: "linear-gradient(90deg, var(--navy-500) 0%, var(--navy-500) 50%, var(--gold-500) 50%, var(--gold-500) 100%)",
+      }}
+    />
   );
 }
 
@@ -159,13 +131,21 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
           borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        <div style={{ padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-          <Brand compact />
-          <IconButton label="Menü" variant="on-navy" onClick={() => setMobileOpen((v) => !v)}>
-            <span style={{ display: "inline-flex", transition: "transform .28s var(--ease-out)", transform: mobileOpen ? "rotate(90deg)" : "none" }}>
-              {navIcon(mobileOpen ? "x" : "menu", 20)}
-            </span>
-          </IconButton>
+        <div style={{ padding: "10px 14px 10px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          {/* yalnız arma — yazı yok */}
+          <Link href="/" aria-label="Buca Yıldız — Anasayfa" style={{ display: "inline-flex" }}>
+            <Image src="/brand/logo-emblem.png" alt="Buca Yıldız" width={46} height={46} style={{ objectFit: "contain", display: "block" }} />
+          </Link>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Button as="a" href="/ucretsiz-deneme" variant="accent" size="sm">
+              Ücretsiz Analiz
+            </Button>
+            <IconButton label="Menü" variant="on-navy" onClick={() => setMobileOpen((v) => !v)}>
+              <span style={{ display: "inline-flex", transition: "transform .28s var(--ease-out)", transform: mobileOpen ? "rotate(90deg)" : "none" }}>
+                {navIcon(mobileOpen ? "x" : "menu", 20)}
+              </span>
+            </IconButton>
+          </div>
         </div>
         <div
           className="by-scroll-on-dark"
@@ -256,11 +236,13 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
             <Social size="md" />
           </div>
         </div>
+        <TeamStripe />
       </header>
 
       {/* ---------- DESKTOP (≥901px) — FCB düzeni ----------
-          İki EŞİT 64px bant (üst: sosyal+panel, alt: mega menü);
-          arma iki bandı birden kaplar ve header'dan alta taşar. */}
+          İki EŞİT 64px bant: üstte en solda sosyal + sağda panel/başvuru;
+          altta mega menü. Arma yalnız menü bandının solunda, alta taşar.
+          En altta takım renkleri şeridi (lacivert | altın). */}
       <header
         className="by-header-desktop"
         style={{
@@ -268,28 +250,27 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
           top: 0,
           zIndex: 50,
           background: "var(--navy-800)",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
         <div style={{ maxWidth: 1680, margin: "0 auto", position: "relative" }}>
-          {/* Taşan arma — yalnız görsel, iki bandı kaplar */}
+          {/* Arma — menü bandının solunda, header'dan alta taşar */}
           <Link
             href="/"
             aria-label="Buca Yıldız — Anasayfa"
-            style={{ position: "absolute", left: 32, top: 6, zIndex: 55, display: "block", filter: "drop-shadow(0 10px 22px rgba(0,0,0,.45))" }}
+            style={{ position: "absolute", left: 32, top: 55, zIndex: 55, display: "block", filter: "drop-shadow(0 10px 22px rgba(0,0,0,.45))" }}
           >
-            <Image src="/brand/logo-emblem.png" alt="Buca Yıldız" width={116} height={116} priority style={{ objectFit: "contain", display: "block" }} />
+            <Image src="/brand/logo-emblem.png" alt="Buca Yıldız" width={92} height={92} priority style={{ objectFit: "contain", display: "block" }} />
           </Link>
 
-          {/* Üst bant: sosyal (sol) + panel/başvuru (sağ) — 64px */}
-          <div style={{ height: 64, padding: "0 32px 0 200px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
+          {/* Üst bant: sosyal content alanının EN SOLUNDA + sağda panel/başvuru — 64px */}
+          <div style={{ height: 64, padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
             <Social />
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <Button as="a" href="/giris" variant="on-navy" size="sm" leftIcon={navIcon("lock")}>
                 Sporcu Girişi
               </Button>
               <Button as="a" href="/basvuru" variant="accent" size="sm" leftIcon={navIcon("clipboard-list")}>
-                Başvuru Formu
+                Ücretsiz Analiz ve Başvuru
               </Button>
             </div>
           </div>
@@ -297,7 +278,7 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
 
         {/* Alt bant: mega menü — üst bantla TAM EŞİT 64px */}
         <nav style={{ background: "var(--navy-900)", borderTop: "1px solid rgba(255,255,255,0.06)" }} onMouseLeave={() => setOpen(null)}>
-          <div style={{ maxWidth: 1680, margin: "0 auto", minHeight: 64, padding: "0 24px 0 194px", display: "flex", alignItems: "stretch", gap: "clamp(14px, 1.8vw, 30px)", flexWrap: "wrap" }}>
+          <div style={{ maxWidth: 1680, margin: "0 auto", minHeight: 64, padding: "0 24px 0 148px", display: "flex", alignItems: "stretch", gap: "clamp(14px, 1.8vw, 30px)", flexWrap: "wrap" }}>
             {MENU.map((m) => {
               const isActive = m.label === active;
               const isOpen = open === m.label;
@@ -366,6 +347,7 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
             })}
           </div>
         </nav>
+        <TeamStripe />
       </header>
     </>
   );
