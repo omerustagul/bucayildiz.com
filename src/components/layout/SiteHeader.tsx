@@ -134,7 +134,7 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
         <div style={{ padding: "10px 14px 10px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           {/* yalnız arma — yazı yok */}
           <Link href="/" aria-label="Buca Yıldız — Anasayfa" style={{ display: "inline-flex" }}>
-            <Image src="/brand/logo-emblem.png" alt="Buca Yıldız" width={46} height={46} style={{ objectFit: "contain", display: "block" }} />
+            <Image src="/brand/logo-emblem.png" alt="Buca Yıldız" width={50} height={50} style={{ objectFit: "contain", display: "block" }} />
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Button as="a" href="/ucretsiz-deneme" variant="accent" size="sm">
@@ -188,10 +188,10 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
                       padding: "13px 12px",
                       textDecoration: "none",
                       fontFamily: "var(--font-heading)",
-                      fontWeight: 600,
+                      fontWeight: 700,
                       fontSize: 18,
                       textTransform: "uppercase",
-                      letterSpacing: "0.03em",
+                      letterSpacing: "0.015em",
                       color: m.label === active ? "var(--gold-400)" : "#fff",
                     }}
                   >
@@ -292,9 +292,9 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
                       gap: 6,
                       padding: "0 4px",
                       fontFamily: "var(--font-heading)",
-                      fontWeight: 600,
-                      fontSize: 16.5,
-                      letterSpacing: "0.04em",
+                      fontWeight: 700,
+                      fontSize: 16,
+                      letterSpacing: "0.015em",
                       textTransform: "uppercase",
                       color: isActive ? "#fff" : "var(--navy-200)",
                       borderBottom: `3px solid ${isActive || isOpen ? "var(--gold-500)" : "transparent"}`,
