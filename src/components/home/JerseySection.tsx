@@ -49,15 +49,8 @@ export async function JerseySection() {
           filter: "drop-shadow(0 18px 38px rgba(14,33,72,.18))",
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage: 'url("/brand/jersey-pattern.svg")',
-            backgroundRepeat: "repeat",
-            backgroundSize: "40px 40px",
-          }}
-        />
+        {/* Modern kafes doku — lacivert bölümlerle aynı desen (by-navy-sec::before) */}
+        <div className="by-navy-sec" style={{ position: "absolute", inset: 0 }} />
       </div>
 
       <div>
