@@ -18,6 +18,30 @@ export type TabBarItem = TabBarLink | TabBarGroup;
 
 const spring = { type: "spring" as const, stiffness: 420, damping: 34 };
 
+/* Dock koreografisi: kabuk 3D perspektifle blur içinde erir; öğeler
+   merkezden dışa doğru zıplayarak gelir, kenardan içe sönerek gider. */
+const dockVariants = {
+  show: {
+    opacity: 1, y: 0, scale: 1, rotateX: 0, filter: "blur(0px)",
+    transition: { type: "spring" as const, stiffness: 380, damping: 30, when: "beforeChildren" as const },
+  },
+  hide: {
+    opacity: 0, y: 14, scale: 0.9, rotateX: 14, filter: "blur(7px)",
+    transition: { duration: 0.22, ease: [0.32, 0, 0.67, 0] as const, when: "afterChildren" as const },
+  },
+};
+
+const dockItemVariants = {
+  show: (order: number) => ({
+    opacity: 1, scale: 1, y: 0,
+    transition: { type: "spring" as const, stiffness: 520, damping: 27, delay: order * 0.05 },
+  }),
+  hide: (order: number) => ({
+    opacity: 0, scale: 0.45, y: 9,
+    transition: { duration: 0.13, ease: "easeIn" as const, delay: (2 - order) * 0.03 },
+  }),
+};
+
 function isGroupActive(g: TabBarGroup, pathname: string) {
   return g.items.some((i) => pathname === i.href || pathname.startsWith(i.href + "/"));
 }
@@ -73,16 +97,17 @@ export function MobileTabBar({
             transition={spring}
             style={{
               position: "fixed",
-              left: 14,
-              right: 14,
-              bottom: "calc(82px + env(safe-area-inset-bottom))",
+              left: 0,
+              right: 0,
+              bottom: "calc(65px + env(safe-area-inset-bottom))",
               zIndex: 71,
               maxWidth: 478,
               margin: "0 auto",
               background: "var(--ink-100)",
               border: "1px solid var(--ink-200)",
-              borderRadius: 18,
-              boxShadow: "0 18px 44px rgba(14,33,72,.22)",
+              borderTopLeftRadius: 12,
+              borderTopRightRadius: 12,
+              boxShadow: "0 18px 44px rgba(14,33,72,.2)",
               overflow: "hidden",
             }}
           >
@@ -141,10 +166,13 @@ export function MobileTabBar({
             key="dock"
             className="by-tabbar"
             aria-label="Alt gezinme"
-            initial={{ scale: 0.88, opacity: 0, y: 18 }}
-            animate={{ scale: 1, opacity: 1, y: 0, transition: spring }}
-            exit={{ scale: 0.72, opacity: 0, y: 6, transition: { duration: 0.22, ease: [0.4, 0, 0.7, 0.2] } }}
+            variants={dockVariants}
+            initial="hide"
+            animate="show"
+            exit="hide"
             style={{
+              transformOrigin: "50% 100%",
+              transformPerspective: 700,
               position: "fixed",
               left: 0,
               right: 0,
@@ -162,9 +190,11 @@ export function MobileTabBar({
           >
             <LayoutGroup id="by-dock">
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
-                {items.map((it) => {
+                {items.map((it, idx) => {
                   const key = itemKey(it);
                   const expanded = key === expandedKey;
+                  const order = Math.abs(idx - (items.length - 1) / 2); // merkezden dışa
+
                   const iconColor = expanded ? "var(--navy-800)" : "var(--ink-500)";
 
                   const inner = (
@@ -208,7 +238,7 @@ export function MobileTabBar({
 
                   if (it.kind === "link") {
                     return (
-                      <motion.div key={key} layout transition={spring} whileTap={{ scale: 0.93 }}>
+                      <motion.div key={key} layout custom={order} variants={dockItemVariants} transition={spring} whileTap={{ scale: 0.93 }}>
                         <Link href={it.href} onClick={close} aria-label={it.label} aria-current={expanded ? "page" : undefined} style={boxStyle}>
                           {inner}
                         </Link>
@@ -218,7 +248,7 @@ export function MobileTabBar({
 
                   const open = openGroup === it.id;
                   return (
-                    <motion.div key={key} layout transition={spring} whileTap={{ scale: 0.93 }}>
+                    <motion.div key={key} layout custom={order} variants={dockItemVariants} transition={spring} whileTap={{ scale: 0.93 }}>
                       <button
                         type="button"
                         aria-label={it.label}
