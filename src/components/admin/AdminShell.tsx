@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/lib/icons";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { MobileTabBar, type TabBarItem } from "@/components/ui/MobileTabBar";
+import { MobileMenu } from "@/components/ui/MobileMenu";
 import { logoutAction } from "@/app/admin/actions";
 
 type NavItem = { href: string; label: string; icon: IconName; ready?: boolean };
@@ -109,11 +110,10 @@ export function AdminShell({ user, mobileNav = true, children }: { user: { name:
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--surface-subtle)" }}>
       {/* Mobile overlay */}
-      {isMobile && mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.45)", zIndex: 55 }} />}
 
       {/* Sidebar — konum/animasyon CSS'te (.adm-sidebar): ilk boyamada doğru, flaş yok */}
       <aside
-        className={`adm-sidebar${mobileOpen ? " adm-sidebar-open" : ""}`}
+        className="adm-sidebar"
         style={{
           width: isMobile ? 256 : collapsed ? 76 : 256,
           flex: "none",
@@ -232,6 +232,21 @@ export function AdminShell({ user, mobileNav = true, children }: { user: { name:
       </div>
 
       {mobileNav && <MobileTabBar items={TABBAR_ITEMS} homeHref="/admin" hidden={mobileOpen} />}
+
+      {/* Tam ekran mobil menü — soldan drawer'ın yerini aldı */}
+      <MobileMenu
+        open={isMobile && mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        header={{ title: user.name, subtitle: roleLabel, initials: initials(user.name) }}
+        groups={[...NAV, { group: "Hesap", items: EXTRA_ITEMS }]}
+        footer={
+          <form action={logoutAction}>
+            <button type="submit" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 9, minHeight: 48, borderRadius: "var(--radius-md)", border: "1px solid var(--border-subtle)", background: "var(--surface-card)", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 14.5, color: "var(--red-600)", cursor: "pointer" }}>
+              <Icon name="log-out" size={17} /> Çıkış Yap
+            </button>
+          </form>
+        }
+      />
     </div>
   );
 }

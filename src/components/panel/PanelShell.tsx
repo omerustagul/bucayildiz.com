@@ -11,6 +11,7 @@ import { panelLogout } from "@/app/panel/actions";
 import { InstallHint } from "@/components/panel/InstallHint";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { MobileTabBar, type TabBarItem } from "@/components/ui/MobileTabBar";
+import { MobileMenu } from "@/components/ui/MobileMenu";
 
 type Athlete = { name: string; teamName: string; number: number | null; position: string; photoUrl: string | null };
 
@@ -60,12 +61,11 @@ export function PanelShell({ athlete, unreadCount = 0, mobileNav = true, childre
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--surface-subtle)" }}>
       {/* Mobile overlay */}
-      {isMobile && mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.45)", zIndex: 55 }} />}
 
       {/* Sidebar — konum/transform CSS'te (.pl-sidebar): ilk boyamada bile doğru,
           sayfa yüklenirken "açılıp kapanma" flaşı olmaz. */}
       <aside
-        className={`pl-sidebar${mobileOpen ? " pl-sidebar-open" : ""}`}
+        className="pl-sidebar"
         style={{
           width: 252,
           flex: "none",
@@ -157,6 +157,26 @@ export function PanelShell({ athlete, unreadCount = 0, mobileNav = true, childre
       </div>
 
       {mobileNav && <MobileTabBar items={TABBAR_ITEMS} homeHref="/panel" hidden={mobileOpen} />}
+
+      {/* Tam ekran mobil menü — soldan drawer'ın yerini aldı */}
+      <MobileMenu
+        open={isMobile && mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        header={{
+          title: athlete.name,
+          subtitle: `${athlete.teamName} · ${numberLabel}`,
+          initials: athlete.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase(),
+          photoUrl: athlete.photoUrl,
+        }}
+        groups={[{ items: NAV.map((n) => ({ href: n.href, label: n.label, icon: n.icon, badge: n.href === "/panel/mesajlar" ? unreadCount : undefined, disabled: n.ready === false })) }]}
+        footer={
+          <form action={panelLogout}>
+            <button type="submit" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 9, minHeight: 48, borderRadius: "var(--radius-md)", border: "1px solid var(--border-subtle)", background: "var(--surface-card)", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 14.5, color: "var(--red-600)", cursor: "pointer" }}>
+              <Icon name="log-out" size={17} /> Çıkış Yap
+            </button>
+          </form>
+        }
+      />
     </div>
   );
 }
