@@ -280,13 +280,13 @@ main:has(+ footer) .by-page-transition > :last-child {
 }
 
 /* ---- Trial hero: masaüstünde tam ekran yüksekliği ----
-   Header (masaüstü) 135px'tir; hero kalan ekranı doldurur, bir sonraki
-   bölüm görünmez. İçerik (başlık/kart/CTA) space-between ile yüksekliğe
-   otomatik dağılır. Mobilde doğal yükseklik korunur. */
+   Header (masaüstü, FCB düzeni) 130px'tir; hero kalan ekranı doldurur,
+   bir sonraki bölüm görünmez. İçerik (başlık/kart/CTA) space-between ile
+   yüksekliğe otomatik dağılır. Mobilde doğal yükseklik korunur. */
 @media (min-width: 901px) {
   .trial-hero {
     display: flex;
-    min-height: calc(100svh - 135px);
+    min-height: calc(100svh - 130px);
   }
 
   .trial-hero-inner {

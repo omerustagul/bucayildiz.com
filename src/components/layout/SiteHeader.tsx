@@ -258,7 +258,9 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
         </div>
       </header>
 
-      {/* ---------- DESKTOP (≥901px) ---------- */}
+      {/* ---------- DESKTOP (≥901px) — FCB düzeni ----------
+          İki EŞİT 64px bant (üst: sosyal+panel, alt: mega menü);
+          arma iki bandı birden kaplar ve header'dan alta taşar. */}
       <header
         className="by-header-desktop"
         style={{
@@ -269,42 +271,52 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
           borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        <div style={{ maxWidth: 1680, margin: "0 auto", padding: "14px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
-            <Brand />
-            <span style={{ width: 1, height: 34, background: "rgba(255,255,255,0.12)" }} />
+        <div style={{ maxWidth: 1680, margin: "0 auto", position: "relative" }}>
+          {/* Taşan arma — yalnız görsel, iki bandı kaplar */}
+          <Link
+            href="/"
+            aria-label="Buca Yıldız — Anasayfa"
+            style={{ position: "absolute", left: 32, top: 6, zIndex: 55, display: "block", filter: "drop-shadow(0 10px 22px rgba(0,0,0,.45))" }}
+          >
+            <Image src="/brand/logo-emblem.png" alt="Buca Yıldız" width={116} height={116} priority style={{ objectFit: "contain", display: "block" }} />
+          </Link>
+
+          {/* Üst bant: sosyal (sol) + panel/başvuru (sağ) — 64px */}
+          <div style={{ height: 64, padding: "0 32px 0 200px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
             <Social />
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Button as="a" href="/giris" variant="on-navy" size="sm" leftIcon={navIcon("lock")}>
-              Sporcu Girişi
-            </Button>
-            <Button as="a" href="/basvuru" variant="accent" size="sm" leftIcon={navIcon("clipboard-list")}>
-              Başvuru Formu
-            </Button>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <Button as="a" href="/giris" variant="on-navy" size="sm" leftIcon={navIcon("lock")}>
+                Sporcu Girişi
+              </Button>
+              <Button as="a" href="/basvuru" variant="accent" size="sm" leftIcon={navIcon("clipboard-list")}>
+                Başvuru Formu
+              </Button>
+            </div>
           </div>
         </div>
+
+        {/* Alt bant: mega menü — üst bantla TAM EŞİT 64px */}
         <nav style={{ background: "var(--navy-900)", borderTop: "1px solid rgba(255,255,255,0.06)" }} onMouseLeave={() => setOpen(null)}>
-          <div style={{ maxWidth: 1680, margin: "0 auto", padding: "0 32px", display: "flex", gap: 32, flexWrap: "wrap" }}>
+          <div style={{ maxWidth: 1680, margin: "0 auto", minHeight: 64, padding: "0 24px 0 194px", display: "flex", alignItems: "stretch", gap: "clamp(14px, 1.8vw, 30px)", flexWrap: "wrap" }}>
             {MENU.map((m) => {
               const isActive = m.label === active;
               const isOpen = open === m.label;
               return (
-                <div key={m.label} style={{ position: "relative" }} onMouseEnter={() => setOpen(m.items.length ? m.label : null)}>
+                <div key={m.label} style={{ position: "relative", display: "flex", height: 64 }} onMouseEnter={() => setOpen(m.items.length ? m.label : null)}>
                   <Link
                     href={m.href}
                     style={{
                       display: "flex",
                       alignItems: "center",
                       gap: 6,
-                      padding: "14px 4px",
+                      padding: "0 4px",
                       fontFamily: "var(--font-heading)",
                       fontWeight: 600,
-                      fontSize: 16,
+                      fontSize: 16.5,
                       letterSpacing: "0.04em",
                       textTransform: "uppercase",
                       color: isActive ? "#fff" : "var(--navy-200)",
-                      borderBottom: `2px solid ${isActive || isOpen ? "var(--gold-500)" : "transparent"}`,
+                      borderBottom: `3px solid ${isActive || isOpen ? "var(--gold-500)" : "transparent"}`,
                       transition: "color .15s, border-color .15s",
                       textDecoration: "none",
                     }}
