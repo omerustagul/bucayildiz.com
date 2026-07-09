@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -114,6 +114,19 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [acc, setAcc] = useState<string | null>(null);
   const pathname = usePathname();
+  const deskRef = useRef<HTMLElement>(null);
+
+  // Header yüksekliğini CSS değişkenine yaz — .trial-hero gibi tam ekran
+  // hesaplar sabit sayı yerine bunu kullanır (bant yüksekliği değişince kaymaz).
+  useEffect(() => {
+    const el = deskRef.current;
+    if (!el) return;
+    const apply = () => document.documentElement.style.setProperty("--by-header-h", `${el.offsetHeight}px`);
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Auto-highlight the top-level menu item matching the current route.
   const active =
@@ -250,6 +263,7 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
           altta mega menü. Arma yalnız menü bandının solunda, alta taşar.
           En altta takım renkleri şeridi (lacivert | altın). */}
       <header
+        ref={deskRef}
         className="by-header-desktop"
         style={{
           position: "sticky",
@@ -272,7 +286,7 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
           <div style={{ height: 48, padding: "26px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 18, minWidth: 0 }}>
               {/* Camsı motto kartı — dar ekranda CSS ile gizlenir */}
-              <Link href="/kurumsal/vizyon-misyon" className="by-motto-card" aria-label="Vizyonumuz">
+              <Link href="/kurumsal/vizyon-misyon" className="by-motto-card">
                 <span className="by-motto-inner" >
                   <span className="by-motto-star">
                     <Icon name="star" size={13} />
