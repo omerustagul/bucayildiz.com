@@ -252,6 +252,80 @@ main {
   }
 }
 
+/* ---- Header motto kartı: camsı zemin + akan altın gradyan çerçeve ---- */
+@keyframes byMottoBorder {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.by-motto-card {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 1px;
+  text-decoration: none;
+  background: linear-gradient(100deg,
+      rgba(233, 200, 96, 0.75), rgba(255, 255, 255, 0.18) 30%,
+      rgba(201, 162, 39, 0.6) 55%, rgba(255, 255, 255, 0.14) 80%,
+      rgba(233, 200, 96, 0.75));
+  background-size: 200% 100%;
+  animation: byMottoBorder 7s linear infinite;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+  transition: box-shadow var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.by-motto-card:hover {
+  box-shadow: 0 8px 24px rgba(201, 162, 39, 0.25);
+  transform: translateY(-1px);
+}
+
+.by-motto-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 999px;
+  padding: 7px 16px 7px 8px;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.10), rgba(10, 18, 38, 0.55) 45%, rgba(201, 162, 39, 0.14));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--navy-100);
+  line-height: 1;
+}
+
+.by-motto-inner b {
+  font-weight: 700;
+  background: linear-gradient(180deg, #F2DB8C, #C9A227);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.by-motto-star {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--grad-gold);
+  color: var(--navy-900);
+  flex: none;
+}
+
+/* Dar masaüstünde üst banda sığmaz — gizlenir */
+@media (max-width: 1280px) {
+  .by-motto-card {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .by-motto-card {
+    animation: none;
+  }
+}
+
 /* ---- Lacivert bölüm dokusu ----
    .by-navy-sec: silik üçgen deseni (FCB tarzı transparan doku).
    Kenarlar bilinçli olarak keskindir (yumuşak geçiş denendi, vazgeçildi). */
