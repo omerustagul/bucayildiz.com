@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { motion, useAnimationFrame, useReducedMotion } from "framer-motion";
 
 /**
@@ -139,37 +139,9 @@ function ShuttleG({
   return <g ref={ref} transform={`translate(${x0} ${y})`}>{children}</g>;
 }
 
-/** Soldan sağa akan döngü (merdiven koşusu). */
-function ConveyorG({
-  x0,
-  x1,
-  y,
-  period,
-  paused = false,
-  children,
-}: {
-  x0: number;
-  x1: number;
-  y: number;
-  period: number;
-  paused?: boolean;
-  children: React.ReactNode;
-}) {
-  const ref = useRef<SVGGElement>(null);
-  useAnimationFrame((t) => {
-    if (paused || !ref.current) return;
-    const p = ((t / 1000) % period) / period;
-    const x = x0 + (x1 - x0) * p;
-    const fade = p < 0.06 ? p / 0.06 : p > 0.94 ? (1 - p) / 0.06 : 1;
-    ref.current.setAttribute("transform", `translate(${x.toFixed(1)} ${y})`);
-    ref.current.setAttribute("opacity", fade.toFixed(2));
-  });
-  return <g ref={ref} transform={`translate(${x0} ${y})`}>{children}</g>;
-}
-
 /* ---------- sporcu figürü ---------- */
 
-type Pose = "run" | "sprint" | "skip" | "stand" | "celebrate";
+type Pose = "run" | "sprint" | "skip" | "stand" | "celebrate" | "hop";
 
 type LimbProps = { pose: Pose; phase: number; dim?: boolean; paused: boolean };
 
@@ -181,10 +153,10 @@ function poseParams(pose: Pose) {
     period,
     thighAmp: pose === "skip" ? 50 : run ? 36 : 0,
     lean: pose === "sprint" ? -12 : pose === "run" ? -8 : pose === "skip" ? -4 : 0,
-    armAmp: run ? 34 : pose === "celebrate" ? 9 : 4,
+    armAmp: run ? 34 : pose === "celebrate" ? 9 : pose === "hop" ? 6 : 4,
     armCenter: pose === "celebrate" ? 168 : run ? 4 : 7,
-    elbow: run ? -78 : pose === "celebrate" ? -18 : -10,
-    bobAmp: run ? 2 : pose === "celebrate" ? 9 : 1.1,
+    elbow: run ? -78 : pose === "celebrate" ? -18 : pose === "hop" ? -52 : -10,
+    bobAmp: run ? 2 : pose === "celebrate" ? 9 : pose === "hop" ? 0 : 1.1,
     bobPeriod: run ? period / 2 : pose === "celebrate" ? 0.85 : 3.2,
   };
 }
@@ -193,12 +165,12 @@ function AthleteLeg({ pose, phase, dim, paused }: LimbProps) {
   const p = poseParams(pose);
   return (
     <g transform="translate(0 -40)">
-      <RotG amp={p.thighAmp} period={p.period} phase={phase} center={pose === "celebrate" ? (phase === 0 ? -10 : 10) : 0} paused={paused}>
+      <RotG amp={p.thighAmp} period={p.period} phase={phase} center={pose === "celebrate" ? (phase === 0 ? -10 : 10) : pose === "hop" ? -20 : 0} paused={paused}>
         {/* uyluk */}
         <line x1="0" y1="2" x2="0" y2="22" stroke={dim ? C.skinDim : C.skin} strokeWidth="7.5" strokeLinecap="round" />
         {/* diz altı — koşuda faz kaymalı bükülme */}
         <g transform="translate(0 22)">
-          <RotG amp={p.run ? 34 : 0} period={p.period} phase={phase + 1.05} center={p.run ? 26 : 2} paused={paused}>
+          <RotG amp={p.run ? 34 : 0} period={p.period} phase={phase + 1.05} center={p.run ? 26 : pose === "hop" ? 38 : 2} paused={paused}>
             <line x1="0" y1="0" x2="0" y2="14" stroke={dim ? C.skinDim : C.skin} strokeWidth="6.2" strokeLinecap="round" />
             <line x1="0" y1="9" x2="0" y2="15" stroke={dim ? "#C7A64A" : C.sock} strokeWidth="6.6" strokeLinecap="round" />
             <ellipse cx="3.4" cy="17.4" rx="5" ry="2.6" fill={C.boot} />
@@ -217,7 +189,13 @@ function AthleteArm({ pose, phase, dim, paused }: LimbProps) {
         amp={p.armAmp}
         period={pose === "celebrate" ? 0.85 : p.period}
         phase={phase}
-        center={pose === "celebrate" ? (phase === 0 ? p.armCenter : -p.armCenter) : p.armCenter * (phase === 0 ? 1 : -1)}
+        center={
+          pose === "celebrate"
+            ? (phase === 0 ? p.armCenter : -p.armCenter)
+            : pose === "hop"
+              ? (phase === 0 ? -30 : 38) // denge: bir kol geride, biri önde
+              : p.armCenter * (phase === 0 ? 1 : -1)
+        }
         paused={paused}
       >
         <line x1="0" y1="2" x2="0" y2="16" stroke={dim ? C.shirtDim : C.shirt} strokeWidth="6" strokeLinecap="round" />
@@ -321,13 +299,202 @@ function Chip({ x, y, w = 104, big, small, delay = 0 }: { x: number; y: number; 
   );
 }
 
-function SceneSvg({ label, children }: { label: string; children: React.ReactNode }) {
+function SceneSvg({ label, tag, children }: { label: string; tag?: string; children: React.ReactNode }) {
   return (
     <div className="tj-scene">
       <svg viewBox="0 0 520 300" role="img" aria-label={label} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
         {children}
+        {/* yayın grafiği tarzı kurumsal etiket */}
+        {tag && (
+          <g>
+            <rect x="16" y="264" width={26 + tag.length * 7.4} height="22" rx="6" fill="rgba(8,15,33,0.78)" stroke="rgba(201,162,39,0.45)" strokeWidth="1" />
+            <rect x="16" y="264" width="4" height="22" rx="2" fill={C.gold} />
+            <text x="28" y="279" fill="rgba(255,255,255,0.85)" style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10.5, letterSpacing: ".14em" }}>{tag}</text>
+          </g>
+        )}
       </svg>
     </div>
+  );
+}
+
+/* ---------- imperatif sahne zaman çizelgeleri ---------- */
+
+/** Çeviklik merdiveni: her basamak boşluğuna çift ayak SIÇRAYARAK ilerleme.
+ *  İniş anında altındaki boşluk parlar; sonda kısa duraklamayla başa sarar. */
+function LadderHopShow({ gaps, groundY, paused }: { gaps: number[]; groundY: number; paused: boolean }) {
+  const bodyRef = useRef<SVGGElement>(null);
+  const glowRefs = useRef<(SVGRectElement | null)[]>([]);
+  const HOP = 0.4; // bir sıçrayış (havada) süresi
+  const REST = 0.14; // yere basma molası
+  const H = 30; // sıçrama yüksekliği
+  const startX = 58;
+  const endX = 462;
+  const points = [startX, ...gaps, endX];
+  const SEG = HOP + REST;
+  const TRAVEL = (points.length - 1) * SEG;
+  const T = TRAVEL + 1.1; // sonda bekle + başa dön
+
+  useAnimationFrame((t) => {
+    if (paused || !bodyRef.current) return;
+    const tt = (t / 1000) % T;
+    let x = startX;
+    let y = 0;
+    let opacity = 1;
+    if (tt < TRAVEL) {
+      const k = Math.min(Math.floor(tt / SEG), points.length - 2);
+      const local = tt - k * SEG;
+      if (local < HOP) {
+        const p = local / HOP;
+        x = points[k] + (points[k + 1] - points[k]) * p;
+        y = -H * 4 * p * (1 - p); // parabol
+      } else {
+        x = points[k + 1]; // yerde bekleme (diz toplanır görünümü poz verir)
+      }
+    } else {
+      x = endX;
+      const rest = tt - TRAVEL;
+      opacity = rest < 0.35 ? 1 : rest < 0.7 ? 1 - (rest - 0.35) / 0.35 : rest < 0.9 ? 0 : (rest - 0.9) / 0.2;
+      if (rest >= 0.9) x = startX; // görünmezken başa ışınlan
+    }
+    bodyRef.current.setAttribute("transform", `translate(${x.toFixed(1)} ${(groundY + y).toFixed(1)})`);
+    bodyRef.current.setAttribute("opacity", opacity.toFixed(2));
+
+    // iniş parlamaları: her boşluğun iniş anı deterministik → sönümlü parıltı
+    gaps.forEach((_, i) => {
+      const el = glowRefs.current[i];
+      if (!el) return;
+      const landAt = (i + 1) * SEG - REST; // bu boşluğa iniş zamanı
+      const since = tt - landAt;
+      const o = since >= 0 && since < 0.5 ? 0.9 * (1 - since / 0.5) : 0;
+      el.setAttribute("opacity", o.toFixed(2));
+    });
+  });
+
+  return (
+    <>
+      {gaps.map((x, i) => (
+        <rect
+          key={x}
+          ref={(el) => { glowRefs.current[i] = el; }}
+          x={x - 19}
+          y={groundY - 12.5}
+          width="38"
+          height="25"
+          rx="4"
+          fill="rgba(233,200,96,0.5)"
+          opacity="0"
+        />
+      ))}
+      <g ref={bodyRef} transform={`translate(${startX} ${groundY})`}>
+        <ellipse cx="0" cy="1" rx="21" ry="4.2" fill="rgba(0,0,0,0.32)" />
+        <g transform="scale(1.45)">
+          <Athlete pose="hop" paused={paused} />
+        </g>
+      </g>
+    </>
+  );
+}
+
+/** Top becerisi hikâyesi: slalom → şut → GOL → kutlama → başa sar.
+ *  Tüm aktörler tek deterministik zaman çizelgesinden sürülür (top asla kaybolmaz). */
+function DribbleShow({ paused }: { paused: boolean }) {
+  const [pose, setPose] = useState<Pose>("run");
+  const athleteRef = useRef<SVGGElement>(null);
+  const ballRef = useRef<SVGGElement>(null);
+  const ballSpinRef = useRef<SVGGElement>(null);
+  const flashRef = useRef<SVGRectElement>(null);
+  const golRef = useRef<SVGGElement>(null);
+  const GROUND = 256;
+  const T = 6.6;
+
+  useAnimationFrame((t) => {
+    if (paused) return;
+    const tt = (t / 1000) % T;
+    let ax = 56, ay = 0, bx = 80, by = 0, actorOpacity = 1, flash = 0, gol = 0, ballOpacity = 1;
+    let next: Pose = "run";
+
+    if (tt < 2.9) {
+      // slalom: koniler (170/244/318) arasında topla birlikte yılankavi
+      const p = tt / 2.9;
+      ax = 56 + (322 - 56) * p;
+      ay = Math.sin(p * Math.PI * 3) * 12;
+      bx = ax + 22;
+      by = ay * 0.85 - Math.abs(Math.sin(tt * 9)) * 3; // top hafif seker
+    } else if (tt < 3.3) {
+      // topun başında şuta hazırlan
+      next = "stand";
+      ax = 322; ay = 0;
+      bx = 352; by = -2;
+    } else if (tt < 3.62) {
+      // ŞUT: top ağlara uçar
+      next = "stand";
+      ax = 322;
+      const q = (tt - 3.3) / 0.32;
+      const e = 1 - (1 - q) * (1 - q); // easeOut
+      bx = 352 + (466 - 352) * e;
+      by = -2 - 58 * e;
+      if (q > 0.82) flash = (q - 0.82) / 0.18;
+    } else if (tt < 5.3) {
+      // GOL + kutlama
+      next = "celebrate";
+      ax = 322;
+      bx = 466; by = -54 + Math.min(1, (tt - 3.62) / 0.3) * 6; // ağdan hafif düşer
+      const g = tt - 3.62;
+      flash = g < 0.35 ? 1 - g / 0.35 : 0;
+      gol = g < 0.25 ? g / 0.25 : g < 1.3 ? 1 : g < 1.68 ? 1 - (g - 1.3) / 0.38 : 0;
+      ballOpacity = g > 1.3 ? Math.max(0, 1 - (g - 1.3) / 0.38) : 1;
+    } else {
+      // sahneyi zarifçe sıfırla
+      next = "run";
+      const r = tt - 5.3;
+      actorOpacity = r < 0.4 ? 1 - r / 0.4 : r < 0.95 ? 0 : (r - 0.95) / 0.35;
+      ax = r < 0.95 ? 322 : 56;
+      bx = r < 0.95 ? 466 : 80;
+      by = r < 0.95 ? -48 : 0;
+      ballOpacity = r < 0.95 ? 0 : actorOpacity;
+    }
+
+    setPose((prev) => (prev === next ? prev : next));
+    athleteRef.current?.setAttribute("transform", `translate(${ax.toFixed(1)} ${(GROUND + ay).toFixed(1)})`);
+    athleteRef.current?.setAttribute("opacity", actorOpacity.toFixed(2));
+    ballRef.current?.setAttribute("transform", `translate(${bx.toFixed(1)} ${(248 + by).toFixed(1)})`);
+    ballRef.current?.setAttribute("opacity", (ballOpacity * actorOpacity).toFixed(2));
+    ballSpinRef.current?.setAttribute("transform", `rotate(${((t / 1000) * 420) % 360} 0 0)`);
+    flashRef.current?.setAttribute("opacity", (flash * 0.85).toFixed(2));
+    golRef.current?.setAttribute("opacity", gol.toFixed(2));
+    golRef.current?.setAttribute("transform", `translate(0 ${(1 - Math.min(1, gol)) * 14})`);
+  });
+
+  return (
+    <>
+      {/* gol anı ağ parlaması */}
+      <rect ref={flashRef} x="428" y="128" width="78" height="126" fill="rgba(233,200,96,0.55)" opacity="0" />
+
+      {/* sporcu */}
+      <g ref={athleteRef} transform={`translate(56 ${GROUND})`}>
+        <ellipse cx="0" cy="1" rx="23" ry="4.4" fill="rgba(0,0,0,0.32)" />
+        <g transform="scale(1.45)">
+          <Athlete pose={paused ? "stand" : pose} paused={paused} />
+        </g>
+      </g>
+
+      {/* top — her karede görünür, kendi ekseninde döner */}
+      <g ref={ballRef} transform="translate(80 248)">
+        <ellipse cx="0" cy="8" rx="7" ry="2" fill="rgba(0,0,0,0.3)" />
+        <g ref={ballSpinRef}>
+          <circle cx="0" cy="0" r="7.5" fill="#fff" stroke="#0B1830" strokeWidth="1" />
+          <path d="M 0 -3.4 L 3.2 -1 L 2 2.8 L -2 2.8 L -3.2 -1 Z" fill="#0B1830" />
+          <line x1="0" y1="-3.4" x2="0" y2="-7.5" stroke="#0B1830" strokeWidth="1" />
+          <line x1="3.2" y1="-1" x2="7.2" y2="-2.2" stroke="#0B1830" strokeWidth="1" />
+          <line x1="-3.2" y1="-1" x2="-7.2" y2="-2.2" stroke="#0B1830" strokeWidth="1" />
+        </g>
+      </g>
+
+      {/* GOL! */}
+      <g ref={golRef} opacity="0">
+        <text x="300" y="96" textAnchor="middle" fill={C.gold300} stroke="rgba(8,15,33,0.6)" strokeWidth="0.5" style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 46, letterSpacing: ".04em" }}>GOL!</text>
+      </g>
+    </>
   );
 }
 
@@ -337,7 +504,7 @@ function SceneSvg({ label, children }: { label: string; children: React.ReactNod
 export function SceneBody() {
   const reduce = !!useReducedMotion();
   return (
-    <SceneSvg label="Vücut profili ölçümü animasyonu">
+    <SceneSvg label="Vücut profili ölçümü animasyonu" tag="ÖLÇÜM 01">
       <Field id="tj1" />
       <defs>
         <linearGradient id="tj1-scan" x1="0" y1="0" x2="0" y2="1">
@@ -410,7 +577,7 @@ export function SceneBody() {
 export function SceneSprint() {
   const reduce = !!useReducedMotion();
   return (
-    <SceneSvg label="Sürat ve kondisyon testi animasyonu">
+    <SceneSvg label="Sürat ve kondisyon testi animasyonu" tag="ÖLÇÜM 02">
       <Field id="tj2" />
       {/* kulvar çizgileri */}
       <line x1="76" y1="264" x2="444" y2="264" stroke="rgba(255,255,255,0.22)" strokeWidth="2" strokeDasharray="10 12" />
@@ -479,9 +646,10 @@ export function SceneSprint() {
 export function SceneLadder() {
   const reduce = !!useReducedMotion();
   const rungs = [90, 132, 174, 216, 258, 300, 342, 384, 426];
-  const PERIOD = 5;
+  // boşluk merkezleri: sporcu her birine çift ayak sıçrayarak basar
+  const gaps = rungs.slice(0, -1).map((x, i) => (x + rungs[i + 1]) / 2);
   return (
-    <SceneSvg label="Koordinasyon merdiveni animasyonu">
+    <SceneSvg label="Koordinasyon merdiveni animasyonu" tag="ÖLÇÜM 03">
       <Field id="tj3" />
       {/* merdiven (yerde) */}
       <g>
@@ -490,30 +658,10 @@ export function SceneLadder() {
         {rungs.map((x) => (
           <line key={x} x1={x} y1="242" x2={x} y2="270" stroke="rgba(255,255,255,0.45)" strokeWidth="3" strokeLinecap="round" />
         ))}
-        {/* koşucu geçerken parlayan basamaklar */}
-        {!reduce && rungs.map((x, i) => (
-          <motion.rect
-            key={x}
-            x={x - 19}
-            y={243.5}
-            width="38"
-            height="25"
-            rx="4"
-            fill="rgba(233,200,96,0.38)"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0.9, 0] }}
-            transition={{ duration: 0.5, repeat: Infinity, repeatDelay: PERIOD - 0.5, delay: (i / rungs.length) * PERIOD * 0.92 + 0.2, ease: "easeOut" }}
-          />
-        ))}
       </g>
 
-      {/* yüksek dizli koşucu merdiven boyunca akar */}
-      <ConveyorG x0={70} x1={450} y={252} period={PERIOD} paused={reduce}>
-        <ellipse cx="0" cy="1" rx="23" ry="4.4" fill="rgba(0,0,0,0.32)" />
-        <g transform="scale(1.45)">
-          <Athlete pose="skip" paused={reduce} />
-        </g>
-      </ConveyorG>
+      {/* boşluktan boşluğa sıçrayan sporcu + iniş parlamaları */}
+      <LadderHopShow gaps={gaps} groundY={256} paused={reduce} />
 
       {/* ritim noktaları */}
       <motion.g initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.3 }}>
@@ -539,11 +687,8 @@ export function SceneLadder() {
    ============================================================ */
 export function SceneDribble() {
   const reduce = !!useReducedMotion();
-  const DUR = 6.4;
-  // zaman payları: 0-0.58 slalom · 0.58-0.66 şut hazırlığı · 0.66-0.78 top ağlarda · 0.78-1 kutlama/reset
-  const times = [0, 0.16, 0.32, 0.48, 0.58, 0.66, 0.95, 1];
   return (
-    <SceneSvg label="Top sürme ve şut animasyonu">
+    <SceneSvg label="Top sürme ve şut animasyonu" tag="ÖLÇÜM 04">
       <Field id="tj4" />
       {/* kale */}
       <g>
@@ -555,64 +700,14 @@ export function SceneDribble() {
         {[0, 1, 2, 3, 4, 5].map((i) => (
           <line key={`h${i}`} x1="430" y1={140 + i * 19} x2="504" y2={140 + i * 19} stroke="rgba(255,255,255,0.22)" strokeWidth="1" />
         ))}
-        {/* gol anı ağ parlaması */}
-        <motion.rect
-          x="428" y="128" width="78" height="126" fill="rgba(233,200,96,0.5)"
-          initial={{ opacity: 0 }}
-          animate={reduce ? undefined : { opacity: [0, 0, 0, 0, 0, 0.85, 0, 0] }}
-          transition={{ duration: DUR, times: [0, 0.6, 0.64, 0.66, 0.675, 0.7, 0.8, 1], repeat: Infinity }}
-        />
       </g>
 
       <Cone x={170} y={256} s={0.9} />
       <Cone x={244} y={256} s={0.9} />
       <Cone x={318} y={256} s={0.9} />
 
-      {/* koşucu: slalom → şut duruşu */}
-      <motion.g
-        initial={false}
-        animate={reduce ? undefined : { x: [46, 152, 226, 300, 356, 372, 372, 46], y: [0, -13, 11, -13, 0, 0, 0, 0] }}
-        transition={{ duration: DUR, times, repeat: Infinity, ease: "easeInOut" }}
-        style={reduce ? { x: 356 } : undefined}
-      >
-        <g transform="translate(0 256)">
-          <ellipse cx="0" cy="1" rx="23" ry="4.4" fill="rgba(0,0,0,0.32)" />
-          <g transform="scale(1.45)">
-            <Athlete pose="run" paused={reduce} />
-          </g>
-        </g>
-      </motion.g>
-
-      {/* top: sporcunun önünde slalom → ağlara */}
-      <motion.g
-        initial={false}
-        animate={reduce ? undefined : {
-          x: [72, 178, 252, 326, 384, 470, 470, 72],
-          y: [0, -10, 8, -10, 0, -58, -58, 0],
-          opacity: [1, 1, 1, 1, 1, 1, 0, 0],
-        }}
-        transition={{ duration: DUR, times, repeat: Infinity, ease: "easeInOut" }}
-        style={reduce ? { x: 470, y: -58 } : undefined}
-      >
-        <g transform="translate(0 248)">
-          <SpinG cx={0} cy={0} period={0.9} paused={reduce}>
-            <circle cx="0" cy="0" r="7.5" fill="#fff" stroke="#0B1830" strokeWidth="1" />
-            <path d="M 0 -3.4 L 3.2 -1 L 2 2.8 L -2 2.8 L -3.2 -1 Z" fill="#0B1830" />
-            <line x1="0" y1="-3.4" x2="0" y2="-7.5" stroke="#0B1830" strokeWidth="1" />
-            <line x1="3.2" y1="-1" x2="7.2" y2="-2.2" stroke="#0B1830" strokeWidth="1" />
-            <line x1="-3.2" y1="-1" x2="-7.2" y2="-2.2" stroke="#0B1830" strokeWidth="1" />
-          </SpinG>
-        </g>
-      </motion.g>
-
-      {/* GOL! */}
-      <motion.g
-        initial={{ opacity: 0 }}
-        animate={reduce ? { opacity: 1 } : { opacity: [0, 0, 0.001, 1, 1, 0], y: [16, 16, 16, 0, 0, -8] }}
-        transition={reduce ? undefined : { duration: DUR, times: [0, 0.66, 0.68, 0.72, 0.88, 0.97], repeat: Infinity, ease: "easeOut" }}
-      >
-        <text x="300" y="96" textAnchor="middle" fill={C.gold300} stroke="rgba(8,15,33,0.6)" strokeWidth="0.5" style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 46, letterSpacing: ".04em" }}>GOL!</text>
-      </motion.g>
+      {/* slalom → şut → GOL → kutlama; tek deterministik zaman çizelgesi */}
+      <DribbleShow paused={reduce} />
     </SceneSvg>
   );
 }
@@ -624,7 +719,7 @@ export function SceneRoad() {
   const reduce = !!useReducedMotion();
   const PATH = "M60,252 C140,252 150,188 220,188 C290,188 300,120 360,140 C405,155 412,150 432,150";
   return (
-    <SceneSvg label="Kişiye özel gelişim yol haritası animasyonu">
+    <SceneSvg label="Kişiye özel gelişim yol haritası animasyonu" tag="ÖLÇÜM 05">
       <Field id="tj5" />
       {/* plan kartı */}
       <motion.g initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.4 }} transition={{ type: "spring", stiffness: 260, damping: 24, delay: 0.2 }}>
@@ -728,7 +823,7 @@ export function SceneStar() {
   const reduce = !!useReducedMotion();
   const star = "M 0 -34 L 9.6 -10.6 L 34 -8.4 L 15.4 7.6 L 21 31 L 0 17.6 L -21 31 L -15.4 7.6 L -34 -8.4 L -9.6 -10.6 Z";
   return (
-    <SceneSvg label="Geleceğin yıldızı kutlama animasyonu">
+    <SceneSvg label="Geleceğin yıldızı kutlama animasyonu" tag="SONUÇ">
       <Field id="tj6" />
       <defs>
         <radialGradient id="tj6-glow" cx="0.5" cy="0.5" r="0.5">
