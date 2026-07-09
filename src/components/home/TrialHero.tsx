@@ -98,7 +98,7 @@ export function TrialHero({ href = "/ucretsiz-deneme" }: { href?: string }) {
               fontFamily: "var(--font-heading)",
               fontWeight: 800,
               fontSize: "clamp(26px, 5.2vw, 36px)",
-              lineHeight: 1.28,
+              lineHeight: 1.08,
               letterSpacing: "0.01em",
               textTransform: "uppercase",
               color: "rgba(255,255,255,0.85)",

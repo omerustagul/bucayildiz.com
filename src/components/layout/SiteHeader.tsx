@@ -263,17 +263,17 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
           <Link
             href="/"
             aria-label="Buca Yıldız — Anasayfa"
-            style={{ position: "absolute", left: 32, top: 40, zIndex: 55, display: "block", filter: "drop-shadow(0 10px 22px rgba(0,0,0,.45))" }}
+            style={{ position: "absolute", left: 32, top: 50, zIndex: 55, display: "block", filter: "drop-shadow(0 10px 22px rgba(0,0,0,.45))" }}
           >
-            <Image src="/brand/logo-emblem.png" alt="Buca Yıldız" width={82} height={82} priority style={{ objectFit: "contain", display: "block" }} />
+            <Image src="/brand/logo-emblem.png" alt="Buca Yıldız" width={76} height={76} priority style={{ objectFit: "contain", display: "block" }} />
           </Link>
 
           {/* Üst bant: sosyal content alanının EN SOLUNDA + sağda panel/başvuru — 64px */}
-          <div style={{ height: 44, padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
+          <div style={{ height: 48, padding: "26px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 18, minWidth: 0 }}>
               {/* Camsı motto kartı — dar ekranda CSS ile gizlenir */}
               <Link href="/kurumsal/vizyon-misyon" className="by-motto-card" aria-label="Vizyonumuz">
-                <span className="by-motto-inner">
+                <span className="by-motto-inner" >
                   <span className="by-motto-star">
                     <Icon name="star" size={13} />
                   </span>
@@ -285,10 +285,10 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
               <Social box={34} />
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <Button style={{ height: "24px", padding: "0 12px", textTransform: "uppercase", fontWeight: "black", letterSpacing: "0.015em" }} as="a" href="/giris" variant="on-navy" size="sm" leftIcon={navIcon("lock")}>
+              <Button style={{ height: "24px", padding: "0 12px", textTransform: "uppercase", fontWeight: "900", letterSpacing: "0.015em" }} as="a" href="/giris" variant="on-navy" size="sm" leftIcon={navIcon("lock")}>
                 Sporcu Girişi
               </Button>
-              <Button style={{ height: "24px", padding: "0 12px", textTransform: "uppercase", fontWeight: "black", letterSpacing: "0.015em" }} as="a" href="/basvuru" variant="accent" size="sm" leftIcon={navIcon("clipboard-list")}>
+              <Button style={{ height: "24px", padding: "0 12px", textTransform: "uppercase", fontWeight: "900", letterSpacing: "0.015em" }} as="a" href="/basvuru" variant="accent" size="sm" leftIcon={navIcon("clipboard-list")}>
                 Ücretsiz Analiz ve Başvuru
               </Button>
             </div>
@@ -367,7 +367,7 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
           </div>
         </nav>
         <TeamStripe />
-      </header>
+      </header >
     </>
   );
 }

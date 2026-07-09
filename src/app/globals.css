@@ -254,14 +254,20 @@ main {
 
 /* ---- Header motto kartı: camsı zemin + akan altın gradyan çerçeve ---- */
 @keyframes byMottoBorder {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 200% 50%;
+  }
 }
 
 .by-motto-card {
   display: inline-flex;
-  height: 34px; /* üst banttaki butonlarla (34px) aynı hiza */
-  border-radius: 999px;
+  height: 34px;
+  /* üst banttaki butonlarla (34px) aynı hiza */
+  border-radius: var(--radius-sm);
   padding: 1px;
   text-decoration: none;
   background: linear-gradient(100deg,
@@ -283,7 +289,7 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   height: 32px;
   padding: 0 16px 0 6px;
   background: linear-gradient(115deg, rgba(255, 255, 255, 0.10), rgba(10, 18, 38, 0.55) 45%, rgba(201, 162, 39, 0.14));
@@ -351,7 +357,7 @@ main {
    Footer arması yukarı taşar (marginTop/beyaz bant YOK). Armanın altındaki
    bölümün yazı/butonlarına binmemesi için sitedeki her sayfanın SON bölümüne
    ek bottom padding verilir (yalnız footer'lı yerleşim: main + footer). */
-main:has(+ footer) .by-page-transition > :last-child {
+main:has(+ footer) .by-page-transition> :last-child {
   padding-bottom: 72px;
 }
 
@@ -362,7 +368,8 @@ main:has(+ footer) .by-page-transition > :last-child {
 @media (min-width: 901px) {
   .trial-hero {
     display: flex;
-    min-height: calc(100svh - 135px); /* header 64+1+64 + renk şeridi 6 */
+    min-height: calc(100svh - 135px);
+    /* header 64+1+64 + renk şeridi 6 */
   }
 
   .trial-hero-inner {
