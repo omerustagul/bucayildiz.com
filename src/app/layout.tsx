@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow, Barlow_Condensed, Barlow_Semi_Condensed, Oswald } from "next/font/google";
+import { Barlow, Barlow_Condensed, Barlow_Semi_Condensed } from "next/font/google";
 import "./globals.css";
 import { getSettings, activeCursor } from "@/lib/settings";
 
@@ -26,16 +26,9 @@ const barlowSemiCondensed = Barlow_Semi_Condensed({
   display: "swap",
 });
 
-/* Başlık fontu: FC Barcelona sitesi kulübe özel (lisanslanamayan)
-   "FC Barcelona Condensed Pro" kullanır; harf yapısına en yakın yasal
-   karşılık Oswald'dır. Çok ağırlıklı olduğundan FCB'nin semibold/bold
-   hiyerarşisi birebir kurulabilir. */
-const oswald = Oswald({
-  variable: "--font-oswald",
-  subsets: ["latin", "latin-ext"],
-  weight: ["500", "600", "700"],
-  display: "swap",
-});
+/* Başlık fontu: Barlow Condensed — FCB Condensed Pro'ya (kulübe özel,
+   lisanslanamaz) glif metrik analiziyle en yakın yasal eş.
+   typography.css'te --font-heading/--font-display buna bağlıdır. */
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
@@ -96,7 +89,7 @@ export default async function RootLayout({
       lang="tr"
       data-scroll-behavior="smooth"
       data-cursor={activeCursor(settings)}
-      className={`${barlow.variable} ${barlowCondensed.variable} ${barlowSemiCondensed.variable} ${oswald.variable}`}
+      className={`${barlow.variable} ${barlowCondensed.variable} ${barlowSemiCondensed.variable}`}
     >
       <body>{children}</body>
     </html>

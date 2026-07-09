@@ -1,15 +1,17 @@
 /* ============================================================
    Buca Yıldız — Typography tokens
-   Display: Oswald (FC Barcelona Condensed Pro'nun en yakın yasal
-            karşılığı — FCB fontu kulübe özeldir, lisanslanamaz)
+   Display: Barlow Condensed — glif metrik analiziyle FC Barcelona
+            Condensed Pro'ya (Íñigo Jerez/Extratype, kulübe özel) en
+            yakın yasal eş çıktı: genişlik vektörü 0.096, ağırlık farkı
+            0.041; Oswald görsel olarak daha iri/yuvarlak kalıyordu.
    Body:    Barlow
    Stats:   Barlow Semi Condensed (tabular numerals)
    ============================================================ */
 :root {
   /* Families — bound to next/font self-hosted variables (see layout.tsx).
      Fallbacks kept for SSR / font-loading. */
-  --font-display: var(--font-oswald), var(--font-barlow-condensed), 'Arial Narrow', 'Oswald', sans-serif;
-  --font-heading: var(--font-oswald), var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
+  --font-display: var(--font-barlow-condensed), 'Arial Narrow', 'Oswald', sans-serif;
+  --font-heading: var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
   --font-body:    var(--font-barlow), system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-stat:    var(--font-barlow-semicondensed), var(--font-barlow), sans-serif;
 
