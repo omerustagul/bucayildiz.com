@@ -18,6 +18,8 @@
     <clipPath id="bClip"><circle cx="16" cy="15.6" r="13.1"/></clipPath>
   </defs>
 
+  <!-- tüm kompozisyon merkez etrafında küçültülür (imleç boyutu) -->
+  <g transform="translate(16 16) scale(0.62) translate(-16 -16)">
   <!-- zemin gölgesi -->
   <ellipse cx="16" cy="29.6" rx="8.6" ry="1.9" fill="#000000" opacity="0.16"/>
 
@@ -48,4 +50,5 @@
   <!-- parlama -->
   <ellipse cx="10.6" cy="7.6" rx="4.6" ry="2.9" fill="#ffffff" opacity="0.65" transform="rotate(-24 10.6 7.6)"/>
   <circle cx="8.4" cy="6.4" r="1" fill="#ffffff" opacity="0.9"/>
+  </g>
 </svg>

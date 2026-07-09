@@ -13,6 +13,8 @@
     </radialGradient>
   </defs>
 
+  <!-- tüm kompozisyon merkez etrafında küçültülür (imleç boyutu) -->
+  <g transform="translate(16 16) scale(0.66) translate(-16 -16)">
   <!-- zemin gölgesi -->
   <ellipse cx="15.5" cy="29.6" rx="9" ry="1.8" fill="#000000" opacity="0.15"/>
 
@@ -33,4 +35,5 @@
   <!-- parlamalar -->
   <path d="M6 13.4 H15" stroke="#FFFFFF" stroke-width="1" stroke-linecap="round" opacity="0.75"/>
   <ellipse cx="14.4" cy="17.2" rx="2.6" ry="1.4" fill="#FFFFFF" opacity="0.5" transform="rotate(-28 14.4 17.2)"/>
+  </g>
 </svg>

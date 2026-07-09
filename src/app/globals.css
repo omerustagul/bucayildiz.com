@@ -337,7 +337,8 @@ main:has(+ footer) .by-page-transition > :last-child {
    ============================================================ */
 html[data-cursor="star"],
 html[data-cursor="star"] * {
-  cursor: url("/cursors/star.svg") 6 4, auto;
+  /* ok imleci: hotspot okun ucu */
+  cursor: url("/cursors/star.svg") 3 2, auto;
 }
 
 html[data-cursor="ball"],

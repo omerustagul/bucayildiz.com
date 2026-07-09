@@ -2,33 +2,16 @@
   <defs>
     <radialGradient id="sCore" cx="0.38" cy="0.3" r="0.95">
       <stop offset="0" stop-color="#FBEBB0"/>
-      <stop offset="0.42" stop-color="#EDCB63"/>
-      <stop offset="0.78" stop-color="#C9A227"/>
-      <stop offset="1" stop-color="#8F6E14"/>
+      <stop offset="0.5" stop-color="#EDCB63"/>
+      <stop offset="1" stop-color="#C9A227"/>
     </radialGradient>
-    <linearGradient id="sEdge" x1="0" y1="0" x2="0.6" y2="1">
-      <stop offset="0" stop-color="#A9861C"/>
-      <stop offset="1" stop-color="#6B520E"/>
-    </linearGradient>
   </defs>
 
-  <!-- zemin gölgesi -->
-  <ellipse cx="16" cy="29.4" rx="7.6" ry="1.7" fill="#000000" opacity="0.15"/>
+  <!-- klasik ok imleci: beyaz konturlu siyah gövde (uç: 3,2 — CSS hotspot) -->
+  <path d="M3 2 L3 21.2 L7.9 17.1 L11 24.6 L15 22.9 L11.9 15.5 L18 15.1 Z"
+        fill="#10151E" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round"/>
 
-  <!-- yıldız gövdesi -->
-  <path d="M16 2.6 L19.6 11 L28.7 11.8 L21.8 17.8 L23.9 26.7 L16 22 L8.1 26.7 L10.2 17.8 L3.3 11.8 L12.4 11 Z"
-        fill="url(#sCore)" stroke="url(#sEdge)" stroke-width="1.1" stroke-linejoin="round"/>
-
-  <!-- fasetler: sağ-alt yarım koyulaşır (mücevher kesimi hissi) -->
-  <path d="M16 2.6 L19.6 11 L28.7 11.8 L21.8 17.8 L23.9 26.7 L16 22 L16 2.6 Z" fill="#7A5C10" opacity="0.22"/>
-  <!-- merkezden kollara ışık çizgileri -->
-  <g stroke="#FFF3C4" stroke-width="0.8" opacity="0.55" stroke-linecap="round">
-    <line x1="16" y1="15.4" x2="16" y2="4.4"/>
-    <line x1="16" y1="15.4" x2="26.6" y2="12"/>
-    <line x1="16" y1="15.4" x2="9.3" y2="25.2"/>
-  </g>
-
-  <!-- parlama -->
-  <circle cx="12.2" cy="8.6" r="1.1" fill="#FFFFFF" opacity="0.9"/>
-  <path d="M24.5 5.5 l0.7 1.7 1.7 0.7 -1.7 0.7 -0.7 1.7 -0.7 -1.7 -1.7 -0.7 1.7 -0.7 Z" fill="#FFFFFF" opacity="0.85"/>
+  <!-- gövdeye işlenmiş altın yıldız -->
+  <path d="M8.1 8.2 L9.16 10.36 L11.55 10.71 L9.82 12.39 L10.23 14.77 L8.1 13.65 L5.97 14.77 L6.38 12.39 L4.65 10.71 L7.04 10.36 Z"
+        fill="url(#sCore)" stroke="#8F6E14" stroke-width="0.5" stroke-linejoin="round"/>
 </svg>
