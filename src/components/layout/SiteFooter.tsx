@@ -39,8 +39,10 @@ const SOCIAL: { name: "instagram" | "facebook" | "youtube" | "x"; label: string 
 ];
 
 export function SiteFooter() {
+  // Arma üstteki bölümün üzerine taşar (beyaz bant yok); taşma payı
+  // globals.css'te son bölüme verilen bottom padding ile açılır.
   return (
-    <footer style={{ position: "relative", background: "var(--navy-950)", marginTop: 80 }}>
+    <footer style={{ position: "relative", background: "var(--navy-950)" }}>
       {/* Overhanging crest */}
       <div
         style={{

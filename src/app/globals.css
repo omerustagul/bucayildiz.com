@@ -252,6 +252,14 @@ main {
   }
 }
 
+/* ---- Footer arması taşma payı ----
+   Footer arması yukarı taşar (marginTop/beyaz bant YOK). Armanın altındaki
+   bölümün yazı/butonlarına binmemesi için sitedeki her sayfanın SON bölümüne
+   ek bottom padding verilir (yalnız footer'lı yerleşim: main + footer). */
+main:has(+ footer) .by-page-transition > :last-child {
+  padding-bottom: 72px;
+}
+
 /* ---- Trial hero: masaüstünde tam ekran yüksekliği ----
    Header (masaüstü) 135px'tir; hero kalan ekranı doldurur, bir sonraki
    bölüm görünmez. İçerik (başlık/kart/CTA) space-between ile yüksekliğe
