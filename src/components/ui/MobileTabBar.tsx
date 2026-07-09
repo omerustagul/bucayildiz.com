@@ -156,7 +156,7 @@ export function MobileTabBar({
               border: "1px solid var(--ink-200)",
               borderRadius: 22,
               boxShadow: "0 10px 32px rgba(14,33,72,.18)",
-              padding: "8px 10px 5px",
+              padding: "8px 10px",
             }}
           >
             <LayoutGroup id="by-dock">
@@ -232,8 +232,6 @@ export function MobileTabBar({
                 })}
               </div>
             </LayoutGroup>
-            {/* home-indicator çubuğu */}
-            <div aria-hidden style={{ width: 46, height: 4, borderRadius: 2, background: "var(--ink-300)", margin: "6px auto 2px" }} />
           </motion.nav>
         )}
       </AnimatePresence>
