@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { Icon, type IconName } from "@/lib/icons";
+import { useOverlayDismiss } from "@/components/ui/useOverlayDismiss";
 
 /** Mobil dock (yalnız ≤900px; .by-tabbar CSS'i ile gizlenir/gösterilir).
  *  Tasarım: açık sayfa zemininden bir ton koyu, yumuşak gölgeli yüzer kart.
@@ -81,6 +82,32 @@ export function MobileTabBar({
   }
   if (hidden && openGroup) setOpenGroup(null);
 
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const sheetOpen = Boolean(openGroup) && !hidden;
+
+  // Proje overlay standardı: Escape ile kapanma + arka plan scroll kilidi (iOS dahil)
+  useOverlayDismiss(sheetOpen, close);
+
+  // Android/tarayıcı geri tuşu: önce grup sayfasını kapatır
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const onPop = () => setOpenGroup(null);
+    window.history.pushState({ byDockSheet: true }, "");
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [sheetOpen]);
+
+  // Odak yönetimi: açılınca ilk bağlantıya, kapanınca tetikleyen butona
+  useEffect(() => {
+    if (sheetOpen) {
+      const id = requestAnimationFrame(() => sheetRef.current?.querySelector("a")?.focus());
+      return () => cancelAnimationFrame(id);
+    }
+    triggerRef.current?.focus();
+    return undefined;
+  }, [sheetOpen]);
+
   const linkActive = (href: string) => (href === homeHref ? pathname === homeHref : pathname === href || pathname.startsWith(href + "/"));
   const routeActiveKey = items.map((it) => (it.kind === "link" ? (linkActive(it.href) ? it.href : null) : isGroupActive(it, pathname) ? it.id : null)).find(Boolean);
   // Tek öğe genişler: açık grup önceliklidir, yoksa rotadaki aktif öğe.
@@ -109,6 +136,10 @@ export function MobileTabBar({
         {openItem && !hidden && (
           <motion.div
             key={openItem.id}
+            ref={sheetRef}
+            id={`by-dock-sheet-${openItem.id}`}
+            role="region"
+            aria-label={openItem.label}
             className="by-mobile-only"
             initial={{ opacity: 0, y: 20, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -277,7 +308,11 @@ export function MobileTabBar({
                         type="button"
                         aria-label={it.label}
                         aria-expanded={open}
-                        onClick={() => setOpenGroup(open ? null : it.id)}
+                        aria-controls={`by-dock-sheet-${it.id}`}
+                        onClick={(e) => {
+                          triggerRef.current = e.currentTarget;
+                          setOpenGroup(open ? null : it.id);
+                        }}
                         style={boxStyle}
                       >
                         {inner}
