@@ -55,9 +55,10 @@ export function AssignmentsAdminView({
     <>
       <ViewHeader title="Mesaj & Doküman" subtitle="Sporculara mesaj, direktif ve doküman gönder" />
 
-      <div className="hp-grid-2" style={{ display: "grid", gridTemplateColumns: "380px 1fr", gap: 18, alignItems: "start" }}>
-        <SendPanel teams={teams} athletes={athletes} />
-        <ListPanel assignments={assignments} />
+      {/* minmax(0,…): grid çocukları min-content'e büyüyüp mobilde taşmasın (kural #7) */}
+      <div className="hp-grid-2" style={{ display: "grid", gridTemplateColumns: "380px minmax(0, 1fr)", gap: 18, alignItems: "start" }}>
+        <div style={{ minWidth: 0 }}><SendPanel teams={teams} athletes={athletes} /></div>
+        <div style={{ minWidth: 0 }}><ListPanel assignments={assignments} /></div>
       </div>
     </>
   );

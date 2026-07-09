@@ -59,10 +59,11 @@ export function SettingsForm({ initial, smtpPassSet }: { initial: SettingsFormVa
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {/* Sekmeler */}
-      <div style={{ display: "flex", gap: 4, flexWrap: "wrap", borderBottom: "1px solid var(--border-subtle)", paddingBottom: 2 }}>
+      {/* Mobilde alt satıra kaymaz: tek satır + yatay kaydırma (.by-tabs) */}
+      <div className="by-tabs" style={{ display: "flex", gap: 4, borderBottom: "1px solid var(--border-subtle)", paddingBottom: 2 }}>
         {TABS.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
-            display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 16px", border: "none", background: "transparent",
+          <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} style={{
+            display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 16px", border: "none", background: "transparent", flex: "none", whiteSpace: "nowrap",
             borderBottom: `2px solid ${tab === t.id ? "var(--gold-500)" : "transparent"}`, cursor: "pointer",
             fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 14, color: tab === t.id ? "var(--text-strong)" : "var(--text-muted)",
           }}>
