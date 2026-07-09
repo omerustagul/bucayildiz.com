@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { TextInput } from "@/components/admin/controls";
 import { Field } from "@/components/admin/kit";
+import { CardList, DataCard, CardHeader, CardFields, CardActions } from "@/components/admin/MobileCardList";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
 import { createPayment, setPaymentStatus, deletePayment } from "@/app/admin/(panel)/odemeler/actions";
@@ -92,7 +93,8 @@ export function PaymentsManager({ athletes, payments }: { athletes: AthleteOpt[]
         {payments.length === 0 ? (
           <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--text-muted)", fontSize: 14 }}>Henüz ödeme kaydı yok.</div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
+          <>
+          <div className="adm-table-wrap" style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
               <thead><tr style={{ background: "var(--surface-subtle)" }}>
                 <th style={th}>Sporcu</th><th style={th}>Dönem</th><th style={th}>Tutar</th><th style={th}>Son Ödeme</th><th style={th}>Durum</th><th style={th}></th>
@@ -124,6 +126,40 @@ export function PaymentsManager({ athletes, payments }: { athletes: AthleteOpt[]
               </tbody>
             </table>
           </div>
+
+          <CardList style={{ padding: 14 }}>
+            {payments.map((p) => {
+              const s = STATUS_LABEL[p.status] ?? STATUS_LABEL.pending;
+              return (
+                <DataCard key={p.id}>
+                  <CardHeader
+                    title={p.athleteName}
+                    subtitle={p.teamName}
+                    badge={
+                      <select value={p.status} disabled={busyId === p.id} onChange={(e) => changeStatus(p.id, e.target.value)} style={{ ...selStyle, width: "auto", padding: "6px 10px", background: s.bg, color: s.fg, fontWeight: 600, border: "none" }}>
+                        <option value="pending">Bekliyor</option>
+                        <option value="paid">Ödendi</option>
+                        <option value="overdue">Gecikti</option>
+                      </select>
+                    }
+                  />
+                  <CardFields
+                    items={[
+                      { label: "Dönem", value: p.period },
+                      { label: "Tutar", value: `${p.amount.toLocaleString("tr-TR")} ₺` },
+                      { label: "Son Ödeme", value: p.dueDate || "—" },
+                    ]}
+                  />
+                  <CardActions>
+                    <Button variant="ghost" size="sm" style={{ color: "var(--red-600)" }} leftIcon={<Icon name="trash-2" size={15} />} onClick={() => remove(p.id)} disabled={busyId === p.id}>
+                      Sil
+                    </Button>
+                  </CardActions>
+                </DataCard>
+              );
+            })}
+          </CardList>
+          </>
         )}
       </div>
     </div>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ViewHeader, Toolbar, Field } from "@/components/admin/kit";
 import { TextInput, SearchBox, Drawer, FileDrop } from "@/components/admin/controls";
 import { Table, type Column } from "@/components/ui/Table";
+import { CardList, CardEmpty, DataCard, CardHeader, CardFields } from "@/components/admin/MobileCardList";
 import { Tabs } from "@/components/ui/Tabs";
 import { Select } from "@/components/ui/Select";
 import { Switch } from "@/components/ui/Switch";
@@ -309,7 +310,33 @@ export function AthletesView({ athletes, teams }: { athletes: AthleteRow[]; team
         <span style={{ marginLeft: "auto", fontSize: 13, color: "var(--ink-400)" }}>{rows.length} sonuç</span>
       </Toolbar>
 
-      <Table columns={cols} rows={rows} getRowKey={(r) => r.id} onRowClick={(r) => setDrawer({ athlete: r })} empty="Bu filtreye uygun sporcu yok." />
+      <div className="adm-table-wrap">
+        <Table columns={cols} rows={rows} getRowKey={(r) => r.id} onRowClick={(r) => setDrawer({ athlete: r })} empty="Bu filtreye uygun sporcu yok." />
+      </div>
+      <CardList>
+        {rows.length === 0 ? (
+          <CardEmpty>Bu filtreye uygun sporcu yok.</CardEmpty>
+        ) : (
+          rows.map((r) => (
+            <DataCard key={r.id} onClick={() => setDrawer({ athlete: r })}>
+              <CardHeader
+                avatar={<Avatar name={r.name} src={r.photoUrl} size="sm" />}
+                title={r.name}
+                subtitle={`${r.number != null ? `#${r.number} ` : ""}${r.position ? `· ${r.position}` : ""}`}
+                badge={<Badge tone={STATUS[r.status]?.tone ?? "neutral"} dot={r.status === "injured"}>{STATUS[r.status]?.label ?? r.status}</Badge>}
+              />
+              <CardFields
+                items={[
+                  { label: "Takım", value: <Badge tone="navy">{r.teamName}</Badge> },
+                  { label: "Ayak", value: r.foot ?? "—" },
+                  { label: "Boy", value: r.height ? `${r.height} cm` : "—" },
+                  { label: "Kilo", value: r.weight ? `${r.weight} kg` : "—" },
+                ]}
+              />
+            </DataCard>
+          ))
+        )}
+      </CardList>
 
       {drawer && <AthleteDrawer athlete={drawer.athlete} teams={teams} onClose={() => setDrawer(null)} />}
     </>

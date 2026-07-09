@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ViewHeader, Panel } from "@/components/admin/ui";
 import { ApplicationStatusSelect } from "@/components/admin/ApplicationStatusSelect";
 import { ApplicationConsentCell } from "@/components/admin/ApplicationConsentCell";
+import { CardList, DataCard, CardHeader, CardFields, CardActions } from "@/components/admin/MobileCardList";
 import { Icon } from "@/lib/icons";
 
 export const metadata: Metadata = { title: "Başvurular" };
@@ -57,6 +58,8 @@ export default async function BasvurularPage() {
             <p style={{ margin: "6px 0 0", fontSize: 13 }}>Sitedeki başvuru formundan gelen kayıtlar burada listelenir.</p>
           </div>
         ) : (
+          <>
+          <div className="adm-table-wrap">
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 920 }}>
               <thead>
@@ -109,6 +112,51 @@ export default async function BasvurularPage() {
               </tbody>
             </table>
           </div>
+          </div>
+
+          <CardList style={{ padding: 14 }}>
+            {apps.map((a) => (
+              <DataCard key={a.id}>
+                <CardHeader
+                  title={
+                    <>
+                      {a.athleteName}
+                      {a.position && <span style={{ color: "var(--text-muted)", fontWeight: 400 }}> · {a.position}</span>}
+                    </>
+                  }
+                  subtitle={a.ageGroup}
+                  badge={<ApplicationStatusSelect id={a.id} status={a.status} />}
+                />
+                <CardFields
+                  items={[
+                    { label: "Veli", value: a.parentName },
+                    { label: "Telefon", value: a.phone },
+                    { label: "E-posta", value: a.email || "—" },
+                    { label: "Tarih", value: fmtDate(a.createdAt) },
+                  ]}
+                />
+                <CardActions>
+                  <ApplicationConsentCell
+                    consents={a.consents.map((c) => ({
+                      documentKey: c.documentKey,
+                      documentTitle: c.documentTitle,
+                      documentVersion: c.documentVersion,
+                      granted: c.granted,
+                      granterName: c.granterName,
+                      granterRelation: c.granterRelation,
+                      channel: c.channel,
+                      textHash: c.textHash,
+                      ipAddress: c.ipAddress,
+                      otpVerified: c.otpVerified,
+                      createdAt: fmtDateTime(c.createdAt),
+                      withdrawnAt: c.withdrawnAt ? fmtDateTime(c.withdrawnAt) : null,
+                    }))}
+                  />
+                </CardActions>
+              </DataCard>
+            ))}
+          </CardList>
+          </>
         )}
       </Panel>
     </>

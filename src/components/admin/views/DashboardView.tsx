@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { ViewHeader, Panel, StatTile } from "@/components/admin/kit";
 import { Table, type Column } from "@/components/ui/Table";
+import { CardList, CardEmpty, DataCard, CardHeader, CardFields } from "@/components/admin/MobileCardList";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -95,7 +96,31 @@ export function DashboardView({ stats, bars, upcoming, featured, today }: { stat
       </div>
 
       <Panel title="Öne Çıkan Sporcular" action={<Button variant="ghost" size="sm" onClick={() => router.push("/admin/sporcular")} rightIcon={<Icon name="arrow-right" size={15} />}>Tüm Sporcular</Button>} pad={0}>
-        <Table columns={cols} rows={featured} getRowKey={(r) => r.id} onRowClick={() => router.push("/admin/sporcular")} style={{ border: "none", borderRadius: 0 }} />
+        <div className="adm-table-wrap">
+          <Table columns={cols} rows={featured} getRowKey={(r) => r.id} onRowClick={() => router.push("/admin/sporcular")} style={{ border: "none", borderRadius: 0 }} />
+        </div>
+        <CardList style={{ padding: 14 }}>
+          {featured.length === 0 ? (
+            <CardEmpty>Öne çıkan sporcu yok.</CardEmpty>
+          ) : (
+            featured.map((r) => (
+              <DataCard key={r.id} onClick={() => router.push("/admin/sporcular")}>
+                <CardHeader
+                  avatar={<Avatar name={r.name} src={r.photoUrl} size="sm" />}
+                  title={r.name}
+                  subtitle={`${r.number != null ? `#${r.number} ` : ""}${r.position ? `· ${r.position}` : ""}`}
+                  badge={<Badge tone={STATUS[r.status]?.tone ?? "neutral"} dot={r.status === "injured"}>{STATUS[r.status]?.label ?? r.status}</Badge>}
+                />
+                <CardFields
+                  items={[
+                    { label: "Takım", value: <Badge tone="navy">{r.teamName}</Badge> },
+                    { label: "Mevki", value: r.position || "—" },
+                  ]}
+                />
+              </DataCard>
+            ))
+          )}
+        </CardList>
       </Panel>
     </>
   );

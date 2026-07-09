@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { TextInput, Modal } from "@/components/admin/controls";
 import { Field } from "@/components/admin/kit";
 import { AthletePickerModal } from "@/components/admin/AthletePickerModal";
+import { CardList, DataCard, CardHeader, CardFields, CardActions } from "@/components/admin/MobileCardList";
 import { Button } from "@/components/ui/Button";
 import { Icon, type IconName } from "@/lib/icons";
 import { computeVo2, YOYO_LEVELS, TESTS, TEST_BY_KEY, type TestKey } from "@/lib/perf";
@@ -221,6 +222,16 @@ function MetricCell({ value, older, better }: { value: number | null; older: num
   );
 }
 
+/** Kart görünümü için MetricCell'in `<td>` sarmalayıcısız hâli. */
+function MetricValue({ value, older, better }: { value: number | null; older: number | null | undefined; better: "up" | "down" }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+      {value ?? "—"}
+      <TrendMark value={value} older={older} better={better} />
+    </span>
+  );
+}
+
 export function MeasurementHistory({ measurements }: { measurements: MeasurementRow[] }) {
   const router = useRouter();
   const [perPage, setPerPage] = useState<number | "all">(10);
@@ -262,7 +273,7 @@ export function MeasurementHistory({ measurements }: { measurements: Measurement
         <div style={{ padding: "36px 20px", textAlign: "center", color: "var(--text-muted)", fontSize: 14 }}>Bu sporcu için henüz ölçüm yok. Sağ üstteki “Yeni Ölçüm Gir” ile ekleyebilirsiniz.</div>
       ) : (
         <>
-          <div style={{ overflowX: "auto" }}>
+          <div className="adm-table-wrap" style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1180 }}>
               <thead><tr style={{ background: "var(--surface-subtle)" }}>
                 <th style={th}>Tarih</th>
@@ -297,6 +308,38 @@ export function MeasurementHistory({ measurements }: { measurements: Measurement
               </tbody>
             </table>
           </div>
+
+          <CardList style={{ padding: 14 }}>
+            {pageRows.map((m, i) => {
+              const older = sortedDesc[startIdx + i + 1] ?? null;
+              const vo2 = vo2Of(m);
+              return (
+                <DataCard key={m.id}>
+                  <CardHeader
+                    title={m.measuredAt}
+                    subtitle={m.note || undefined}
+                    badge={
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 700, color: "var(--navy-700)" }}>
+                        VO2 {vo2 != null ? vo2.toFixed(1) : "—"}
+                        <TrendMark value={vo2} older={vo2Of(older)} better="up" />
+                      </span>
+                    }
+                  />
+                  <CardFields
+                    items={HISTORY_KEYS.map((k) => ({
+                      label: `${TEST_BY_KEY[k].label} (${TEST_BY_KEY[k].unit})`,
+                      value: <MetricValue value={m[k]} older={older?.[k]} better={TEST_BY_KEY[k].better} />,
+                    }))}
+                  />
+                  <CardActions>
+                    <Button variant="ghost" size="sm" style={{ color: "var(--red-600)" }} leftIcon={<Icon name="trash-2" size={15} />} onClick={() => remove(m.id)} disabled={busyId === m.id}>
+                      Sil
+                    </Button>
+                  </CardActions>
+                </DataCard>
+              );
+            })}
+          </CardList>
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 18px", borderTop: "1px solid var(--border-subtle)", flexWrap: "wrap" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ViewHeader, Toolbar, Panel, Field, Stepper, cardStyle } from "@/components/admin/kit";
 import { TextInput, TextArea, SearchBox, FileDrop } from "@/components/admin/controls";
 import { Table, type Column } from "@/components/ui/Table";
+import { CardList, CardEmpty, DataCard, CardHeader, CardFields } from "@/components/admin/MobileCardList";
 import { Tabs } from "@/components/ui/Tabs";
 import { Select } from "@/components/ui/Select";
 import { Switch } from "@/components/ui/Switch";
@@ -305,7 +306,40 @@ export function BlogView({ posts }: { posts: PostRow[] }) {
         <SearchBox placeholder="Başlık ara…" value={q} onChange={setQ} />
         <span style={{ marginLeft: "auto", fontSize: 13, color: "var(--ink-400)" }}>{rows.length} yazı</span>
       </Toolbar>
-      <Table columns={cols} rows={rows} getRowKey={(r) => r.id} onRowClick={(r) => setMode({ post: r })} empty="İçerik bulunamadı." />
+      <div className="adm-table-wrap">
+        <Table columns={cols} rows={rows} getRowKey={(r) => r.id} onRowClick={(r) => setMode({ post: r })} empty="İçerik bulunamadı." />
+      </div>
+      <CardList>
+        {rows.length === 0 ? (
+          <CardEmpty>İçerik bulunamadı.</CardEmpty>
+        ) : (
+          rows.map((r) => (
+            <DataCard key={r.id} onClick={() => setMode({ post: r })}>
+              <CardHeader
+                avatar={
+                  <div style={{ position: "relative", width: 46, height: 34, borderRadius: "var(--radius-sm)", overflow: "hidden", background: "var(--grad-navy)", display: "grid", placeItems: "center", color: "rgba(255,255,255,.2)", flex: "none" }}>
+                    {r.coverUrl ? <Image src={r.coverUrl} alt="" fill style={{ objectFit: "cover" }} sizes="46px" /> : <Icon name="image" size={15} />}
+                  </div>
+                }
+                title={
+                  <>
+                    {r.featured && <span style={{ color: "var(--gold-500)", marginRight: 5 }}>★</span>}
+                    {r.title}
+                  </>
+                }
+                subtitle={templateName(r.template)}
+                badge={<Badge tone={STATUS[r.status]?.tone ?? "neutral"} dot={r.status === "scheduled"}>{STATUS[r.status]?.label ?? r.status}</Badge>}
+              />
+              <CardFields
+                items={[
+                  { label: "Yazar", value: r.author || "—" },
+                  { label: "Tarih", value: fmt(r.publishedAt) },
+                ]}
+              />
+            </DataCard>
+          ))
+        )}
+      </CardList>
     </>
   );
 }
