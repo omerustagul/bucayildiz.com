@@ -109,7 +109,7 @@ export function MobileTabBar({
         {openItem && !hidden && (
           <motion.div
             key={openItem.id}
-            className="by-tabbar"
+            className="by-mobile-only"
             initial={{ opacity: 0, y: 20, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98, transition: { duration: 0.18 } }}

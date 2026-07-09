@@ -49,47 +49,22 @@ const NAV: NavGroup[] = [
   },
 ];
 
-const ALL_ITEMS = NAV.flatMap((g) => g.items);
+/** Kenar çubuğunda görünmeyen ama breadcrumb/dock'ta yer alan sayfalar. */
+const EXTRA_ITEMS: NavItem[] = [{ href: "/admin/profil", label: "Profilim", icon: "user-round", ready: true }];
 
-/** Mobil alt çubuk: sol Kulüp+Site (grup), orta Genel Bakış, sağ İletişim+Sistem (grup). */
+const ALL_ITEMS = [...NAV.flatMap((g) => g.items), ...EXTRA_ITEMS];
+
+/** Mobil dock grupları NAV'dan türetilir — TEK KAYNAK: kenar çubuğuna
+ *  eklenen sayfa dock'a otomatik düşer, elle senkron gerektirmez. */
+const navGroup = (name: string): NavItem[] => NAV.find((g) => g.group === name)?.items ?? [];
+const toTab = ({ href, label, icon }: NavItem) => ({ href, label, icon });
+
 const TABBAR_ITEMS: TabBarItem[] = [
-  {
-    kind: "group", id: "kulup", label: "Kulüp", icon: "shield",
-    items: [
-      { href: "/admin/sporcular", label: "Sporcular", icon: "users" },
-      { href: "/admin/performans", label: "Performans", icon: "heart-pulse" },
-      { href: "/admin/beslenme", label: "Beslenme", icon: "clipboard-list" },
-      { href: "/admin/takimlar", label: "Takımlar", icon: "shield" },
-      { href: "/admin/takvim-programi", label: "Takvim Programı", icon: "calendar-check" },
-      { href: "/admin/antrenmanlar", label: "Antrenmanlar", icon: "dumbbell" },
-      { href: "/admin/fikstur", label: "Fikstür", icon: "calendar-days" },
-      { href: "/admin/odemeler", label: "Ödemeler", icon: "clipboard-list" },
-    ],
-  },
-  {
-    kind: "group", id: "site", label: "Site", icon: "newspaper",
-    items: [
-      { href: "/admin/basvurular", label: "Başvurular", icon: "inbox" },
-      { href: "/admin/haberler", label: "Haberler / Blog", icon: "newspaper" },
-      { href: "/admin/medya", label: "Medya Kütüphanesi", icon: "images" },
-      { href: "/admin/formalar", label: "Formalar", icon: "shirt" },
-    ],
-  },
+  { kind: "group", id: "kulup", label: "Kulüp", icon: "shield", items: navGroup("Kulüp").map(toTab) },
+  { kind: "group", id: "site", label: "Site", icon: "newspaper", items: [...navGroup("Başvurular"), ...navGroup("İçerik & Site")].map(toTab) },
   { kind: "link", href: "/admin", label: "Genel Bakış", icon: "layout-dashboard" },
-  {
-    kind: "group", id: "iletisim", label: "İletişim", icon: "bell",
-    items: [
-      { href: "/admin/mesajlar", label: "Mesaj & Doküman", icon: "send" },
-      { href: "/admin/bildirimler", label: "Bildirimler", icon: "bell" },
-    ],
-  },
-  {
-    kind: "group", id: "sistem", label: "Sistem", icon: "settings",
-    items: [
-      { href: "/admin/ayarlar", label: "Ayarlar", icon: "settings" },
-      { href: "/admin/profil", label: "Profilim", icon: "user-round" },
-    ],
-  },
+  { kind: "group", id: "iletisim", label: "İletişim", icon: "bell", items: navGroup("İletişim").map(toTab) },
+  { kind: "group", id: "sistem", label: "Sistem", icon: "settings", items: [...navGroup("Sistem"), ...EXTRA_ITEMS].map(toTab) },
 ];
 
 function isActive(pathname: string, href: string) {

@@ -944,12 +944,14 @@ body {
 }
 
 /* --- Mobil alt gezinme çubuğu (yalnız <=900px) --- */
-.by-tabbar {
+.by-tabbar,
+.by-mobile-only {
   display: none;
 }
 
 @media (max-width: 900px) {
-  .by-tabbar {
+  .by-tabbar,
+  .by-mobile-only {
     display: block;
   }
 
