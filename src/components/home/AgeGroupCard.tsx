@@ -94,7 +94,6 @@ export function AgeGroupCard({
             letterSpacing: ".01em",
             textTransform: "uppercase",
             color: "#fff",
-            paddingRight: 25,
             maxHeight: "3em",
             overflow: "hidden",
             display: "flex",
