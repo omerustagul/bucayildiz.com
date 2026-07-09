@@ -37,7 +37,7 @@ export async function FixtureSection() {
   const compact = [finished[finished.length - 1], upcoming[1]].filter(Boolean).slice(0, 2) as Fx[];
 
   return (
-    <section className="by-navy-sec by-navy-blend" style={{ background: "var(--grad-navy-deep)", position: "relative", overflow: "hidden" }}>
+    <section className="by-navy-sec" style={{ background: "var(--grad-navy-deep)", position: "relative", overflow: "hidden" }}>
       <span style={{ position: "absolute", right: -80, top: -60, fontSize: 420, lineHeight: 1, color: "rgba(201,162,39,0.04)", pointerEvents: "none" }}>★</span>
       <div style={{ maxWidth: 1540, margin: "0 auto", padding: "88px clamp(16px, 5vw, 32px)", position: "relative" }}>
         <SectionHeading
@@ -50,7 +50,7 @@ export async function FixtureSection() {
         <div className="hp-grid-2" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 24, alignItems: "stretch" }}>
           {/* Next match feature */}
           {next && (
-            <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: "var(--radius-xl)", padding: "clamp(20px, 5vw, 36px)", display: "flex", flexDirection: "column", gap: 24, justifyContent: "space-between" }}>
+            <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(3px)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: "var(--radius-xl)", padding: "clamp(20px, 5vw, 36px)", display: "flex", flexDirection: "column", gap: 24, justifyContent: "space-between" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Badge tone="gold">Sıradaki Maç</Badge>
                 <span style={{ fontSize: 13, color: "var(--navy-200)", fontWeight: 500 }}>{next.competition}</span>

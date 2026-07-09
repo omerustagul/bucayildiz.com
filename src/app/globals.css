@@ -252,11 +252,9 @@ main {
   }
 }
 
-/* ---- Lacivert bölüm dokusu + yumuşak kenar geçişi ----
-   .by-navy-sec: silik üçgen deseni (referans: FCB tarzı transparan doku).
-   .by-navy-blend: bölümün üst VE alt kenarında sayfa zemininden lacivertte
-   eriyen çok ince gradyan — keskin çizgiyi kırar.
-   .by-navy-blend-b: yalnız alt kenar (üst komşusu da koyuysa). */
+/* ---- Lacivert bölüm dokusu ----
+   .by-navy-sec: silik üçgen deseni (FCB tarzı transparan doku).
+   Kenarlar bilinçli olarak keskindir (yumuşak geçiş denendi, vazgeçildi). */
 .by-navy-sec {
   position: relative;
 }
@@ -268,22 +266,6 @@ main {
   pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='96'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M10 8l11 6.5-11 6.5z'/%3E%3Cpath d='M62 26l-11 6.5 11 6.5z'/%3E%3Cpath d='M30 52l11 6.5-11 6.5z'/%3E%3Cpath d='M78 70l-11 6.5 11 6.5z'/%3E%3C/g%3E%3Cg fill='%23000000' fill-opacity='0.14'%3E%3Cpath d='M48 4l-11 6.5 11 6.5z'/%3E%3Cpath d='M16 66l11 6.5-11 6.5z'/%3E%3Cpath d='M70 44l11 6.5-11 6.5z'/%3E%3C/g%3E%3C/svg%3E");
   background-size: 84px 96px;
-}
-
-.by-navy-blend::after,
-.by-navy-blend-b::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.by-navy-blend::after {
-  background: linear-gradient(180deg, var(--surface-page) 0, transparent 38px, transparent calc(100% - 38px), var(--surface-page) 100%);
-}
-
-.by-navy-blend-b::after {
-  background: linear-gradient(180deg, transparent calc(100% - 38px), var(--surface-page) 100%);
 }
 
 /* ---- Footer arması taşma payı ----

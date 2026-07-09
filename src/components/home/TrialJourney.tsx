@@ -49,8 +49,7 @@ export function TrialJourney() {
 
   return (
     <div className="tj-page">
-      {/* hero — üst komşu (nav) da koyu; yalnız alt kenar yumuşatılır */}
-      <header className="tj-hero by-navy-sec by-navy-blend-b">
+      <header className="tj-hero by-navy-sec">
         <span className="tj-star-bg">★</span>
         <div className="tj-hero-inner">
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 13, letterSpacing: ".16em", textTransform: "uppercase", color: "var(--gold-400)" }}>
