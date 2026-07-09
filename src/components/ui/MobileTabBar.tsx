@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
+import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "framer-motion";
 import { Icon, type IconName } from "@/lib/icons";
 import { useOverlayDismiss } from "@/components/ui/useOverlayDismiss";
 
@@ -38,7 +38,9 @@ const dockVariants = {
   },
 };
 
-const dockItemShow = (order: number) => ({
+type ItemStagger = { order: number; max: number };
+
+const dockItemShow = ({ order }: ItemStagger) => ({
   opacity: 1, scale: 1, y: 0,
   transition: { type: "spring" as const, stiffness: 520, damping: 27, delay: order * 0.05 },
 });
@@ -46,11 +48,23 @@ const dockItemShow = (order: number) => ({
 const dockItemVariants = {
   show: dockItemShow,
   showFlat: dockItemShow, // dock düz moddayken de öğeler görünür kalır
-
-  hide: (order: number) => ({
+  hide: ({ order, max }: ItemStagger) => ({
     opacity: 0, scale: 0.45, y: 9,
-    transition: { duration: 0.13, ease: "easeIn" as const, delay: (2 - order) * 0.03 },
+    transition: { duration: 0.13, ease: "easeIn" as const, delay: (max - order) * 0.03 },
   }),
+};
+
+/* Hareket azaltma tercihi: koreografi yerine sade opaklık geçişleri */
+const dockVariantsReduced = {
+  show: { opacity: 1, transition: { duration: 0.15 } },
+  showFlat: { opacity: 1, transition: { duration: 0.15 } },
+  hide: { opacity: 0, transition: { duration: 0.15 } },
+};
+
+const dockItemVariantsReduced = {
+  show: { opacity: 1 },
+  showFlat: { opacity: 1 },
+  hide: { opacity: 1 }, // öğeler kabukla birlikte söner, ayrı animasyon yok
 };
 
 function isGroupActive(g: TabBarGroup, pathname: string) {
@@ -81,6 +95,23 @@ export function MobileTabBar({
     if (openGroup) setOpenGroup(null);
   }
   if (hidden && openGroup) setOpenGroup(null);
+
+  const reduce = !!useReducedMotion();
+  const navVariants = reduce ? dockVariantsReduced : dockVariants;
+  const itemVariants = reduce ? dockItemVariantsReduced : dockItemVariants;
+
+  // Dock gerçek yüksekliğini CSS değişkenine yazar — .by-tabbar-pad sabit
+  // 104px varsayımı yerine bunu okur (header'daki --by-header-h deseni)
+  const dockRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = dockRef.current;
+    if (!el) return;
+    const apply = () => document.documentElement.style.setProperty("--by-dock-h", `${el.offsetHeight}px`);
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [hidden]);
 
   const sheetRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -141,10 +172,10 @@ export function MobileTabBar({
             role="region"
             aria-label={openItem.label}
             className="by-mobile-only"
-            initial={{ opacity: 0, y: 20, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.98, transition: { duration: 0.18 } }}
-            transition={spring}
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.98 }}
+            animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+            exit={reduce ? { opacity: 0, transition: { duration: 0.15 } } : { opacity: 0, y: 16, scale: 0.98, transition: { duration: 0.18 } }}
+            transition={reduce ? { duration: 0.15 } : spring}
             style={{
               position: "fixed",
               left: 0,
@@ -165,7 +196,7 @@ export function MobileTabBar({
             <div style={{ padding: "10px 14px 8px", fontSize: 10.5, fontWeight: 700, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--navy-600)", borderBottom: "1px solid var(--ink-200)" }}>
               {openItem.label}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", padding: "4px 8px 6px" }}>
+            <div className="by-overlay-scroll" style={{ display: "flex", flexDirection: "column", padding: "4px 8px 6px", maxHeight: "55dvh", overflowY: "auto" }}>
               {openItem.items.map((sub, i) => {
                 const on = pathname === sub.href || pathname.startsWith(sub.href + "/");
                 return (
@@ -177,7 +208,8 @@ export function MobileTabBar({
                         display: "flex",
                         alignItems: "center",
                         gap: 11,
-                        padding: "10px 8px",
+                        minHeight: 44,
+                        padding: "8px",
                         borderRadius: 10,
                         textDecoration: "none",
                         background: on ? "var(--navy-800)" : "transparent",
@@ -218,9 +250,10 @@ export function MobileTabBar({
         {!hidden && (
           <motion.nav
             key="dock"
+            ref={dockRef}
             className="by-tabbar"
             aria-label="Alt gezinme"
-            variants={dockVariants}
+            variants={navVariants}
             initial="hide"
             animate={openItem ? "showFlat" : "show"}
             exit="hide"
@@ -249,6 +282,7 @@ export function MobileTabBar({
                   const key = itemKey(it);
                   const expanded = key === expandedKey;
                   const order = Math.abs(idx - (items.length - 1) / 2); // merkezden dışa
+                  const stagger = { order, max: (items.length - 1) / 2 };
 
                   const iconColor = expanded ? "var(--navy-800)" : "var(--ink-500)";
 
@@ -263,12 +297,16 @@ export function MobileTabBar({
                             key="lbl"
                             layout
                             initial={{ opacity: 0, x: -6 }}
+                            /* nav'ın show/showFlat varyant geçişleri propagasyonla açık
+                               animate nesnesini ezebiliyor — parent etiketlerine karşılık
+                               gelen varyantlar vererek propagasyonla hizalanıyoruz */
+                            variants={{ show: { opacity: 1, x: 0 }, showFlat: { opacity: 1, x: 0 } }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -6, transition: { duration: 0.14 } }}
                             transition={spring}
                             style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}
                           >
-                            <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--navy-800)", whiteSpace: "nowrap" }}>{it.label}</span>
+                            <span style={{ display: "block", minWidth: 0, maxWidth: 118, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12.5, fontWeight: 700, color: "var(--navy-800)", whiteSpace: "nowrap" }}>{it.label}</span>
                             {/* altın alt çizgi — öğeler arasında kayarak taşınır */}
                             <motion.span layoutId="by-dock-line" transition={spring} style={{ height: 2.5, width: "100%", marginTop: 3.5, borderRadius: 2, background: "var(--grad-gold)" }} />
                           </motion.span>
@@ -280,6 +318,7 @@ export function MobileTabBar({
                   const boxStyle: React.CSSProperties = {
                     display: "flex",
                     alignItems: "center",
+                    minHeight: 44, // dokunma hedefi (WCAG 2.5.5)
                     gap: 7,
                     padding: "9px 11px",
                     borderRadius: 8,
@@ -293,7 +332,7 @@ export function MobileTabBar({
 
                   if (it.kind === "link") {
                     return (
-                      <motion.div key={key} layout custom={order} variants={dockItemVariants} transition={spring} whileTap={{ scale: 0.93 }}>
+                      <motion.div key={key} layout custom={stagger} variants={itemVariants} transition={spring} whileTap={{ scale: 0.93 }}>
                         <Link href={it.href} onClick={close} aria-label={it.label} aria-current={expanded ? "page" : undefined} style={boxStyle}>
                           {inner}
                         </Link>
@@ -303,7 +342,7 @@ export function MobileTabBar({
 
                   const open = openGroup === it.id;
                   return (
-                    <motion.div key={key} layout custom={order} variants={dockItemVariants} transition={spring} whileTap={{ scale: 0.93 }}>
+                    <motion.div key={key} layout custom={stagger} variants={itemVariants} transition={spring} whileTap={{ scale: 0.93 }}>
                       <button
                         type="button"
                         aria-label={it.label}

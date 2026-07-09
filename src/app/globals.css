@@ -956,6 +956,7 @@ body {
   }
 
   .by-tabbar-pad {
-    padding-bottom: calc(104px + env(safe-area-inset-bottom)) !important;
+    /* Dock kendi yüksekliğini --by-dock-h ile yazar (safe-area dahil) */
+    padding-bottom: calc(var(--by-dock-h, 92px) + 14px) !important;
   }
 }
