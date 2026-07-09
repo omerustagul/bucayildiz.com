@@ -49,14 +49,15 @@ export function TrialJourney() {
 
   return (
     <div className="tj-page">
-      {/* hero */}
-      <header className="tj-hero">
+      {/* hero — üst komşu (nav) da koyu; yalnız alt kenar yumuşatılır */}
+      <header className="tj-hero by-navy-sec by-navy-blend-b">
         <span className="tj-star-bg">★</span>
         <div className="tj-hero-inner">
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 13, letterSpacing: ".16em", textTransform: "uppercase", color: "var(--gold-400)" }}>
             <span style={{ width: 22, height: 2, background: "var(--gold-500)" }} />Ücretsiz Deneme Programı
           </span>
-          <h1 style={{ lineHeight: "45px" }}>
+          {/* satır aralığı orana bağlı — sabit px font büyüyünce bindirir */}
+          <h1 style={{ lineHeight: 1.15 }}>
             Önce iyi bir <span className="gold">insan</span>,<br />sonra iyi bir <span className="gold">sporcu</span> yetiştiriyoruz
           </h1>
           <p style={{ fontSize: "clamp(16px,2vw,19px)", lineHeight: 1.6, color: "var(--navy-100)", maxWidth: 640, margin: "20px auto 0" }}>

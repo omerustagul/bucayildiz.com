@@ -22,6 +22,7 @@ export function TrialBanner({
 }) {
   return (
     <div
+      className="by-navy-sec"
       style={{
         position: "relative",
         overflow: "hidden",

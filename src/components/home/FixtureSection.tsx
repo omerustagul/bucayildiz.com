@@ -37,7 +37,7 @@ export async function FixtureSection() {
   const compact = [finished[finished.length - 1], upcoming[1]].filter(Boolean).slice(0, 2) as Fx[];
 
   return (
-    <section style={{ background: "var(--grad-navy-deep)", position: "relative", overflow: "hidden" }}>
+    <section className="by-navy-sec by-navy-blend" style={{ background: "var(--grad-navy-deep)", position: "relative", overflow: "hidden" }}>
       <span style={{ position: "absolute", right: -80, top: -60, fontSize: 420, lineHeight: 1, color: "rgba(201,162,39,0.04)", pointerEvents: "none" }}>★</span>
       <div style={{ maxWidth: 1540, margin: "0 auto", padding: "88px clamp(16px, 5vw, 32px)", position: "relative" }}>
         <SectionHeading
