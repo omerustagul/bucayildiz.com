@@ -260,6 +260,7 @@ main {
 
 .by-motto-card {
   display: inline-flex;
+  height: 34px; /* üst banttaki butonlarla (34px) aynı hiza */
   border-radius: 999px;
   padding: 1px;
   text-decoration: none;
@@ -283,7 +284,8 @@ main {
   align-items: center;
   gap: 9px;
   border-radius: 999px;
-  padding: 7px 16px 7px 8px;
+  height: 32px;
+  padding: 0 16px 0 6px;
   background: linear-gradient(115deg, rgba(255, 255, 255, 0.10), rgba(10, 18, 38, 0.55) 45%, rgba(201, 162, 39, 0.14));
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);

@@ -89,11 +89,17 @@ function TeamStripe() {
   );
 }
 
-function Social({ size = "sm" }: { size?: "sm" | "md" }) {
+function Social({ size = "sm", box }: { size?: "sm" | "md"; box?: number }) {
   return (
     <div style={{ display: "flex", gap: 8 }}>
       {SOCIAL.map((s) => (
-        <IconButton key={s.name} label={s.label} variant="on-navy" size={size}>
+        <IconButton
+          key={s.name}
+          label={s.label}
+          variant="on-navy"
+          size={size}
+          style={box ? { width: box, height: box } : undefined}
+        >
           <BrandGlyph name={s.name} />
         </IconButton>
       ))}
@@ -276,7 +282,7 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
                   </span>
                 </span>
               </Link>
-              <Social />
+              <Social box={34} />
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <Button style={{ height: "24px", padding: "0 12px", textTransform: "uppercase", fontWeight: "black", letterSpacing: "0.015em" }} as="a" href="/giris" variant="on-navy" size="sm" leftIcon={navIcon("lock")}>
