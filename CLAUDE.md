@@ -72,9 +72,12 @@ ilgili `test`) temiz olmalı.
    çağırmalı. Örnek: `src/lib/auth.ts`, `src/app/admin/(panel)/sporcular/actions.ts`.
 2. **Girdi doğrulama Zod ile.** Tüm action girdileri `unknown` alır, `safeParse`
    edilir; hata mesajları Türkçe döner.
-3. **Oturum:** `jose` HS256 JWT, `by_session` cookie (httpOnly, prod'da secure,
-   7 gün). `AUTH_SECRET` zorunlu. `session.ts` edge-safe'tir (bcrypt/next-headers
-   içermez) — middleware güvenle kullanabilir.
+3. **Oturum:** `jose` HS256 JWT; portallar TAMAMEN AYRI — admin `by_admin_session`,
+   sporcu paneli `by_panel_session` cookie'si taşır (httpOnly, prod'da secure, 7 gün).
+   Çapraz yönlendirme YOK; aynı tarayıcıda iki portala aynı anda giriş yapılabilir.
+   `getAdminSession()`/`getPanelSession()` kullan — genel bir `getSession` yok.
+   `AUTH_SECRET` zorunlu. `session.ts` edge-safe'tir (bcrypt/next-headers içermez)
+   — middleware güvenle kullanabilir.
 4. **Env-driven servisler sessiz devre dışı deseni:** SMTP/S3/SMS/Push, ilgili
    env boşken sessizce atlanır, dolunca aktifleşir. Yeni servis eklerken bu deseni
    koru (ör. mail başarısızlığı başvuru kaydını bozmaz — non-blocking).

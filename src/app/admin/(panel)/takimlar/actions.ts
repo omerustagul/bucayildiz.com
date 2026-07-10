@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Takım adı zorunlu.").max(60),
@@ -24,9 +24,8 @@ const schema = z.object({
 export type TeamResult = { error: string };
 
 async function requireAuth() {
-  const s = await getSession();
+  const s = await getAdminSession();
   if (!s) redirect("/admin/giris");
-  if (s.role !== "admin") redirect("/panel");
 }
 
 /** Ana takım tekildir: bir takım ana yapılırken diğerlerinin işareti kaldırılır. */

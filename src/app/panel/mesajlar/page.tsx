@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { getSession } from "@/lib/auth";
+import { getPanelSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AssignmentsPanelView, type PanelAssignment } from "@/components/panel/AssignmentsPanelView";
 
 export const metadata: Metadata = { title: "Mesajlar — Sporcu Paneli" };
 
 export default async function PanelMesajlar() {
-  const session = await getSession();
+  const session = await getPanelSession();
   const athleteId = session!.athleteId!;
 
   const rawAssignments = await prisma.athleteAssignment.findMany({

@@ -1,9 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { destroySession } from "@/lib/auth";
+import { destroyPanelSession } from "@/lib/auth";
 
 export async function panelLogout() {
-  await destroySession();
+  await destroyPanelSession();
   redirect("/giris");
 }

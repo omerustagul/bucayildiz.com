@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getAdminSession, getPanelSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 /** Web Push aboneliği kaydı — oturumlu kullanıcı (sporcu/veli veya admin). */
 export async function POST(req: Request) {
-  const session = await getSession();
+  // İki portal oturumu da geçerli (admin medya yükler, sporcu avatar/push)
+  const session = (await getAdminSession()) ?? (await getPanelSession());
   if (!session) return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
 
   let body: { endpoint?: string; keys?: { p256dh?: string; auth?: string } };

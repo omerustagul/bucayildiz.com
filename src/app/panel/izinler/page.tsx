@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getSession } from "@/lib/auth";
+import { getPanelSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveConsentDocuments } from "@/lib/consent.server";
 import { ConsentManager, type ConsentItem } from "@/components/panel/ConsentManager";
@@ -11,7 +11,7 @@ function fmt(d: Date) {
 }
 
 export default async function IzinlerPage() {
-  const session = await getSession();
+  const session = await getPanelSession();
   const athleteId = session!.athleteId!;
 
   const [docs, records] = await Promise.all([

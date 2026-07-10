@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getSession, hashPassword } from "@/lib/auth";
+import { getAdminSession, hashPassword } from "@/lib/auth";
 
 const schema = z.object({
   name: z.string().trim().min(1, "İsim zorunlu.").max(120),
@@ -24,9 +24,8 @@ const schema = z.object({
 export type AthleteResult = { error: string };
 
 async function requireAuth() {
-  const s = await getSession();
+  const s = await getAdminSession();
   if (!s) redirect("/admin/giris");
-  if (s.role !== "admin") redirect("/panel");
 }
 
 function toData(d: z.infer<typeof schema>) {

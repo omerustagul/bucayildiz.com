@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 
 const hex = /^#[0-9a-fA-F]{6}$/;
 
@@ -22,9 +22,8 @@ const schema = z.object({
 export type JerseyResult = { error: string };
 
 async function requireAuth() {
-  const s = await getSession();
+  const s = await getAdminSession();
   if (!s) redirect("/admin/giris");
-  if (s.role !== "admin") redirect("/panel");
 }
 
 function toData(d: z.infer<typeof schema>) {

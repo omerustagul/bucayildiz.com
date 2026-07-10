@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { getSession } from "@/lib/auth";
+import { getPanelSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { TrainingCalendar, type CalFixture, type CalTraining } from "@/components/panel/TrainingCalendar";
 
 export const metadata: Metadata = { title: "Antrenmanlar — Sporcu Paneli" };
 
 export default async function PanelAntrenmanlar() {
-  const session = await getSession();
+  const session = await getPanelSession();
   const athlete = await prisma.athlete.findUnique({ where: { id: session!.athleteId! }, select: { id: true, teamId: true } });
   if (!athlete) return null;
 

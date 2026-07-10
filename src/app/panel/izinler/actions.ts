@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { getSession } from "@/lib/auth";
+import { getPanelSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { consentTextHash, getConsentDocumentByKey } from "@/lib/consent.server";
 
@@ -13,7 +13,7 @@ export type ConsentActionResult = { ok: true } | { ok: false; error: string };
  * Her işlem yeni bir ConsentRecord olayı yazar (audit); güncel durum = en son kayıt.
  */
 export async function setAthleteConsent(documentKey: string, granted: boolean): Promise<ConsentActionResult> {
-  const session = await getSession();
+  const session = await getPanelSession();
   if (!session?.athleteId) return { ok: false, error: "Yetkisiz." };
 
   const doc = await getConsentDocumentByKey(documentKey);

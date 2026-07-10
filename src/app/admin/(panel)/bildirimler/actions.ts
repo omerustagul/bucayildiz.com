@@ -1,6 +1,6 @@
 "use server";
 
-import { getSession } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 import { sendPush } from "@/lib/push";
 
 export type SendResult = { ok: true; sent: number; configured: boolean } | { ok: false; error: string };
@@ -11,7 +11,7 @@ export type SendResult = { ok: true; sent: number; configured: boolean } | { ok:
  * KVKK: gövdeye sağlık/performans verisi yazma — genel tut.
  */
 export async function sendNotification(input: { target: string; title: string; body: string; url?: string }): Promise<SendResult> {
-  const session = await getSession();
+  const session = await getAdminSession();
   if (!session || session.role !== "admin") return { ok: false, error: "Yetkisiz." };
 
   const title = input.title?.trim();

@@ -3,14 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 
 const hex = /^#[0-9a-fA-F]{6}$/;
 
 export type MediaResult = { ok: boolean; error?: string };
 
 async function authed() {
-  const s = await getSession();
+  const s = await getAdminSession();
   return !!s && s.role === "admin";
 }
 

@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getAdminSession, getPanelSession } from "@/lib/auth";
 import { saveUpload } from "@/lib/storage";
 
 /** Görsel yükleme uç noktası — oturumlu yöneticiler veya sporcular (yalnızca görsel). */
 export async function POST(req: Request) {
-  const session = await getSession();
+  // İki portal oturumu da geçerli (admin medya yükler, sporcu avatar/push)
+  const session = (await getAdminSession()) ?? (await getPanelSession());
   const isAdmin = session?.role === "admin";
   const isAthlete = Boolean(session?.athleteId);
   if (!session || (!isAdmin && !isAthlete)) return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });

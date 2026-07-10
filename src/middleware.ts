@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifySession, SESSION_COOKIE } from "@/lib/session";
+import { verifyAdminToken, verifyPanelToken, ADMIN_COOKIE, PANEL_COOKIE } from "@/lib/session";
 
-/** /admin (yalnızca admin) ve /panel (oturumlu sporcu/admin) rotalarını korur. */
+/** /admin ve /panel rotalarını korur. Portallar TAMAMEN AYRI: her biri kendi
+ *  çerezine bakar, çapraz yönlendirme yoktur. Aynı tarayıcıda iki portala
+ *  aynı anda oturum açılabilir. */
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const session = await verifySession(req.cookies.get(SESSION_COOKIE)?.value);
 
   const redirectTo = (path: string, withNext = false) => {
     const url = req.nextUrl.clone();
@@ -15,21 +16,19 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   };
 
-  // --- /admin --- (paneller tamamen ayrı: yalnız admin oturumu)
+  // --- /admin --- yalnız admin çerezi geçerli
   if (pathname.startsWith("/admin")) {
+    const admin = await verifyAdminToken(req.cookies.get(ADMIN_COOKIE)?.value);
     const isLogin = pathname === "/admin/giris";
-    if (!session && !isLogin) return redirectTo("/admin/giris", true);
-    if (session?.role === "admin" && isLogin) return redirectTo("/admin");
-    // Sporcu oturumu admin'e giremez; ama /panel'e geri atmak yerine admin
-    // GİRİŞİNE gider (portallar ayrı — isteyen admin hesabıyla giriş yapar).
-    if (session && session.role !== "admin" && !isLogin) return redirectTo("/admin/giris", true);
+    if (!admin && !isLogin) return redirectTo("/admin/giris", true);
+    if (admin && isLogin) return redirectTo("/admin");
     return NextResponse.next();
   }
 
-  // --- /panel --- (yalnız sporcu oturumu; admin kendi paneline)
+  // --- /panel --- yalnız panel (sporcu) çerezi geçerli
   if (pathname.startsWith("/panel")) {
-    if (!session) return redirectTo("/giris", true);
-    if (!session.athleteId) return redirectTo("/admin");
+    const athlete = await verifyPanelToken(req.cookies.get(PANEL_COOKIE)?.value);
+    if (!athlete) return redirectTo("/giris", true);
     return NextResponse.next();
   }
 

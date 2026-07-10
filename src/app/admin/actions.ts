@@ -1,9 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { destroySession } from "@/lib/auth";
+import { destroyAdminSession } from "@/lib/auth";
 
 export async function logoutAction() {
-  await destroySession();
+  await destroyAdminSession();
   redirect("/admin/giris");
 }

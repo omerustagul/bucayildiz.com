@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getSession } from "@/lib/auth";
+import { getPanelSession } from "@/lib/auth";
 import { PanelLoginForm } from "@/components/PanelLoginForm";
 import { Icon } from "@/lib/icons";
 
@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Panele Giriş" };
 
 export default async function GirisPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;
-  const session = await getSession();
+  const session = await getPanelSession();
   // Paneller ayrı: yalnız SPORCU oturumu panele yönlenir. Yönetici oturumu
   // varken bu sayfa yine sporcu giriş formunu gösterir (admin'e atmaz).
   if (session?.athleteId) redirect("/panel");

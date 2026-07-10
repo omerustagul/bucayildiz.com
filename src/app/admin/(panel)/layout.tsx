@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 import { getSettings } from "@/lib/settings";
 import { AdminShell } from "@/components/admin/AdminShell";
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
-  const session = await getSession();
+  const session = await getAdminSession();
   if (!session) redirect("/admin/giris");
   const settings = await getSettings();
   return (

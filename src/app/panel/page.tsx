@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getSession } from "@/lib/auth";
+import { getPanelSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AthleteCard } from "@/components/panel/AthleteCard";
 import { TrainingCalendar, type CalFixture, type CalTraining } from "@/components/panel/TrainingCalendar";
@@ -19,7 +19,7 @@ function fmtShortDate(ymd: string) {
 export const metadata: Metadata = { title: "Genel Bakış — Sporcu Paneli" };
 
 export default async function PanelDashboard() {
-  const session = await getSession();
+  const session = await getPanelSession();
   const athlete = await prisma.athlete.findUnique({
     where: { id: session!.athleteId! },
     include: { team: true, measurements: { orderBy: { measuredAt: "asc" } } },
