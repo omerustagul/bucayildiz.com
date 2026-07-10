@@ -33,7 +33,7 @@ export function Labeled({
         {hint && <span style={{ fontWeight: 400, color: "var(--text-muted)" }}> · {hint}</span>}
       </label>
       {children}
-      {error && <span style={{ fontSize: 12.5, color: "var(--red-600)" }}>{error}</span>}
+      {error && <span className="by-anim-error" style={{ fontSize: 12.5, color: "var(--red-600)" }}>{error}</span>}
     </div>
   );
 }

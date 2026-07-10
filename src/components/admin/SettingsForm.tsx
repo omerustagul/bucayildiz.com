@@ -190,7 +190,12 @@ export function SettingsForm({ initial, smtpPassSet }: { initial: SettingsFormVa
       </div>
 
       {msg && (
-        <div style={{ maxWidth: 820, padding: "10px 13px", borderRadius: "var(--radius-sm)", fontSize: 13.5, background: msg.ok ? "var(--green-100)" : "var(--red-100)", border: `1px solid ${msg.ok ? "var(--green-600)" : "var(--red-600)"}`, color: msg.ok ? "var(--green-600)" : "var(--red-600)" }}>
+        <div className={msg.ok ? "by-anim-pop" : "by-anim-error"} style={{ maxWidth: 820, padding: "10px 13px", borderRadius: "var(--radius-sm)", fontSize: 13.5, display: "flex", alignItems: "center", gap: 8, background: msg.ok ? "var(--green-100)" : "var(--red-100)", border: `1px solid ${msg.ok ? "var(--green-600)" : "var(--red-600)"}`, color: msg.ok ? "var(--green-600)" : "var(--red-600)" }}>
+          {msg.ok && (
+            <span className="by-anim-success" style={{ display: "inline-flex", flex: "none" }}>
+              <Icon name="check" size={16} />
+            </span>
+          )}
           {msg.text}
         </div>
       )}

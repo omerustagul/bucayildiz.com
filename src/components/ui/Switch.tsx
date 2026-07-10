@@ -33,6 +33,7 @@ export function Switch({
   };
   const control = (
     <span
+      className="by-switch"
       onClick={toggle}
       onKeyDown={(e) => {
         if (disabled) return;
@@ -59,6 +60,7 @@ export function Switch({
       }}
     >
       <span
+        className="by-switch-knob"
         style={{
           position: "absolute",
           top: 3,
@@ -68,7 +70,6 @@ export function Switch({
           borderRadius: "50%",
           background: "#fff",
           boxShadow: "var(--shadow-sm)",
-          transition: "left var(--dur-fast) var(--ease-out)",
         }}
       />
     </span>

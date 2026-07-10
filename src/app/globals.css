@@ -833,6 +833,71 @@ footer {
   animation: byPaneIn .18s var(--ease-out) both;
 }
 
+/* Form hata mesajı — belirirken hafif sarsılır (fade + shake) */
+@keyframes byErrorIn {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+
+  20% {
+    opacity: 1;
+    transform: translateX(-4px);
+  }
+
+  40% {
+    transform: translateX(4px);
+  }
+
+  60% {
+    transform: translateX(-2px);
+  }
+
+  80% {
+    transform: translateX(2px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.by-anim-error {
+  animation: byErrorIn .32s var(--ease-out) both;
+}
+
+/* Başarı geri bildirimi — ✓ pop (hafif taşmalı büyüme) */
+@keyframes bySuccessPop {
+  0% {
+    opacity: 0;
+    transform: scale(.5);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.by-anim-success {
+  animation: bySuccessPop .34s var(--ease-out) both;
+}
+
+/* Switch mikro geri bildirim: yaylı knob hareketi + basılıyken ezilme */
+.by-switch .by-switch-knob {
+  transition: left .22s cubic-bezier(.34, 1.56, .64, 1), transform var(--dur-fast) var(--ease-out);
+}
+
+.by-switch:active .by-switch-knob {
+  transform: scaleX(1.18);
+}
+
 @media (prefers-reduced-motion: reduce) {
 
   .by-anim-fade,
@@ -843,7 +908,9 @@ footer {
   .by-anim-pop.is-closing,
   .by-anim-sheet.is-closing,
   .by-anim-drawer.is-closing,
-  .by-anim-pane {
+  .by-anim-pane,
+  .by-anim-error,
+  .by-anim-success {
     animation: none;
   }
 }
