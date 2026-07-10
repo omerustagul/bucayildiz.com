@@ -773,12 +773,77 @@ footer {
   animation: byDrawerIn .22s var(--ease-out) both;
 }
 
+/* Kapanış (exit) animasyonları — bileşen unmount'u kısa süre geciktirip
+   .is-closing sınıfıyla ters yönde oynatır (controls.tsx useDelayedUnmount) */
+@keyframes byFadeOut {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes byPopOut {
+  to {
+    opacity: 0;
+    transform: scale(.96) translateY(6px);
+  }
+}
+
+@keyframes byDrawerOut {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes bySheetDown {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+.by-anim-fade.is-closing {
+  animation: byFadeOut .16s var(--ease-out) both;
+}
+
+.by-anim-pop.is-closing {
+  animation: byPopOut .16s var(--ease-out) both;
+}
+
+.by-anim-drawer.is-closing {
+  animation: byDrawerOut .2s var(--ease-out) both;
+}
+
+.by-anim-sheet.is-closing {
+  animation: bySheetDown .22s var(--ease-out) both;
+}
+
+/* Sekme İÇERİĞİ geçişi — panel remount olduğunda yumuşak giriş */
+@keyframes byPaneIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.by-anim-pane {
+  animation: byPaneIn .18s var(--ease-out) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
 
   .by-anim-fade,
   .by-anim-pop,
   .by-anim-sheet,
-  .by-anim-drawer {
+  .by-anim-drawer,
+  .by-anim-fade.is-closing,
+  .by-anim-pop.is-closing,
+  .by-anim-sheet.is-closing,
+  .by-anim-drawer.is-closing,
+  .by-anim-pane {
     animation: none;
   }
 }

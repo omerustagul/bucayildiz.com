@@ -1,6 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+
+// SSR'da useLayoutEffect uyarısını önler (sunucuda useEffect'e düşer)
+const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { IconButton } from "@/components/ui/IconButton";
@@ -90,13 +93,70 @@ export function SearchBox({ placeholder = "Ara…", value, onChange, width = 260
   );
 }
 
+
+/** Kapanışta unmount'u kısa süre geciktirir; .is-closing ile çıkış animasyonu oynar. */
+function useDelayedUnmount(open: boolean, ms = 180) {
+  const [render, setRender] = useState(open);
+  if (open && !render) setRender(true); // açılış: render-anı senkron
+  useEffect(() => {
+    if (open) return;
+    const t = setTimeout(() => setRender(false), ms);
+    return () => clearTimeout(t);
+  }, [open, ms]);
+  return { render, closing: render && !open };
+}
+
+/** Overlay tüketicileri çoğunlukla `{state && <Drawer/Modal ...>}` deseniyle koşullu
+ *  mount eder — `open` hiç false olmadan bileşen sökülür ve useDelayedUnmount devreye
+ *  giremez. Bu kanca unmount anında elemanların görsel klonunu body'e ekleyip
+ *  .is-closing çıkış animasyonunu klon üzerinde oynatır; tüm kapanma yolları
+ *  (X, backdrop, Escape, footer İptal/Kaydet, rota değişimi) tek kod yoluna düşer. */
+function useUnmountExit(refs: Array<React.RefObject<HTMLElement | null>>, ms = 240) {
+  // useLayoutEffect: unmount cleanup'ı mutasyon fazında, ref'ler kopmadan ve DOM
+  // sökülmeden ÖNCE çalışır — pasif useEffect cleanup'ında ref'ler çoktan null olur.
+  useIsoLayoutEffect(() => {
+    return () => {
+      const els = refs.map((r) => r.current).filter((el): el is HTMLElement => !!el);
+      // Gerçek düğüm zaten is-closing oynatıyorsa (open→false yolu) çifte animasyon yapma
+      if (!els.length || els.some((el) => el.classList.contains("is-closing"))) return;
+      const pairs = els.map((el) => {
+        const clone = el.cloneNode(true) as HTMLElement;
+        // cloneNode kullanıcı girdisini kopyalamaz — form değerlerini elle taşı
+        const src = el.querySelectorAll<HTMLInputElement>("input, textarea, select");
+        const dst = clone.querySelectorAll<HTMLInputElement>("input, textarea, select");
+        src.forEach((s, i) => {
+          const d = dst[i];
+          if (!d) return;
+          d.value = s.value;
+          if (s.type === "checkbox" || s.type === "radio") d.checked = s.checked;
+        });
+        clone.classList.add("is-closing");
+        clone.querySelectorAll(".by-anim-pop, .by-anim-drawer, .by-anim-sheet").forEach((c) => c.classList.add("is-closing"));
+        clone.style.pointerEvents = "none";
+        clone.setAttribute("aria-hidden", "true");
+        return { orig: el, clone };
+      });
+      requestAnimationFrame(() => {
+        // StrictMode'un sahte cleanup'ı: orijinal hâlâ DOM'daysa unmount gerçek değil
+        if (pairs.some(({ orig }) => orig.isConnected)) return;
+        pairs.forEach(({ clone }) => document.body.appendChild(clone));
+        setTimeout(() => pairs.forEach(({ clone }) => clone.remove()), ms);
+      });
+    };
+  }, [ms]);
+}
+
 export function Drawer({ open, onClose, title, subtitle, children, footer, width = 480 }: { open: boolean; onClose: () => void; title: string; subtitle?: string; children: React.ReactNode; footer?: React.ReactNode; width?: number }) {
   useOverlayDismiss(open, onClose);
-  if (!open || typeof document === "undefined") return null;
+  const { render, closing } = useDelayedUnmount(open, 200);
+  const backdropRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  useUnmountExit([backdropRef, panelRef]);
+  if (!render || typeof document === "undefined") return null;
   return createPortal(
     <>
-      <div className="by-anim-fade" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.45)", zIndex: 200 }} />
-      <aside className="by-anim-drawer" role="dialog" aria-modal="true" aria-label={title} style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: `min(${width}px, 94vw)`, background: "var(--surface-page)", boxShadow: "var(--shadow-xl)", zIndex: 201, display: "flex", flexDirection: "column" }}>
+      <div ref={backdropRef} className={`by-anim-fade${closing ? " is-closing" : ""}`} onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.45)", zIndex: 200 }} />
+      <aside ref={panelRef} className={`by-anim-drawer${closing ? " is-closing" : ""}`} role="dialog" aria-modal="true" aria-label={title} style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: `min(${width}px, 94vw)`, background: "var(--surface-page)", boxShadow: "var(--shadow-xl)", zIndex: 201, display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-subtle)", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
           <div>
             <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 22, textTransform: "uppercase", color: "var(--text-strong)", margin: 0, lineHeight: 1.05 }}>{title}</h2>
@@ -116,10 +176,13 @@ export function Drawer({ open, onClose, title, subtitle, children, footer, width
 
 export function Modal({ open, onClose, title, children, footer, width = 460 }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode; footer?: React.ReactNode; width?: number }) {
   useOverlayDismiss(open, onClose);
-  if (!open || typeof document === "undefined") return null;
+  const { render, closing } = useDelayedUnmount(open, 170);
+  const rootRef = useRef<HTMLDivElement>(null);
+  useUnmountExit([rootRef]);
+  if (!render || typeof document === "undefined") return null;
   return createPortal(
-    <div className="by-anim-fade" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.5)", display: "grid", placeItems: "center", zIndex: 210, padding: 20 }}>
-      <div className="by-anim-pop" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={title} style={{ width: `min(${width}px, 96vw)`, background: "var(--surface-page)", borderRadius: "var(--radius-xl)", boxShadow: "var(--shadow-xl)", overflow: "hidden" }}>
+    <div ref={rootRef} className={`by-anim-fade${closing ? " is-closing" : ""}`} onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.5)", display: "grid", placeItems: "center", zIndex: 210, padding: 20 }}>
+      <div className={`by-anim-pop${closing ? " is-closing" : ""}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={title} style={{ width: `min(${width}px, 96vw)`, background: "var(--surface-page)", borderRadius: "var(--radius-xl)", boxShadow: "var(--shadow-xl)", overflow: "hidden" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 20, textTransform: "uppercase", color: "var(--text-strong)", margin: 0 }}>{title}</h2>
           <IconButton label="Kapat" variant="ghost" onClick={onClose}>

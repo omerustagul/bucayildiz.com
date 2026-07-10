@@ -72,7 +72,8 @@ export function SettingsForm({ initial, smtpPassSet }: { initial: SettingsFormVa
         ))}
       </div>
 
-      <div style={{ background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", padding: "22px 24px" }}>
+      {/* key={tab}: sekme değişiminde panel yumuşak giriş animasyonuyla gelir */}
+      <div key={tab} className="by-anim-pane" style={{ background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", padding: "22px 24px" }}>
         {tab === "kulup" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.7fr) minmax(0,1.3fr)", gap: 22, alignItems: "start" }} className="jersey-form-grid">
