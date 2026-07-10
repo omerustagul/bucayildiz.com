@@ -59,6 +59,7 @@ import {
   FileText,
   Apple,
   EyeOff,
+  Camera,
   type LucideIcon,
 } from "lucide-react";
 
@@ -120,6 +121,7 @@ const ICONS: Record<string, LucideIcon> = {
   "file-text": FileText,
   apple: Apple,
   "eye-off": EyeOff,
+  camera: Camera,
 };
 
 export type IconName = keyof typeof ICONS;

@@ -30,6 +30,34 @@ export async function updateContact(parentPhone: string): Promise<ProfileResult>
   }
 }
 
+const photoUrlSchema = z
+  .string()
+  .trim()
+  .min(1, "Geçersiz fotoğraf.")
+  .max(500)
+  .refine((v) => v.startsWith("/uploads/") || /^https?:\/\//.test(v), "Geçersiz fotoğraf adresi.");
+
+/**
+ * Profil fotoğrafını günceller. Dosyanın kendisi `/api/upload` üzerinden
+ * (src/lib/storage.ts, magic-byte doğrulamalı) yüklenip URL alınır; bu action
+ * yalnızca o URL'yi oturumdaki sporcunun KENDİ kaydına yazar — session dışı
+ * bir athleteId asla kabul edilmez.
+ */
+export async function updatePhoto(url: string): Promise<ProfileResult> {
+  const session = await requireAthlete();
+  const parsed = photoUrlSchema.safeParse(url);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz fotoğraf." };
+
+  try {
+    await prisma.athlete.update({ where: { id: session.athleteId! }, data: { photoUrl: parsed.data } });
+    revalidatePath("/panel/profil");
+    revalidatePath("/panel", "layout");
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Fotoğraf güncellenemedi. Lütfen tekrar deneyin." };
+  }
+}
+
 const passwordSchema = z.object({
   current: z.string().min(1, "Mevcut şifrenizi girin."),
   next: z.string().min(8, "Yeni şifre en az 8 karakter olmalı.").max(100),

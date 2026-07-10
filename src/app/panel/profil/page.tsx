@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { requireAthlete } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Avatar } from "@/components/ui/Avatar";
 import { ProfileForms } from "@/components/panel/ProfileForms";
+import { AvatarUpload } from "@/components/panel/AvatarUpload";
 
 export const metadata: Metadata = { title: "Profil — Sporcu Paneli" };
 
@@ -33,18 +33,21 @@ export default async function PanelProfil() {
       </div>
 
       {/* Kimlik */}
-      <div style={{ display: "flex", alignItems: "center", gap: 16, background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", padding: "18px 20px" }}>
-        <Avatar name={athlete.name} src={athlete.photoUrl} size={56} />
-        <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 16, background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", padding: "18px 20px", flexWrap: "wrap" }}>
+        <AvatarUpload name={athlete.name} photoUrl={athlete.photoUrl} />
+        <div style={{ minWidth: 0 }}>
           <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 20, color: "var(--text-strong)" }}>{athlete.name}</div>
           <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 2 }}>
             {athlete.team.name} · {athlete.position || "Mevki belirtilmemiş"}{athlete.number != null ? ` · #${athlete.number}` : ""}
           </div>
+          <p style={{ fontSize: 11.5, color: "var(--text-muted)", margin: "6px 0 0" }}>
+            Fotoğrafınız yalnızca kulüp içi sistemlerde görüntülenir.
+          </p>
         </div>
       </div>
 
       {/* Salt-okunur bilgiler (kulüp tarafından yönetilir) */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 6 }}>
         <Info label="Takım" value={athlete.team.name} />
         <Info label="Mevki" value={athlete.position || dash} />
         <Info label="Forma No" value={athlete.number != null ? String(athlete.number) : dash} />
