@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section } from "@/components/content/blocks";
 import { MediaGallery, type GalleryAsset } from "@/components/content/MediaGallery";
+import { fmtTrDateShort } from "@/lib/format";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -17,7 +18,7 @@ export default async function MediaCategoryPage({ params }: { params: Promise<{ 
   if (!category) notFound();
 
   const assets = await prisma.mediaAsset.findMany({ where: { categoryId: id }, orderBy: { createdAt: "desc" } });
-  const items: GalleryAsset[] = assets.map((a) => ({ id: a.id, url: a.url, title: a.title, kind: a.kind }));
+  const items: GalleryAsset[] = assets.map((a) => ({ id: a.id, url: a.url, title: a.title, kind: a.kind, category: category.name, date: fmtTrDateShort(a.createdAt) }));
 
   return (
     <>

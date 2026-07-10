@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section } from "@/components/content/blocks";
-import { MediaGallery } from "@/components/content/MediaGallery";
+import { MediaGallery, type GalleryAsset } from "@/components/content/MediaGallery";
+import { fmtTrDateShort } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Fotoğraflar" };
 
@@ -11,7 +12,7 @@ export default async function FotograflarPage() {
   const photos = await prisma.mediaAsset.findMany({
     where: { kind: "photo" },
     orderBy: { createdAt: "desc" },
-    select: { id: true, url: true, title: true, kind: true },
+    select: { id: true, url: true, title: true, kind: true, createdAt: true, category: { select: { name: true } } },
   });
 
   return (
@@ -21,7 +22,7 @@ export default async function FotograflarPage() {
         {photos.length === 0 ? (
           <p style={{ fontSize: 14, color: "var(--text-muted)" }}>Henüz fotoğraf eklenmedi.</p>
         ) : (
-          <MediaGallery items={photos} />
+          <MediaGallery items={photos.map((a): GalleryAsset => ({ id: a.id, url: a.url, title: a.title, kind: a.kind, category: a.category?.name ?? null, date: fmtTrDateShort(a.createdAt) }))} />
         )}
       </Section>
     </>
