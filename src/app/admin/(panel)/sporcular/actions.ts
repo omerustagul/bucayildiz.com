@@ -13,7 +13,7 @@ const schema = z.object({
   number: z.number().int().min(0).max(99).nullable().optional(),
   height: z.number().int().min(100).max(230).nullable().optional(),
   weight: z.number().int().min(20).max(150).nullable().optional(),
-  birthDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçerli bir doğum tarihi giriniz.").optional().or(z.literal("")),
+  birthDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçerli bir doğum tarihi giriniz.").optional().or(z.literal("")).nullable(),
   foot: z.enum(["Sağ", "Sol", "Çift"]).nullable().optional(),
   status: z.enum(["active", "injured", "rest"]).default("active"),
   licenseNo: z.string().trim().max(40).optional().or(z.literal("")),
