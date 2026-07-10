@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Icon, type IconName } from "@/lib/icons";
-import { SceneBody, SceneSprint, SceneLadder, SceneDribble, SceneRoad, SceneStar } from "./TrialScenes";
+import { SceneBody, SceneSprint, SceneLadder, SceneDribble, SceneRoad, SceneStar, SceneViewport } from "./TrialScenes";
 import "@/styles/trial-journey.css";
 
 /** Buca Yıldız — Ücretsiz Deneme "Yolculuk" ekranı (veli gözünden).
@@ -100,7 +100,7 @@ export function TrialJourney() {
             const Scene = s.scene;
             return (
               <div className={"tj-step" + (s.final ? " is-final" : "")} key={i}>
-                <div className="tj-pane scene-col"><Scene /></div>
+                <SceneViewport className="tj-pane scene-col"><Scene /></SceneViewport>
                 <div className="tj-spine"><div className="tj-node">{s.final ? <Icon name="star" size={22} /> : i + 1}</div></div>
                 <div className="tj-pane text-col">
                   <span className="tj-kicker">{s.kicker}</span>

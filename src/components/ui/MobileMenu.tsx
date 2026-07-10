@@ -73,7 +73,12 @@ export function MobileMenu({
     ? { show: { opacity: 1 }, hide: { opacity: 1 } }
     : { show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 480, damping: 30 } }, hide: { opacity: 0, y: 14 } };
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+  // En uzun eşleşme kazanır: kök href ("/panel") alt rotalarda aktif görünmez
+  const activeHref = groups
+    .flatMap((g) => g.items)
+    .filter((it) => pathname === it.href || pathname.startsWith(it.href + "/"))
+    .reduce<string | null>((a, b) => (b.href.length > (a?.length ?? 0) ? b.href : a), null);
+  const isActive = (href: string) => href === activeHref;
 
   return (
     <AnimatePresence>

@@ -242,7 +242,8 @@
   --fig: #EAF0FA;
   --fig-dim: #9FB0CE;
   position: relative;
-  height: 300px;
+  /* Yükseklik SVG oranına kilitli (520×300) — dar ekranda üst/altta boş lacivert bant kalmaz */
+  aspect-ratio: 520 / 300;
   width: 100%;
   max-width: 520px;
   margin-inline: auto;

@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { motion, useAnimationFrame, useReducedMotion } from "framer-motion";
+import { createContext, useContext, useRef, useState } from "react";
+import { motion, useAnimationFrame, useInView, useReducedMotion } from "framer-motion";
 
 /**
  * Buca Yıldız — Ücretsiz Deneme sahneleri (framer-motion).
@@ -280,11 +280,11 @@ function Cone({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
 
 /** Ölçüm çipi: sahne içinde cam-altın rozet. */
 function Chip({ x, y, w = 104, big, small, delay = 0 }: { x: number; y: number; w?: number; big: string; small: string; delay?: number }) {
+  const inView = useSceneInView();
   return (
     <motion.g
       initial={{ opacity: 0, y: 14 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.4 }}
+      animate={inView ? { opacity: 1, y: 0 } : undefined}
       transition={{ type: "spring", stiffness: 300, damping: 22, delay }}
     >
       <motion.g
@@ -296,6 +296,26 @@ function Chip({ x, y, w = 104, big, small, delay = 0 }: { x: number; y: number; 
         <text x={x + 14} y={y + 34} fill="rgba(255,255,255,0.6)" style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 9.5, letterSpacing: ".08em", textTransform: "uppercase" }}>{small}</text>
       </motion.g>
     </motion.g>
+  );
+}
+
+/* iOS Safari, SVG iç öğelerinde (<g>) IntersectionObserver desteklemez —
+   whileInView SVG içinde hiç tetiklenmez ve öğeler opacity:0'da kalır.
+   Gözlem, SceneSvg'nin HTML sarmalayıcısında yapılıp context ile dağıtılır. */
+const SceneInViewCtx = createContext(false);
+const useSceneInView = () => useContext(SceneInViewCtx);
+
+/** Sahneyi saran sütun: görünürlük gözlemi burada yapılır ve context ile
+ *  sahnenin İÇİNDE çalışan tüm bileşenlere dağıtılır. Provider'ın sahne
+ *  bileşeninin ÜSTÜNDE olması şart — bileşen kendi render ettiği provider'ın
+ *  değerini okuyamaz. */
+export function SceneViewport({ className, children }: { className?: string; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.35 });
+  return (
+    <div ref={ref} className={className}>
+      <SceneInViewCtx.Provider value={inView}>{children}</SceneInViewCtx.Provider>
+    </div>
   );
 }
 
@@ -502,6 +522,7 @@ function DribbleShow({ paused }: { paused: boolean }) {
    SAHNE 01 — Vücut profili: tarama ışını + ölçüm çipleri
    ============================================================ */
 export function SceneBody() {
+  const inView = useSceneInView();
   const reduce = !!useReducedMotion();
   return (
     <SceneSvg label="Vücut profili ölçümü animasyonu" tag="ÖLÇÜM 01">
@@ -515,7 +536,7 @@ export function SceneBody() {
       </defs>
 
       {/* boy cetveli */}
-      <motion.g initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.35, duration: 0.6 }}>
+      <motion.g initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : undefined} transition={{ delay: 0.35, duration: 0.6 }}>
         <line x1="150" y1="98" x2="150" y2="252" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
         {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
           <line key={i} x1="150" y1={98 + i * 22} x2={i % 2 === 0 ? 160 : 156} y2={98 + i * 22} stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
@@ -538,8 +559,7 @@ export function SceneBody() {
           strokeWidth="3"
           strokeLinecap="round"
           initial={{ pathLength: 0, opacity: 0 }}
-          whileInView={{ pathLength: 1, opacity: 1 }}
-          viewport={{ once: true, amount: 0.4 }}
+          animate={inView ? { pathLength: 1, opacity: 1 } : undefined}
           transition={{ duration: 0.5, delay: 0.15 + i * 0.08, ease: "easeOut" }}
         />
       ))}
@@ -575,6 +595,7 @@ export function SceneBody() {
    SAHNE 02 — Kondisyon & sürat: mekik koşusu + nabız + kronometre
    ============================================================ */
 export function SceneSprint() {
+  const inView = useSceneInView();
   const reduce = !!useReducedMotion();
   return (
     <SceneSvg label="Sürat ve kondisyon testi animasyonu" tag="ÖLÇÜM 02">
@@ -601,7 +622,7 @@ export function SceneSprint() {
       </ShuttleG>
 
       {/* kronometre çipi */}
-      <motion.g initial={{ opacity: 0, y: -12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ type: "spring", stiffness: 280, damping: 22, delay: 0.2 }}>
+      <motion.g initial={{ opacity: 0, y: -12 }} animate={inView ? { opacity: 1, y: 0 } : undefined} transition={{ type: "spring", stiffness: 280, damping: 22, delay: 0.2 }}>
         <rect x="34" y="26" width="150" height="46" rx="12" fill="rgba(8,15,33,0.72)" stroke="rgba(201,162,39,0.55)" />
         <circle cx="60" cy="49" r="13" fill="none" stroke={C.gold300} strokeWidth="2.5" />
         <rect x="57.5" y="30" width="5" height="4" rx="1" fill={C.gold300} />
@@ -613,7 +634,7 @@ export function SceneSprint() {
       </motion.g>
 
       {/* nabız monitörü */}
-      <motion.g initial={{ opacity: 0, y: -12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ type: "spring", stiffness: 280, damping: 22, delay: 0.35 }}>
+      <motion.g initial={{ opacity: 0, y: -12 }} animate={inView ? { opacity: 1, y: 0 } : undefined} transition={{ type: "spring", stiffness: 280, damping: 22, delay: 0.35 }}>
         <rect x="342" y="26" width="144" height="46" rx="12" fill="rgba(8,15,33,0.72)" stroke="rgba(201,162,39,0.55)" />
         <motion.path
           d="M 366 49 c -6 -7 -9 -13 -3.5 -16.5 c 3 -1.8 6 0.4 6.9 2.4 c 0.9 -2 3.9 -4.2 6.9 -2.4 c 5.5 3.5 2.5 9.5 -3.5 16.5 l -3.4 3.6 z"
@@ -644,6 +665,7 @@ export function SceneSprint() {
    SAHNE 03 — Koordinasyon: çeviklik merdiveni
    ============================================================ */
 export function SceneLadder() {
+  const inView = useSceneInView();
   const reduce = !!useReducedMotion();
   const rungs = [90, 132, 174, 216, 258, 300, 342, 384, 426];
   // boşluk merkezleri: sporcu her birine çift ayak sıçrayarak basar
@@ -664,7 +686,7 @@ export function SceneLadder() {
       <LadderHopShow gaps={gaps} groundY={256} paused={reduce} />
 
       {/* ritim noktaları */}
-      <motion.g initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.3 }}>
+      <motion.g initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : undefined} transition={{ delay: 0.3 }}>
         {[0, 1, 2].map((i) => (
           <motion.circle
             key={i}
@@ -716,13 +738,14 @@ export function SceneDribble() {
    SAHNE 05 — Kişiye özel yol haritası
    ============================================================ */
 export function SceneRoad() {
+  const inView = useSceneInView();
   const reduce = !!useReducedMotion();
   const PATH = "M60,252 C140,252 150,188 220,188 C290,188 300,120 360,140 C405,155 412,150 432,150";
   return (
     <SceneSvg label="Kişiye özel gelişim yol haritası animasyonu" tag="ÖLÇÜM 05">
       <Field id="tj5" />
       {/* plan kartı */}
-      <motion.g initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.4 }} transition={{ type: "spring", stiffness: 260, damping: 24, delay: 0.2 }}>
+      <motion.g initial={{ opacity: 0, y: 14 }} animate={inView ? { opacity: 1, y: 0 } : undefined} transition={{ type: "spring", stiffness: 260, damping: 24, delay: 0.2 }}>
         <rect x="44" y="42" width="150" height="98" rx="12" fill="rgba(8,15,33,0.72)" stroke="rgba(201,162,39,0.55)" />
         <text x="60" y="66" fill={C.gold300} style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 13, letterSpacing: ".1em" }}>GELİŞİM PLANI</text>
         {[0, 1, 2].map((i) => (
@@ -736,12 +759,11 @@ export function SceneRoad() {
             strokeWidth="5"
             strokeLinecap="round"
             initial={{ pathLength: 0 }}
-            whileInView={{ pathLength: 1 }}
-            viewport={{ once: true, amount: 0.4 }}
+            animate={inView ? { pathLength: 1 } : undefined}
             transition={{ duration: 0.55, delay: 0.55 + i * 0.18, ease: "easeOut" }}
           />
         ))}
-        <motion.g initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, amount: 0.4 }} transition={{ type: "spring", stiffness: 320, damping: 18, delay: 1.15 }}>
+        <motion.g initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : undefined} transition={{ type: "spring", stiffness: 320, damping: 18, delay: 1.15 }}>
           <circle cx="172" cy="120" r="9" fill="#2F9E5B" />
           <path d="M 167.5 120 l 3.2 3.4 l 5.8 -7" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
         </motion.g>
@@ -756,8 +778,7 @@ export function SceneRoad() {
         strokeWidth="4"
         strokeLinecap="round"
         initial={{ pathLength: 0 }}
-        whileInView={{ pathLength: 1 }}
-        viewport={{ once: true, amount: 0.4 }}
+        animate={inView ? { pathLength: 1 } : undefined}
         transition={{ duration: 1.7, ease: [0.4, 0, 0.2, 1], delay: 0.35 }}
       />
       {/* rota üzerinde ilerleyen ışık */}
@@ -769,8 +790,7 @@ export function SceneRoad() {
           strokeWidth="2"
           style={{ offsetPath: `path("${PATH}")` }}
           initial={{ offsetDistance: "0%", opacity: 0 }}
-          whileInView={{ offsetDistance: ["0%", "100%"], opacity: [0, 1, 1, 0] }}
-          viewport={{ once: false, amount: 0.4 }}
+          animate={inView ? { offsetDistance: ["0%", "100%"], opacity: [0, 1, 1, 0] } : undefined}
           transition={{ duration: 2.6, repeat: Infinity, repeatDelay: 1.1, ease: "easeInOut", delay: 0.5 }}
         />
       )}
@@ -789,8 +809,7 @@ export function SceneRoad() {
           stroke={C.gold}
           strokeWidth="3"
           initial={{ r: 0 }}
-          whileInView={{ r: 7 }}
-          viewport={{ once: true, amount: 0.4 }}
+          animate={inView ? { r: 7 } : undefined}
           transition={{ type: "spring", stiffness: 380, damping: 16, delay: d as number }}
         />
       ))}
@@ -798,8 +817,7 @@ export function SceneRoad() {
       {/* hedef yıldız */}
       <motion.g
         initial={{ opacity: 0, y: 10 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.4 }}
+        animate={inView ? { opacity: 1, y: 0 } : undefined}
         transition={{ type: "spring", stiffness: 300, damping: 15, delay: 2 }}
       >
         <motion.text
@@ -820,6 +838,7 @@ export function SceneRoad() {
    SAHNE 06 — Geleceğin yıldızı: kutlama
    ============================================================ */
 export function SceneStar() {
+  const inView = useSceneInView();
   const reduce = !!useReducedMotion();
   const star = "M 0 -34 L 9.6 -10.6 L 34 -8.4 L 15.4 7.6 L 21 31 L 0 17.6 L -21 31 L -15.4 7.6 L -34 -8.4 L -9.6 -10.6 Z";
   return (
@@ -847,7 +866,7 @@ export function SceneStar() {
       />
 
       {/* yıldız */}
-      <motion.g initial={{ opacity: 0, y: 26 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.4 }} transition={{ type: "spring", stiffness: 220, damping: 15, delay: 0.25 }}>
+      <motion.g initial={{ opacity: 0, y: 26 }} animate={inView ? { opacity: 1, y: 0 } : undefined} transition={{ type: "spring", stiffness: 220, damping: 15, delay: 0.25 }}>
         <g transform="translate(260 118) scale(1.5)">
           <motion.path
             d={star}
