@@ -39,7 +39,7 @@ export async function FixtureSection() {
   return (
     <section className="by-navy-sec" style={{ background: "var(--grad-navy-deep)", position: "relative", overflow: "hidden" }}>
       <span style={{ position: "absolute", right: -80, top: -60, fontSize: 420, lineHeight: 1, color: "rgba(201,162,39,0.04)", pointerEvents: "none" }}>★</span>
-      <div style={{ maxWidth: 1540, margin: "0 auto", padding: "88px clamp(16px, 5vw, 32px)", position: "relative" }}>
+      <div style={{ maxWidth: 1540, margin: "0 auto", padding: "38px clamp(16px, 5vw, 32px)", position: "relative" }}>
         <SectionHeading
           kicker="Fikstür"
           title="Güncel Maç Programı"
@@ -58,11 +58,11 @@ export async function FixtureSection() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 16 }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
                   <Image src={CREST} alt="Buca Yıldız" width={84} height={84} style={{ objectFit: "contain" }} />
-                  <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 22, textTransform: "uppercase", color: "#fff", textAlign: "center", lineHeight: 1 }}>Buca Yıldız</span>
+                  <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 16, textTransform: "uppercase", color: "#fff", textAlign: "center", lineHeight: 1 }}>Buca Yıldız</span>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                  <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, fontSize: 44, color: "var(--gold-400)", fontVariantNumeric: "tabular-nums" }}>{next.time || "—"}</span>
-                  <span style={{ fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--navy-200)" }}>{fmtTrDate(next.date)}</span>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+                  <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, fontSize: 34, color: "var(--gold-400)", fontVariantNumeric: "tabular-nums" }}>{next.time || "—"}</span>
+                  <span style={{ fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--navy-200)" }}>{fmtTrDate(next.date)}</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
                   {next.opponentLogo ? (
@@ -72,7 +72,7 @@ export async function FixtureSection() {
                       {next.opponent.split(" ").map((w) => w[0]).slice(0, 2).join("")}
                     </div>
                   )}
-                  <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 22, textTransform: "uppercase", color: "#fff", textAlign: "center", lineHeight: 1 }}>{next.opponent}</span>
+                  <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 16, textTransform: "uppercase", color: "#fff", textAlign: "center", lineHeight: 1 }}>{next.opponent}</span>
                 </div>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid rgba(255,255,255,0.10)", paddingTop: 20 }}>

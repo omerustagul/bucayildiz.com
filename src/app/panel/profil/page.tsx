@@ -47,7 +47,7 @@ export default async function PanelProfil() {
       </div>
 
       {/* Salt-okunur bilgiler (kulüp tarafından yönetilir) */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 6 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12 }}>
         <Info label="Takım" value={athlete.team.name} />
         <Info label="Mevki" value={athlete.position || dash} />
         <Info label="Forma No" value={athlete.number != null ? String(athlete.number) : dash} />

@@ -36,6 +36,8 @@ const schema = z.object({
   mailFrom: str,
   mailToAdmin: z.string().trim().email("Geçerli e-posta giriniz.").optional().or(z.literal("")),
   // Görünüm
+  heroImageUrl: z.string().trim().max(500).optional().or(z.literal("")),
+  homeGalleryCategoryId: z.string().trim().max(60).optional().or(z.literal("")),
   customCursor: z.boolean().default(false),
   cursorStyle: z.enum(["default", "star", "ball", "whistle"]).default("star"),
   mobileNavAdmin: z.boolean().default(true),
@@ -71,6 +73,8 @@ export async function saveSettings(input: unknown): Promise<SettingsResult> {
     smtpUser: orNull(d.smtpUser),
     mailFrom: orNull(d.mailFrom),
     mailToAdmin: orNull(d.mailToAdmin),
+    heroImageUrl: orNull(d.heroImageUrl),
+    homeGalleryCategoryId: orNull(d.homeGalleryCategoryId),
     customCursor: d.customCursor,
     cursorStyle: d.cursorStyle,
     mobileNavAdmin: d.mobileNavAdmin,

@@ -5,12 +5,16 @@ import { FixtureSection } from "@/components/home/FixtureSection";
 import { MediaSection } from "@/components/home/MediaSection";
 import { AgeGroupsSection } from "@/components/home/AgeGroupsSection";
 import { JerseySection } from "@/components/home/JerseySection";
+import { AcademyFramesSection } from "@/components/home/AcademyFramesSection";
+import { getSettings } from "@/lib/settings";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const settings = await getSettings();
   return (
     <>
-      <TrialHero href="/ucretsiz-deneme" />
+      <TrialHero href="/ucretsiz-deneme" heroImageUrl={settings.heroImageUrl} />
       <HowItWorksSection />
+      <AcademyFramesSection />
       <NewsSection />
       <FixtureSection />
       <MediaSection />

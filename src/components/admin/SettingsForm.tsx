@@ -16,7 +16,10 @@ export type SettingsFormValues = {
   smtpHost: string; smtpPort: string; smtpUser: string; mailFrom: string; mailToAdmin: string;
   customCursor: boolean; cursorStyle: string;
   mobileNavAdmin: boolean; mobileNavPanel: boolean;
+  heroImageUrl: string; homeGalleryCategoryId: string;
 };
+
+export type MediaCategoryOption = { id: string; name: string };
 
 const TABS: { id: string; label: string; icon: IconName }[] = [
   { id: "kulup", label: "Kulüp", icon: "shield" },
@@ -32,7 +35,7 @@ const CURSORS: { id: string; label: string; desc: string }[] = [
   { id: "whistle", label: "Düdük", desc: "Hakem düdüğü imleci" },
 ];
 
-export function SettingsForm({ initial, smtpPassSet }: { initial: SettingsFormValues; smtpPassSet: boolean }) {
+export function SettingsForm({ initial, smtpPassSet, mediaCategories = [] }: { initial: SettingsFormValues; smtpPassSet: boolean; mediaCategories?: MediaCategoryOption[] }) {
   const [tab, setTab] = useState("kulup");
   const [v, setV] = useState<SettingsFormValues>(initial);
   const [smtpPass, setSmtpPass] = useState("");
@@ -135,6 +138,32 @@ export function SettingsForm({ initial, smtpPassSet }: { initial: SettingsFormVa
 
         {tab === "gorunum" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            {/* Ana sayfa: hero arka planı + Akademiden Kareler kategorisi */}
+            <div>
+              <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 15, color: "var(--text-strong)" }}>Ana Sayfa Hero Görseli</div>
+              <div style={{ fontSize: 13, color: "var(--text-muted)", margin: "3px 0 10px" }}>Trial hero alanının arka plan görseli. Boş bırakılırsa varsayılan marka görseli kullanılır.</div>
+              <div style={{ maxWidth: 420 }}>
+                <FileDrop value={v.heroImageUrl || null} onChange={(url) => set("heroImageUrl", url ?? "")} label="Hero görseli yükle" aspect="16 / 9" />
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 15, color: "var(--text-strong)" }}>Akademiden Kareler Kategorisi</div>
+              <div style={{ fontSize: 13, color: "var(--text-muted)", margin: "3px 0 10px" }}>Ana sayfadaki galeri şeridi bu kategorideki medyayı gösterir. &quot;Tümü&quot; seçiliyken kütüphanedeki son medya dosyaları gelir.</div>
+              <select
+                value={v.homeGalleryCategoryId}
+                onChange={(e) => set("homeGalleryCategoryId", e.target.value)}
+                style={{ fontFamily: "var(--font-body)", fontSize: 14.5, padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", background: "var(--surface-card)", color: "var(--text-body)", minWidth: 260 }}
+              >
+                <option value="">Tümü (kategori filtresi yok)</option>
+                {mediaCategories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ height: 1, background: "var(--border-subtle)" }} />
+
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
               <div>
                 <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 15, color: "var(--text-strong)" }}>Özel İmleç</div>

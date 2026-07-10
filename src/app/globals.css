@@ -368,7 +368,8 @@ main:has(+ footer) .by-page-transition> :last-child {
 @media (min-width: 901px) {
   .trial-hero {
     display: flex;
-    min-height: calc(100svh - var(--by-header-h, 123px)); /* header kendi yüksekliğini yazar (SiteHeader) */
+    min-height: calc(100svh - var(--by-header-h, 123px));
+    /* header kendi yüksekliğini yazar (SiteHeader) */
     /* header 64+1+64 + renk şeridi 6 */
   }
 
@@ -385,8 +386,7 @@ main:has(+ footer) .by-page-transition> :last-child {
 /* Mobilde arma küçülür, başlık armanın altına girmesin diye sağdan pay alır */
 @media (max-width: 900px) {
   .trial-hero-badge {
-    width: 74px !important;
-    top: 30px !important;
+    top: 22px !important;
   }
 
   .trial-hero-title {
@@ -541,24 +541,50 @@ footer {
    ============================================================ */
 .trial-hero {
   background-color: var(--navy-950);
+}
+
+/* Arka plan ayrı katmanda: açılışta transform ile yumuşak zoom-out
+   (background-size animasyonu jank üretir; transform GPU'da akıcıdır). */
+.trial-hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   background-image: linear-gradient(90deg,
       rgba(5, 11, 26, 0.96) 0%,
       rgba(5, 11, 26, 0.85) 32%,
       rgba(5, 11, 26, 0.45) 58%,
       rgba(5, 11, 26, 0.1) 100%),
-    url("/brand/hero-trial.jpg");
+    var(--hero-img, url("/brand/hero-trial.jpg"));
   background-size: cover;
   background-position: center;
+  animation: byHeroZoom 2.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform;
+}
+
+@keyframes byHeroZoom {
+  from {
+    transform: scale(1.07);
+  }
+
+  to {
+    transform: scale(1);
+  }
 }
 
 @media (max-width: 760px) {
-  .trial-hero {
+  .trial-hero-bg {
     background-image: linear-gradient(180deg,
         rgba(5, 11, 26, 0.82) 0%,
         rgba(5, 11, 26, 0.58) 36%,
         rgba(5, 11, 26, 0.9) 100%),
-      url("/brand/hero-trial-square.jpg");
+      var(--hero-img-m, url("/brand/hero-trial-square.jpg"));
     background-position: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trial-hero-bg {
+    animation: none;
   }
 }
 
@@ -1172,6 +1198,7 @@ body {
 }
 
 @media (max-width: 900px) {
+
   .by-tabbar,
   .by-mobile-only {
     display: block;
@@ -1407,5 +1434,35 @@ body {
 
   .by-squad-cards {
     display: flex !important;
+  }
+}
+/* Ana sayfa "Akademiden Kareler" — tek satır kare şerit; mobilde yatay kaydırma */
+.by-frames-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 5 * 14px) / 6);
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  padding-bottom: 6px; /* olası scrollbar için nefes */
+  scrollbar-width: thin;
+}
+
+.by-frames-strip > * {
+  scroll-snap-align: start;
+}
+
+.by-frame-card img {
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+
+.by-frame-card:hover img {
+  transform: scale(1.05);
+}
+
+@media (max-width: 900px) {
+  .by-frames-strip {
+    grid-auto-columns: 44%;
   }
 }

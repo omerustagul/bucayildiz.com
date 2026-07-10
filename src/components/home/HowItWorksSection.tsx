@@ -170,7 +170,7 @@ export function HowItWorksSection() {
   return (
     <section style={{ background: "var(--surface-page)", position: "relative", overflow: "hidden" }}>
       <span aria-hidden style={{ position: "absolute", left: -60, top: -40, fontSize: 320, lineHeight: 1, color: "rgba(21,41,90,0.03)", pointerEvents: "none" }}>★</span>
-      <div style={{ maxWidth: 1540, borderBlock: "1px solid var(--gold-500)", margin: "0 auto", padding: "68px clamp(16px, 5vw, 32px)", position: "relative" }}>
+      <div style={{ maxWidth: 1540, borderBlock: "1px solid var(--gold-500)", margin: "0 auto", padding: "38px clamp(16px, 5vw, 32px)", position: "relative" }}>
         <div className="how-grid" style={{ display: "grid", gridTemplateColumns: "1fr 2px 1.12fr 2px 1fr", gap: "clamp(24px, 3vw, 36px)", alignItems: "stretch" }}>
           <StepsColumn />
           <HowDivider />

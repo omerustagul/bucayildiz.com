@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import { ViewHeader } from "@/components/admin/ui";
 import { getSettings } from "@/lib/settings";
+import { prisma } from "@/lib/prisma";
 import { SettingsForm, type SettingsFormValues } from "@/components/admin/SettingsForm";
 
 export const metadata: Metadata = { title: "Ayarlar" };
 
 export default async function AyarlarPage() {
-  const s = await getSettings();
+  const [s, categories] = await Promise.all([
+    getSettings(),
+    prisma.mediaCategory.findMany({ orderBy: { sort: "asc" }, select: { id: true, name: true } }),
+  ]);
   const str = (x: string | null) => x ?? "";
   const numStr = (x: number | null) => (x == null ? "" : String(x));
 
@@ -31,6 +35,8 @@ export default async function AyarlarPage() {
     smtpUser: str(s.smtpUser),
     mailFrom: str(s.mailFrom),
     mailToAdmin: str(s.mailToAdmin),
+    heroImageUrl: str(s.heroImageUrl),
+    homeGalleryCategoryId: str(s.homeGalleryCategoryId),
     customCursor: s.customCursor,
     cursorStyle: s.cursorStyle,
     mobileNavAdmin: s.mobileNavAdmin,
@@ -40,7 +46,7 @@ export default async function AyarlarPage() {
   return (
     <>
       <ViewHeader title="Ayarlar" subtitle="Kulüp, SEO, e-posta ve görünüm ayarlarını buradan yönetin" />
-      <SettingsForm initial={initial} smtpPassSet={!!s.smtpPass} />
+      <SettingsForm initial={initial} smtpPassSet={!!s.smtpPass} mediaCategories={categories} />
     </>
   );
 }

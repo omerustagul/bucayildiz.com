@@ -23,7 +23,7 @@ const TESTS: { icon: IconName; label: string }[] = [
   { icon: "gauge", label: "10-20-30 m Sprint" },
 ];
 
-export function TrialHero({ href = "/ucretsiz-deneme" }: { href?: string }) {
+export function TrialHero({ href = "/ucretsiz-deneme", heroImageUrl }: { href?: string; heroImageUrl?: string | null }) {
   const reduce = useReducedMotion();
 
   // Zarif giriş: fade + hafif yukarı kayma; testler 70ms arayla belirir.
@@ -39,49 +39,58 @@ export function TrialHero({ href = "/ucretsiz-deneme" }: { href?: string }) {
   };
 
   return (
-    <section className="trial-hero" style={{ position: "relative", overflow: "hidden", color: "#fff" }}>
+    <section
+      className="trial-hero"
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        color: "#fff",
+        // Özel görsel ayarlardan gelir; boşsa varsayılan marka görselleri
+        ["--hero-img" as string]: `url("${heroImageUrl || "/brand/hero-trial.jpg"}")`,
+        ["--hero-img-m" as string]: `url("${heroImageUrl || "/brand/hero-trial-square.jpg"}")`,
+      }}
+    >
+      {/* Arka plan katmanı — açılışta yumuşak zoom-out (transform, bg'den ayrık) */}
+      <div className="trial-hero-bg" aria-hidden="true" />
       <div
         className="trial-hero-inner"
         style={{
           maxWidth: 1540,
           width: "100%",
           margin: "0 auto",
-          padding: "clamp(36px, 2vw, 56px) clamp(16px, 5vw, 32px)",
+          padding: "38px clamp(16px, 5vw, 32px)",
           position: "relative",
           zIndex: 1,
         }}
       >
-        {/* 8-18 yaş arması — konteyner içeriğine hizalı, kulüp kalkanı formunda */}
+        {/* 8-18 yaş rozeti — minik, cam-altın kapsül */}
         <motion.div
           className="trial-hero-badge"
-          initial={reduce ? false : { opacity: 0, y: -12 }}
+          initial={reduce ? false : { opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
           style={{
             position: "absolute",
-            top: "clamp(36px, 2vw, 56px)",
+            top: "clamp(30px, 2vw, 50px)",
             right: "clamp(16px, 5vw, 32px)",
-            width: "clamp(88px, 9vw, 118px)",
             zIndex: 2,
-            filter: "drop-shadow(0 10px 26px rgba(0,0,0,.5))",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 9,
+            padding: "9px 16px 9px 12px",
+            borderRadius: "var(--radius-pill)",
+            background: "rgba(8, 15, 33, 0.55)",
+            border: "1px solid rgba(201, 162, 39, 0.55)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.35)",
           }}
         >
-          <svg viewBox="0 0 120 138" style={{ display: "block", width: "100%", height: "auto" }} role="img" aria-label="8-18 yaş arası">
-            <defs>
-              <linearGradient id="byShieldGold" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stopColor="#E9C860" />
-                <stop offset=".5" stopColor="#C9A227" />
-                <stop offset="1" stopColor="#8F6E14" />
-              </linearGradient>
-            </defs>
-            {/* kalkan gövdesi + altın çerçeve */}
-            <path d="M60 6 L106 20 V66 C106 98 88 118 60 132 C32 118 14 98 14 66 V20 Z" fill="rgba(8,15,33,0.8)" stroke="url(#byShieldGold)" strokeWidth="2.5" strokeLinejoin="round" />
-            {/* iç kontur */}
-            <path d="M60 14 L98 26.5 V66 C98 93 83 110 60 122.5 C37 110 22 93 22 66 V26.5 Z" fill="none" stroke="rgba(201,162,39,0.35)" strokeWidth="1" strokeLinejoin="round" />
-            <text x="60" y="46" textAnchor="middle" style={{ fontSize: 21, fill: "url(#byShieldGold)" }}>★</text>
-            <text x="60" y="82" textAnchor="middle" style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 30, fill: "#fff", letterSpacing: ".01em" }}>8-18</text>
-            <text x="60" y="102" textAnchor="middle" style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 9.5, letterSpacing: ".24em", fill: "#DDBB4E" }}>YAŞ ARASI</text>
-          </svg>
+          <span aria-hidden="true" style={{ width: 26, height: 26, flex: "none", borderRadius: "50%", display: "grid", placeItems: "center", background: "var(--grad-gold)", color: "var(--navy-900)", fontSize: 13, lineHeight: 1 }}>★</span>
+          <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.05 }}>
+            <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 17, color: "#fff", letterSpacing: ".02em" }}>8–18</span>
+            <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 8.5, letterSpacing: ".2em", color: "#DDBB4E" }}>YAŞ ARASI</span>
+          </span>
         </motion.div>
 
         <motion.div
