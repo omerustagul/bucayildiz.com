@@ -13,11 +13,14 @@ export function PageHero({
   kicker,
   lead,
   breadcrumb = [],
+  badge,
 }: {
   title: string;
   kicker?: string;
   lead?: string;
   breadcrumb?: Crumb[];
+  /** Başlığın hemen üstünde gösterilen opsiyonel rozet (ör. "Son Dakika"). */
+  badge?: React.ReactNode;
 }) {
   return (
     <section style={{ position: "relative", overflow: "hidden", background: "var(--grad-navy-deep)" }}>
@@ -76,6 +79,8 @@ export function PageHero({
             {kicker}
           </span>
         )}
+
+        {badge && <div style={{ marginBottom: 12 }}>{badge}</div>}
 
         <h1
           style={{

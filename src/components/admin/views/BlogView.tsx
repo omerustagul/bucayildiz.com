@@ -16,6 +16,17 @@ import { Icon, type IconName } from "@/lib/icons";
 import { POST_TEMPLATES, POST_CATEGORIES } from "@/lib/enums";
 import { toast } from "@/components/ui/Toast";
 import { createPost, updatePost, deletePost } from "@/app/admin/(panel)/haberler/actions";
+import {
+  defaultTemplateData,
+  parseTemplateData,
+  type MacraporuData,
+  type GaleriData,
+  type RoportajData,
+  type DuyuruData,
+  type GoalRow,
+  type PhotoRow,
+  type QaRow,
+} from "@/lib/postTemplates";
 
 export type PostRow = {
   id: string;
@@ -27,6 +38,7 @@ export type PostRow = {
   coverUrl: string | null;
   excerpt: string;
   body: string;
+  templateData: string;
   author: string;
   featured: boolean;
   publishedAt: string | null;
@@ -43,11 +55,156 @@ const fmt = (d: string | null) => {
   const [y, m, day] = d.split("-");
   return day && m && y ? `${day}.${m}.${y}` : d;
 };
+const BODY_LABELS: Record<string, string> = {
+  macraporu: "Maç Anlatımı",
+  galeri: "Kısa Metin",
+  roportaj: "Giriş Metni",
+  sondakika: "Kısa Metin",
+  duyuru: "Bilgilendirme Metni",
+};
+const bodyLabel = (template: string) => BODY_LABELS[template] ?? "Metin";
+const BODY_HINTS: Record<string, string> = {
+  roportaj: "Soru-cevap bloklarından önce görünen kısa giriş.",
+  duyuru: "Duyurunun ana metni — resmî ve sade tutulması önerilir.",
+};
+const bodyHint = (template: string) => BODY_HINTS[template];
+
 function slugify(s: string) {
   return s
     .toLowerCase()
     .replaceAll("ı", "i").replaceAll("ğ", "g").replaceAll("ü", "u").replaceAll("ş", "s").replaceAll("ö", "o").replaceAll("ç", "c")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+// ---------- Ortak dinamik-liste satırı stilleri ----------
+const rowCardStyle: React.CSSProperties = { display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", background: "var(--surface-subtle)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)" };
+const removeBtnStyle: React.CSSProperties = { flex: "none", width: 34, height: 34, borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", background: "var(--surface-card)", color: "var(--red-600)", cursor: "pointer", display: "grid", placeItems: "center" };
+const addBtnStyle: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 14px", borderRadius: "var(--radius-sm)", border: "1px dashed var(--navy-400)", background: "var(--navy-50)", color: "var(--navy-800)", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 13.5, cursor: "pointer" };
+const emptyHintStyle: React.CSSProperties = { fontSize: 13, color: "var(--text-muted)", padding: "12px 14px", background: "var(--surface-subtle)", border: "1px dashed var(--border-subtle)", borderRadius: "var(--radius-md)" };
+const subLabelStyle: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: "var(--text-strong)", marginBottom: 8 };
+
+// ---------- Şablona özgü içerik editörleri ----------
+
+/** Maç Raporu — skor, gol listesi, maç kareleri. */
+function MacraporuFields({ data, onChange }: { data: MacraporuData; onChange: (d: MacraporuData) => void }) {
+  const set = <K extends keyof MacraporuData>(k: K, v: MacraporuData[K]) => onChange({ ...data, [k]: v });
+  const setGoal = (i: number, patch: Partial<GoalRow>) => set("goals", data.goals.map((g, j) => (j === i ? { ...g, ...patch } : g)));
+  const addGoal = () => set("goals", [...data.goals, { minute: "", player: "", team: "us" }]);
+  const removeGoal = (i: number) => set("goals", data.goals.filter((_, j) => j !== i));
+  const setPhoto = (i: number, url: string) => set("gallery", data.gallery.map((u, j) => (j === i ? url : u)));
+  const addPhoto = (url: string) => set("gallery", [...data.gallery, url]);
+  const removePhoto = (i: number) => set("gallery", data.gallery.filter((_, j) => j !== i));
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <Field label="Rakip Takım"><TextInput value={data.opponent} onChange={(e) => set("opponent", e.target.value)} placeholder="Rakip adı" /></Field>
+        <Field label="Turnuva / Lig"><TextInput value={data.competition} onChange={(e) => set("competition", e.target.value)} placeholder="Örn. U17 Ligi" /></Field>
+        <Field label="Bizim Skor"><TextInput type="number" min={0} value={data.ourScore} onChange={(e) => set("ourScore", e.target.value)} placeholder="0" /></Field>
+        <Field label="Rakip Skor"><TextInput type="number" min={0} value={data.oppScore} onChange={(e) => set("oppScore", e.target.value)} placeholder="0" /></Field>
+        <Field label="Maç Tarihi"><TextInput type="date" value={data.matchDate} onChange={(e) => set("matchDate", e.target.value)} /></Field>
+        <Field label="Saha">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "100%", padding: "0 2px" }}>
+            <span style={{ fontSize: 14, color: "var(--ink-700)" }}>{data.isHome ? "Ev sahibiyiz" : "Deplasmandayız"}</span>
+            <Switch checked={data.isHome} onChange={(n) => set("isHome", n)} />
+          </div>
+        </Field>
+      </div>
+
+      <div>
+        <div style={subLabelStyle}>Gol Listesi</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {data.goals.length === 0 && <div style={emptyHintStyle}>Henüz gol eklenmedi.</div>}
+          {data.goals.map((g, i) => (
+            <div key={i} className="by-row-in" style={rowCardStyle}>
+              <TextInput value={g.minute} onChange={(e) => setGoal(i, { minute: e.target.value })} placeholder="45'" aria-label="Dakika" style={{ width: 58, flex: "none" }} />
+              <TextInput value={g.player} onChange={(e) => setGoal(i, { player: e.target.value })} placeholder="Oyuncu adı" aria-label="Oyuncu adı" style={{ flex: 1, minWidth: 0 }} />
+              <Select value={g.team} onChange={(e) => setGoal(i, { team: e.target.value as "us" | "them" })} options={[{ value: "us", label: "Bizim" }, { value: "them", label: "Rakip" }]} containerStyle={{ width: 116, flex: "none" }} />
+              <button type="button" aria-label="Golü kaldır" onClick={() => removeGoal(i)} style={removeBtnStyle}>
+                <Icon name="trash-2" size={15} />
+              </button>
+            </div>
+          ))}
+          <div><button type="button" onClick={addGoal} style={addBtnStyle}><Icon name="plus" size={15} /> Gol Ekle</button></div>
+        </div>
+      </div>
+
+      <div>
+        <div style={subLabelStyle}>Maç Kareleri</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+          {data.gallery.map((url, i) => (
+            <div key={i} className="by-row-in">
+              <FileDrop value={url} onChange={(u) => (u ? setPhoto(i, u) : removePhoto(i))} compact aspect="4 / 3" label="" />
+            </div>
+          ))}
+          <FileDrop value={null} onChange={(u) => u && addPhoto(u)} compact aspect="4 / 3" label="Kare Ekle" icon="camera" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Galeri / Ödül Töreni — foto ızgarası, opsiyonel kısa açıklamalar. */
+function GaleriFields({ data, onChange }: { data: GaleriData; onChange: (d: GaleriData) => void }) {
+  const setPhoto = (i: number, patch: Partial<PhotoRow>) => onChange({ photos: data.photos.map((p, j) => (j === i ? { ...p, ...patch } : p)) });
+  const addPhoto = (url: string) => onChange({ photos: [...data.photos, { url, caption: "" }] });
+  const removePhoto = (i: number) => onChange({ photos: data.photos.filter((_, j) => j !== i) });
+  return (
+    <div>
+      <div style={subLabelStyle}>Foto Izgarası</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
+        {data.photos.map((p, i) => (
+          <div key={i} className="by-row-in" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <FileDrop value={p.url} onChange={(u) => (u ? setPhoto(i, { url: u }) : removePhoto(i))} compact aspect="4 / 3" label="" />
+            <TextInput value={p.caption} onChange={(e) => setPhoto(i, { caption: e.target.value })} placeholder="Kısa açıklama (opsiyonel)" style={{ fontSize: 12.5, padding: "8px 10px" }} />
+          </div>
+        ))}
+        <FileDrop value={null} onChange={(u) => u && addPhoto(u)} compact aspect="4 / 3" label="Fotoğraf Ekle" icon="images" />
+      </div>
+    </div>
+  );
+}
+
+/** Röportaj — portre, öne çıkan alıntı, soru-cevap blokları. */
+function RoportajFields({ data, onChange }: { data: RoportajData; onChange: (d: RoportajData) => void }) {
+  const set = <K extends keyof RoportajData>(k: K, v: RoportajData[K]) => onChange({ ...data, [k]: v });
+  const setQa = (i: number, patch: Partial<QaRow>) => set("qa", data.qa.map((q, j) => (j === i ? { ...q, ...patch } : q)));
+  const addQa = () => set("qa", [...data.qa, { q: "", a: "" }]);
+  const removeQa = (i: number) => set("qa", data.qa.filter((_, j) => j !== i));
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <Field label="Portre Görseli"><FileDrop value={data.portraitUrl || null} onChange={(url) => set("portraitUrl", url ?? "")} label="Portre yükle" hint="3:4 önerilir" aspect="3 / 4" /></Field>
+      <Field label="Öne Çıkan Alıntı"><TextInput value={data.quote} onChange={(e) => set("quote", e.target.value)} placeholder="Röportajdan öne çıkan tek cümle" /></Field>
+      <div>
+        <div style={subLabelStyle}>Soru – Cevap</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {data.qa.length === 0 && <div style={emptyHintStyle}>Henüz soru eklenmedi.</div>}
+          {data.qa.map((row, i) => (
+            <div key={i} className="by-row-in" style={{ display: "flex", flexDirection: "column", gap: 8, padding: 12, background: "var(--surface-subtle)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ flex: "none", fontFamily: "var(--font-stat)", fontSize: 12, fontWeight: 700, color: "var(--gold-700)" }}>S{i + 1}</span>
+                <TextInput value={row.q} onChange={(e) => setQa(i, { q: e.target.value })} placeholder="Soru" aria-label="Soru" style={{ flex: 1, minWidth: 0 }} />
+                <button type="button" aria-label="Soruyu kaldır" onClick={() => removeQa(i)} style={removeBtnStyle}>
+                  <Icon name="trash-2" size={15} />
+                </button>
+              </div>
+              <TextArea rows={2} value={row.a} onChange={(e) => setQa(i, { a: e.target.value })} placeholder="Cevap" aria-label="Cevap" />
+            </div>
+          ))}
+          <div><button type="button" onClick={addQa} style={addBtnStyle}><Icon name="plus" size={15} /> Soru Ekle</button></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Duyuru — opsiyonel iletişim satırı. */
+function DuyuruFields({ data, onChange }: { data: DuyuruData; onChange: (d: DuyuruData) => void }) {
+  return (
+    <Field label="İletişim Satırı" hint="Opsiyonel — telefon veya e-posta. Bilgilendirme metninin altında gösterilir.">
+      <TextInput value={data.contact} onChange={(e) => onChange({ contact: e.target.value })} placeholder="0232 000 00 00 veya iletisim@bucayildiz.com" />
+    </Field>
+  );
 }
 
 // ---------- Wizard ----------
@@ -70,13 +227,15 @@ function Wizard({ post, onExit }: { post: PostRow | null; onExit: () => void }) 
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((s) => ({ ...s, [k]: v }));
+  // Şablona özgü yapılandırılmış veri — templateData JSON'unun (client-tarafı) hâli
+  const [td, setTd] = useState<Record<string, unknown>>(() => parseTemplateData(post?.template ?? "standart", post?.templateData));
 
   const tpl = POST_TEMPLATES.find((t) => t.id === f.template) ?? POST_TEMPLATES[3];
   const canNext = step === 0 ? !!f.template : true;
 
   const save = (status: string) => {
     setError(null);
-    const payload = { ...f, slug: f.slug || slugify(f.title) || "yeni-haber", status };
+    const payload = { ...f, slug: f.slug || slugify(f.title) || "yeni-haber", status, templateData: JSON.stringify(td) };
     startTransition(async () => {
       const res = isNew ? await createPost(payload) : await updatePost(post!.id, payload);
       if (res?.error) setError(res.error);
@@ -130,7 +289,10 @@ function Wizard({ post, onExit }: { post: PostRow | null; onExit: () => void }) 
                 return (
                   <button
                     key={t.id}
-                    onClick={() => set("template", t.id)}
+                    onClick={() => {
+                      set("template", t.id);
+                      if (t.id !== f.template) setTd(defaultTemplateData(t.id));
+                    }}
                     style={{ textAlign: "left", cursor: "pointer", font: "inherit", padding: 18, borderRadius: "var(--radius-lg)", border: `1.5px solid ${on ? "var(--navy-700)" : "var(--border-subtle)"}`, background: on ? "var(--navy-50)" : "var(--surface-card)", boxShadow: on ? "var(--ring-focus)" : "var(--shadow-xs)", transition: "all var(--dur-fast)", position: "relative" }}
                   >
                     {on && <span style={{ position: "absolute", top: 14, right: 14, color: "var(--navy-700)" }}><Icon name="check" size={20} /></span>}
@@ -156,7 +318,11 @@ function Wizard({ post, onExit }: { post: PostRow | null; onExit: () => void }) 
           <div className="post-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 22, alignItems: "start" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
               <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 14, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--gold-700)" }}>{tpl.name} · İçerik</div>
-              <Field label="Kapak görseli" required>
+              <Field
+                label="Kapak görseli"
+                required={f.template !== "sondakika"}
+                hint={f.template === "sondakika" ? "Son dakika haberlerinde kapak görseli şiddetle önerilir." : undefined}
+              >
                 <FileDrop value={f.coverUrl || null} onChange={(url) => set("coverUrl", url ?? "")} label="Kapak görseli yükle" hint="1600×900 önerilir" aspect="16 / 9" />
               </Field>
               <Field label="Başlık" required>
@@ -165,7 +331,26 @@ function Wizard({ post, onExit }: { post: PostRow | null; onExit: () => void }) 
               <Field label="Özet / Spot">
                 <TextArea rows={2} value={f.excerpt} onChange={(e) => set("excerpt", e.target.value)} placeholder="Kısa giriş metni (manşet altı)" />
               </Field>
-              <Field label="Metin">
+
+              {f.template === "sondakika" && (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)" }}>
+                  <Icon name="zap" size={16} style={{ color: "var(--red-600)", flex: "none" }} />
+                  <span style={{ fontSize: 12.5, color: "var(--red-600)" }}>Bu haber sitede kırmızı “SON DAKİKA” rozetiyle gösterilir — ek alan gerekmez.</span>
+                </div>
+              )}
+              {f.template === "duyuru" && (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 13px", background: "var(--navy-50)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)" }}>
+                  <Icon name="megaphone" size={16} style={{ color: "var(--navy-700)", flex: "none" }} />
+                  <span style={{ fontSize: 12.5, color: "var(--ink-600)" }}>Duyurular sitede kulüp logosuyla resmî, sade bir blok olarak gösterilir.</span>
+                </div>
+              )}
+
+              {f.template === "macraporu" && <MacraporuFields data={td as MacraporuData} onChange={(d) => setTd(d as Record<string, unknown>)} />}
+              {f.template === "galeri" && <GaleriFields data={td as GaleriData} onChange={(d) => setTd(d as Record<string, unknown>)} />}
+              {f.template === "roportaj" && <RoportajFields data={td as RoportajData} onChange={(d) => setTd(d as Record<string, unknown>)} />}
+              {f.template === "duyuru" && <DuyuruFields data={td as DuyuruData} onChange={(d) => setTd(d as Record<string, unknown>)} />}
+
+              <Field label={bodyLabel(f.template)} hint={bodyHint(f.template)}>
                 <TextArea rows={7} value={f.body} onChange={(e) => set("body", e.target.value)} placeholder="Haber metni… (paragrafları boş satırla ayırın)" />
               </Field>
             </div>

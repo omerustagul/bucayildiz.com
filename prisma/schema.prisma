@@ -249,6 +249,9 @@ model Post {
   coverUrl    String?
   excerpt     String   @default("")
   body        String   @default("") // paragraflar çift satır ile ayrılır
+  // Şablona özgü yapılandırılmış veri (JSON) — ör. macraporu: skor, goller,
+  // maç kareleri; roportaj: soru-cevap blokları. Şablon editörleri doldurur.
+  templateData String  @default("{}")
   author      String   @default("")
   featured    Boolean  @default(false)
   publishedAt String? // "YYYY-MM-DD"
