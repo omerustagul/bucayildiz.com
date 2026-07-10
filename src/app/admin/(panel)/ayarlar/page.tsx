@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ViewHeader } from "@/components/admin/ui";
 import { getSettings } from "@/lib/settings";
+import { resolveSocialLinks } from "@/lib/social";
 import { prisma } from "@/lib/prisma";
 import { SettingsForm, type SettingsFormValues } from "@/components/admin/SettingsForm";
 
@@ -22,10 +23,7 @@ export default async function AyarlarPage() {
     phone: str(s.phone),
     email: str(s.email),
     address: str(s.address),
-    instagramUrl: str(s.instagramUrl),
-    facebookUrl: str(s.facebookUrl),
-    youtubeUrl: str(s.youtubeUrl),
-    xUrl: str(s.xUrl),
+    socialLinks: JSON.stringify(resolveSocialLinks(s)),
     metaTitle: str(s.metaTitle),
     metaDescription: str(s.metaDescription),
     ogImageUrl: str(s.ogImageUrl),

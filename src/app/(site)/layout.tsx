@@ -1,6 +1,8 @@
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { PageTransition } from "@/components/layout/PageTransition";
+import { getSettings } from "@/lib/settings";
+import { resolveSocialLinks } from "@/lib/social";
 
 /**
  * Tüm public sayfalar için varsayılan ISR aralığı: admin'de yapılan içerik
@@ -10,14 +12,15 @@ import { PageTransition } from "@/components/layout/PageTransition";
 export const revalidate = 60;
 
 /** Public website shell — sticky header + footer around every public page. */
-export default function SiteLayout({ children }: { children: React.ReactNode }) {
+export default async function SiteLayout({ children }: { children: React.ReactNode }) {
+  const socials = resolveSocialLinks(await getSettings());
   return (
     <>
-      <SiteHeader />
+      <SiteHeader socials={socials} />
       <main>
         <PageTransition>{children}</PageTransition>
       </main>
-      <SiteFooter />
+      <SiteFooter socials={socials} />
     </>
   );
 }

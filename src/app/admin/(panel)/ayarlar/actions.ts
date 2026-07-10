@@ -19,10 +19,7 @@ const schema = z.object({
   phone: str,
   email: z.string().trim().email("Geçerli e-posta giriniz.").optional().or(z.literal("")),
   address: z.string().trim().max(400).optional().or(z.literal("")),
-  instagramUrl: url,
-  facebookUrl: url,
-  youtubeUrl: url,
-  xUrl: url,
+  socialLinks: z.string().max(4000).default("[]"),
   // SEO
   metaTitle: str,
   metaDescription: z.string().trim().max(400).optional().or(z.literal("")),
@@ -44,6 +41,16 @@ const schema = z.object({
   mobileNavPanel: z.boolean().default(true),
 });
 
+import { parseSocialLinks } from "@/lib/social";
+
+/** İstemciden gelen JSON'u katalogla süzüp kanonik biçimde saklar. */
+function sanitizeSocialLinks(json: string): string {
+  const links = parseSocialLinks(json)
+    .map((l) => ({ platform: l.platform, url: l.url.trim().slice(0, 300) }))
+    .filter((l) => l.url !== "");
+  return JSON.stringify(links);
+}
+
 const orNull = (v: string | undefined | null) => (v && v.trim() !== "" ? v.trim() : null);
 
 export async function saveSettings(input: unknown): Promise<SettingsResult> {
@@ -60,10 +67,7 @@ export async function saveSettings(input: unknown): Promise<SettingsResult> {
     phone: orNull(d.phone),
     email: orNull(d.email),
     address: orNull(d.address),
-    instagramUrl: orNull(d.instagramUrl),
-    facebookUrl: orNull(d.facebookUrl),
-    youtubeUrl: orNull(d.youtubeUrl),
-    xUrl: orNull(d.xUrl),
+    socialLinks: sanitizeSocialLinks(d.socialLinks),
     metaTitle: orNull(d.metaTitle),
     metaDescription: orNull(d.metaDescription),
     ogImageUrl: orNull(d.ogImageUrl),

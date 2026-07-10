@@ -1436,6 +1436,7 @@ body {
     display: flex !important;
   }
 }
+
 /* Ana sayfa "Akademiden Kareler" — tek satır kare şerit; mobilde yatay kaydırma */
 .by-frames-strip {
   display: grid;
@@ -1445,11 +1446,12 @@ body {
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   overscroll-behavior-x: contain;
-  padding-bottom: 6px; /* olası scrollbar için nefes */
+  padding-bottom: 6px;
+  /* olası scrollbar için nefes */
   scrollbar-width: thin;
 }
 
-.by-frames-strip > * {
+.by-frames-strip>* {
   scroll-snap-align: start;
 }
 
@@ -1465,4 +1467,9 @@ body {
   .by-frames-strip {
     grid-auto-columns: 44%;
   }
+}
+/* Sosyal medya ikon bağlantıları (header/footer) */
+.by-social-link:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: var(--gold-400) !important;
 }

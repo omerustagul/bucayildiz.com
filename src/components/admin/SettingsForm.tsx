@@ -5,13 +5,14 @@ import { TextInput, TextArea, FileDrop } from "@/components/admin/controls";
 import { Field } from "@/components/admin/kit";
 import { Switch } from "@/components/ui/Switch";
 import { Button } from "@/components/ui/Button";
-import { Icon, type IconName } from "@/lib/icons";
+import { Icon, BrandGlyph, type IconName, type BrandName } from "@/lib/icons";
+import { SOCIAL_PLATFORMS, parseSocialLinks, type SocialLink } from "@/lib/social";
 import { saveSettings } from "@/app/admin/(panel)/ayarlar/actions";
 
 export type SettingsFormValues = {
   clubName: string; clubShortName: string; logoUrl: string; foundedYear: string;
   phone: string; email: string; address: string;
-  instagramUrl: string; facebookUrl: string; youtubeUrl: string; xUrl: string;
+  socialLinks: string; // JSON: [{ platform, url }]
   metaTitle: string; metaDescription: string; ogImageUrl: string; keywords: string;
   smtpHost: string; smtpPort: string; smtpUser: string; mailFrom: string; mailToAdmin: string;
   customCursor: boolean; cursorStyle: string;
@@ -34,6 +35,66 @@ const CURSORS: { id: string; label: string; desc: string }[] = [
   { id: "ball", label: "Futbol Topu", desc: "Spor temalı top imleci" },
   { id: "whistle", label: "Düdük", desc: "Hakem düdüğü imleci" },
 ];
+
+/** Dinamik sosyal medya editörü — platform seç + bağlantı gir; sil/ekle. */
+function SocialLinksEditor({ value, onChange }: { value: SocialLink[]; onChange: (links: SocialLink[]) => void }) {
+  const used = new Set(value.map((l) => l.platform));
+  const available = SOCIAL_PLATFORMS.filter((p) => !used.has(p.id));
+  const update = (i: number, patch: Partial<SocialLink>) => onChange(value.map((l, j) => (j === i ? { ...l, ...patch } : l)));
+  return (
+    <div>
+      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-strong)", marginBottom: 8 }}>Sosyal Medya Hesapları</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {value.length === 0 && (
+          <div style={{ fontSize: 13, color: "var(--text-muted)", padding: "12px 14px", background: "var(--surface-subtle)", border: "1px dashed var(--border-subtle)", borderRadius: "var(--radius-md)" }}>
+            Henüz hesap eklenmedi. Aşağıdan platform seçerek ekleyin.
+          </div>
+        )}
+        {value.map((l, i) => {
+          const meta = SOCIAL_PLATFORMS.find((p) => p.id === l.platform);
+          return (
+            <div key={l.platform} className="by-row-in" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", background: "var(--surface-subtle)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)" }}>
+              <span style={{ width: 36, height: 36, flex: "none", borderRadius: 10, display: "grid", placeItems: "center", background: "var(--navy-900)", color: "var(--gold-300)" }}>
+                <BrandGlyph name={l.platform as BrandName} size={17} />
+              </span>
+              <select
+                value={l.platform}
+                onChange={(e) => update(i, { platform: e.target.value })}
+                aria-label="Platform"
+                style={{ flex: "none", width: 140, fontFamily: "var(--font-body)", fontSize: 13.5, padding: "9px 10px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", background: "var(--surface-card)", color: "var(--text-body)" }}
+              >
+                <option value={l.platform}>{meta?.label ?? l.platform}</option>
+                {available.map((p) => (
+                  <option key={p.id} value={p.id}>{p.label}</option>
+                ))}
+              </select>
+              <TextInput value={l.url} onChange={(e) => update(i, { url: e.target.value })} placeholder={meta?.placeholder ?? "https://..."} style={{ flex: 1, minWidth: 0 }} />
+              <button
+                type="button"
+                aria-label={(meta?.label ?? l.platform) + " hesabını kaldır"}
+                onClick={() => onChange(value.filter((_, j) => j !== i))}
+                style={{ flex: "none", width: 34, height: 34, borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", background: "var(--surface-card)", color: "var(--red-600)", cursor: "pointer", display: "grid", placeItems: "center" }}
+              >
+                <Icon name="trash-2" size={15} />
+              </button>
+            </div>
+          );
+        })}
+        {available.length > 0 && (
+          <div>
+            <button
+              type="button"
+              onClick={() => onChange([...value, { platform: available[0].id, url: "" }])}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 14px", borderRadius: "var(--radius-sm)", border: "1px dashed var(--navy-400)", background: "var(--navy-50)", color: "var(--navy-800)", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}
+            >
+              <Icon name="plus" size={15} /> Platform Ekle
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function SettingsForm({ initial, smtpPassSet, mediaCategories = [] }: { initial: SettingsFormValues; smtpPassSet: boolean; mediaCategories?: MediaCategoryOption[] }) {
   const [tab, setTab] = useState("kulup");
@@ -79,7 +140,7 @@ export function SettingsForm({ initial, smtpPassSet, mediaCategories = [] }: { i
       <div key={tab} className="by-anim-pane" style={{ background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", padding: "22px 24px" }}>
         {tab === "kulup" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.7fr) minmax(0,1.3fr)", gap: 22, alignItems: "start" }} className="jersey-form-grid">
+            <div style={{ display: "grid", gridTemplateColumns: "210px minmax(0,1fr)", gap: 22, alignItems: "start" }} className="jersey-form-grid">
               <Field label="Logo" hint="Şeffaf PNG önerilir">
                 <FileDrop value={v.logoUrl || null} onChange={(url) => set("logoUrl", url ?? "")} label="Logo yükle" aspect="1 / 1" icon="shield" />
               </Field>
@@ -94,12 +155,7 @@ export function SettingsForm({ initial, smtpPassSet, mediaCategories = [] }: { i
             </div>
             <Field label="E-posta"><TextInput value={v.email} onChange={(e) => set("email", e.target.value)} placeholder="bilgi@bucayildiz.com" /></Field>
             <Field label="Adres"><TextArea rows={2} value={v.address} onChange={(e) => set("address", e.target.value)} /></Field>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-              <Field label="Instagram"><TextInput value={v.instagramUrl} onChange={(e) => set("instagramUrl", e.target.value)} placeholder="https://instagram.com/..." /></Field>
-              <Field label="Facebook"><TextInput value={v.facebookUrl} onChange={(e) => set("facebookUrl", e.target.value)} placeholder="https://facebook.com/..." /></Field>
-              <Field label="YouTube"><TextInput value={v.youtubeUrl} onChange={(e) => set("youtubeUrl", e.target.value)} placeholder="https://youtube.com/..." /></Field>
-              <Field label="X (Twitter)"><TextInput value={v.xUrl} onChange={(e) => set("xUrl", e.target.value)} placeholder="https://x.com/..." /></Field>
-            </div>
+            <SocialLinksEditor value={parseSocialLinks(v.socialLinks)} onChange={(links) => set("socialLinks", JSON.stringify(links))} />
           </div>
         )}
 

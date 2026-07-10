@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { IconButton } from "@/components/ui/IconButton";
 import { Button } from "@/components/ui/Button";
-import { Icon, BrandGlyph } from "@/lib/icons";
+import { Icon } from "@/lib/icons";
+import { SocialLinks } from "@/components/layout/SocialLinks";
+import type { SocialLink } from "@/lib/social";
 
 /** Buca Yıldız — Footer with the crest overhanging the top edge. */
 
@@ -31,14 +32,7 @@ function Col({ title, links }: { title: string; links: { label: string; href: st
   );
 }
 
-const SOCIAL: { name: "instagram" | "facebook" | "youtube" | "x"; label: string }[] = [
-  { name: "instagram", label: "Instagram" },
-  { name: "facebook", label: "Facebook" },
-  { name: "youtube", label: "YouTube" },
-  { name: "x", label: "X" },
-];
-
-export function SiteFooter() {
+export function SiteFooter({ socials = [] }: { socials?: SocialLink[] }) {
   // Arma üstteki bölümün üzerine taşar (beyaz bant yok); taşma payı
   // globals.css'te son bölüme verilen bottom padding ile açılır.
   return (
@@ -82,13 +76,7 @@ export function SiteFooter() {
             <p style={{ fontSize: 14, lineHeight: 1.65, color: "var(--navy-200)", margin: 0, maxWidth: 320 }}>
               İzmir Buca&apos;da geleceğin futbolcularını disiplin, saygı ve takım ruhuyla yetiştiren altyapı kulübü.
             </p>
-            <div style={{ display: "flex", gap: 8 }}>
-              {SOCIAL.map((s) => (
-                <IconButton key={s.name} label={s.label} variant="on-navy">
-                  <BrandGlyph name={s.name} />
-                </IconButton>
-              ))}
-            </div>
+            <SocialLinks links={socials} />
           </div>
 
           <Col

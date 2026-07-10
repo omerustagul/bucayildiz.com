@@ -376,6 +376,9 @@ model SiteSetting {
   phone         String?
   email         String?
   address       String?
+  // Dinamik sosyal medya listesi — JSON: [{ platform, url }]. Aşağıdaki dört
+  // eski alan geriye dönük okuma içindir; UI artık yalnız socialLinks yazar.
+  socialLinks   String  @default("[]")
   instagramUrl  String?
   facebookUrl   String?
   youtubeUrl    String?

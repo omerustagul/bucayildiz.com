@@ -6,19 +6,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
-import { Icon, BrandGlyph, type IconName } from "@/lib/icons";
+import { Icon, type IconName } from "@/lib/icons";
+import { SocialLinks } from "@/components/layout/SocialLinks";
+import type { SocialLink } from "@/lib/social";
 
 /**
  * Buca Yıldız — Site header: logo + social (left), panel/başvuru (right),
  * mega menu (bottom). Collapses to a hamburger drawer under 900px.
  */
-
-const SOCIAL: { name: "instagram" | "facebook" | "youtube" | "x"; label: string }[] = [
-  { name: "instagram", label: "Instagram" },
-  { name: "facebook", label: "Facebook" },
-  { name: "youtube", label: "YouTube" },
-  { name: "x", label: "X" },
-];
 
 type MenuEntry = { label: string; href: string; items: { label: string; href: string }[] };
 
@@ -89,27 +84,10 @@ function TeamStripe() {
   );
 }
 
-function Social({ size = "sm", box }: { size?: "sm" | "md"; box?: number }) {
-  return (
-    <div style={{ display: "flex", gap: 8 }}>
-      {SOCIAL.map((s) => (
-        <IconButton
-          key={s.name}
-          label={s.label}
-          variant="on-navy"
-          size={size}
-          style={box ? { width: box, height: box } : undefined}
-        >
-          <BrandGlyph name={s.name} />
-        </IconButton>
-      ))}
-    </div>
-  );
-}
 
 const navIcon = (name: IconName, size = 17) => <Icon name={name} size={size} />;
 
-export function SiteHeader({ active: activeOverride }: { active?: string }) {
+export function SiteHeader({ active: activeOverride, socials = [] }: { active?: string; socials?: SocialLink[] }) {
   const [open, setOpen] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [acc, setAcc] = useState<string | null>(null);
@@ -252,7 +230,7 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
             })}
           </nav>
           <div style={{ padding: "14px 18px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-            <Social size="md" />
+            <SocialLinks links={socials} box={40} iconSize={17} />
           </div>
         </div>
         <TeamStripe />
@@ -296,7 +274,7 @@ export function SiteHeader({ active: activeOverride }: { active?: string }) {
                   </span>
                 </span>
               </Link>
-              <Social box={34} />
+              <SocialLinks links={socials} box={34} iconSize={16} />
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <Button style={{ height: "24px", padding: "0 12px", textTransform: "uppercase", fontWeight: "900", letterSpacing: "0.015em" }} as="a" href="/giris" variant="on-navy" size="sm" leftIcon={navIcon("lock")}>
