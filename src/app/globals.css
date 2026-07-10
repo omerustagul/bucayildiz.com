@@ -98,19 +98,19 @@ main {
 
 /* Footer link hover (CSS so the footer can stay a server component) */
 .footer-link {
-  color: var(--navy-100);
+  color: rgba(255, 255, 255, 0.72);
   text-decoration: none;
   transition: color var(--dur-fast) var(--ease-out);
 }
 
 .footer-link:hover {
-  color: #fff;
+  color: var(--gold-300);
 }
 
 .footer-legal-link {
   font-size: 0.8125rem;
   /* 13px */
-  color: var(--navy-300);
+  color: rgba(255, 255, 255, 0.45);
   text-decoration: none;
   transition: color var(--dur-fast) var(--ease-out);
 }
@@ -427,7 +427,13 @@ main:has(+ footer) .by-page-transition> :last-child {
   }
 
   .hp-grid-footer {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Marka bloğu ve bülten tam genişlik; link kolonları yan yana kalır (kompakt) */
+  .hp-grid-footer > :first-child,
+  .hp-grid-footer > :last-child {
+    grid-column: 1 / -1;
   }
 }
 
