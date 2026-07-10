@@ -64,13 +64,13 @@ export function MediaGallery({ items }: { items: GalleryAsset[] }) {
             {/* Alt bilgi: kategori rozeti + tarih (dosya adı yok) */}
             <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 13px", minWidth: 0 }}>
               {a.category ? (
-                <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: "var(--gold-700)", background: "rgba(201, 162, 39, 0.12)", border: "1px solid rgba(201, 162, 39, 0.3)", borderRadius: "var(--radius-pill)", padding: "4px 10px" }}>
+                <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 11, fontWeight: 700, color: "var(--gold-700)", background: "rgba(201, 162, 39, 0.12)", border: "1px solid rgba(201, 162, 39, 0.3)", borderRadius: "var(--radius-sm)", padding: "4px 10px" }}>
                   {a.category}
                 </span>
               ) : (
                 <span />
               )}
-              <span style={{ flex: "none", fontSize: 12, color: "var(--text-muted)", fontVariantNumeric: "tabular-nums" }}>{a.date}</span>
+              <span style={{ flex: "none", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", fontVariantNumeric: "tabular-nums" }}>{a.date}</span>
             </span>
           </button>
         ))}

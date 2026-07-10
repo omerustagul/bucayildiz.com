@@ -7,10 +7,10 @@ import { AppointmentForm } from "./AppointmentForm";
  */
 
 const STEPS = [
-  { n: 1, title: "Randevu Alın", text: "Ücretsiz analiz için bize ulaşın ve randevunuzu alın." },
-  { n: 2, title: "Performans Testleri", text: "Çocuğunuzun fiziksel ve teknik performansını ölçüyoruz." },
+  { n: 1, title: "Randevu Alın", text: "Ücretsiz analiz için web sitemizdeki formu doldurarak bize ulaşın ve randevunuzu alın." },
+  { n: 2, title: "Performans Testleri", text: "Çocuğunuzun zihinsel, fiziksel ve teknik performansını/becerilerini ölçüyoruz." },
   { n: 3, title: "Raporlama", text: "Sonuçları detaylı analiz ediyor, kişisel gelişim raporunu hazırlıyoruz." },
-  { n: 4, title: "Gelişim Planı", text: "Çocuğunuz için özel antrenman planı oluşturuyoruz." },
+  { n: 4, title: "Gelişim Planı", text: "Çocuğunuz için özel beslenme ve antrenman planlarını hazırlıyoruz." },
 ];
 
 const RADAR = [
@@ -48,7 +48,7 @@ function StepsColumn() {
             </div>
             <div style={{ paddingBottom: i < STEPS.length - 1 ? 16 : 0 }}>
               <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 16, letterSpacing: ".02em", textTransform: "uppercase", color: "var(--gold-700)", margin: "6px 0 6px" }}>{s.title}</h3>
-              <p style={{ fontSize: 12, lineHeight: 1.55, color: "var(--ink-600)", margin: 0, maxWidth: 320 }}>{s.text}</p>
+              <p style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.55, color: "var(--ink-600)", margin: 0, maxWidth: 320 }}>{s.text}</p>
             </div>
           </div>
         ))}
@@ -78,7 +78,7 @@ function Radar({ size = 168 }: { size?: number }) {
 
 function SampleReportCard() {
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", borderRadius: "var(--radius-xl)", border: "1.5px solid var(--gold-500)", background: "var(--surface-card)", padding: 6, boxShadow: "var(--shadow-lg)" }}>
+    <div style={{ height: "100%", maxWidth: "420px", justifySelf: "center", display: "flex", flexDirection: "column", borderRadius: "var(--radius-xl)", border: "1.5px solid var(--gold-500)", background: "var(--surface-card)", padding: 6, boxShadow: "var(--shadow-lg)" }}>
       <div style={{ textAlign: "center", padding: "6px 10px 7px", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 18, letterSpacing: ".16em", textTransform: "uppercase", color: "var(--gold-700)" }}>
         Örnek Rapor
       </div>
@@ -170,7 +170,7 @@ export function HowItWorksSection() {
   return (
     <section style={{ background: "var(--surface-page)", position: "relative", overflow: "hidden" }}>
       <span aria-hidden style={{ position: "absolute", left: -60, top: -40, fontSize: 320, lineHeight: 1, color: "rgba(21,41,90,0.03)", pointerEvents: "none" }}>★</span>
-      <div style={{ maxWidth: 1540, borderBlock: "1px solid var(--gold-500)", margin: "0 auto", padding: "38px clamp(16px, 5vw, 32px)", position: "relative" }}>
+      <div style={{ maxWidth: 1540, borderBlock: "1px solid var(--ink-100)", margin: "0 auto", padding: "38px clamp(16px, 5vw, 32px)", position: "relative" }}>
         <div className="how-grid" style={{ display: "grid", gridTemplateColumns: "1fr 2px 1.12fr 2px 1fr", gap: "clamp(24px, 3vw, 36px)", alignItems: "stretch" }}>
           <StepsColumn />
           <HowDivider />

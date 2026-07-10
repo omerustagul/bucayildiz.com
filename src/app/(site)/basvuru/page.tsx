@@ -69,6 +69,8 @@ export default async function BasvuruPage() {
           background: "#fff",
           border: "1px solid var(--border-subtle)",
           borderRadius: "var(--radius-xl)",
+          marginTop: "40px",
+          marginBottom: "100px",
           overflow: "hidden",
           boxShadow: "var(--shadow-lg)",
         }}

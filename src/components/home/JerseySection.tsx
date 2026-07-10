@@ -43,7 +43,7 @@ export async function JerseySection() {
           position: "absolute",
           inset: 0,
           background: "var(--grad-navy)",
-          clipPath: "polygon(0% 7%, 100% 19%, 100% 90%, 0% 78%)",
+          clipPath: "polygon(0% 0%, 100% 19%, 100% 90%, 0% 78%)",
           overflow: "hidden",
           zIndex: -1,
           filter: "drop-shadow(0 18px 38px rgba(14,33,72,.18))",
