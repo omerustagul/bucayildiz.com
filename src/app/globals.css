@@ -1312,3 +1312,100 @@ body {
     display: flex !important;
   }
 }
+
+/* ---- Site: takım kadro tablosu → mobil kart (≤900px) ----
+   Aynı "masaüstünde tablo aynen kalır, dar ekranda kart listesi devreye
+   girer" deseni (bkz. yukarıdaki .adm-table-wrap / .adm-cards), ancak site
+   tarafına özel sınıflarla — admin sınıfları buraya karıştırılmaz. Kullanım:
+   src/app/(site)/takimlar/[slug]/page.tsx */
+.by-squad-table {
+  display: block;
+}
+
+.by-squad-cards {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.by-squad-card {
+  min-width: 0;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+}
+
+.by-squad-card-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.by-squad-card-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.by-squad-card-number {
+  flex: none;
+  font-family: var(--font-stat);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--navy-900);
+  background: var(--navy-50);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  padding: 4px 11px;
+}
+
+.by-squad-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.by-squad-card-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.by-squad-card-label {
+  min-width: 0;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-400);
+}
+
+.by-squad-card-value {
+  min-width: 0;
+  font-size: 13.5px;
+  color: var(--text-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .by-squad-table {
+    display: none !important;
+  }
+
+  .by-squad-cards {
+    display: flex !important;
+  }
+}

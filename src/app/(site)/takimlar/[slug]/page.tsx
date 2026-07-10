@@ -67,41 +67,81 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
             Bu takımda henüz aktif sporcu yok.
           </div>
         ) : (
-          <div style={{ overflowX: "auto", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", background: "var(--surface-card)" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
-              <thead>
-                <tr>
-                  <th style={th}>Sporcu</th>
-                  <th style={th}>Mevki</th>
-                  <th style={th}>Doğum Tarihi</th>
-                  <th style={{ ...th, textAlign: "right" }}>Boy</th>
-                  <th style={{ ...th, textAlign: "right" }}>Kilo</th>
-                  <th style={{ ...th, textAlign: "center" }}>Forma No</th>
-                  <th style={{ ...th, textAlign: "center" }}>Ayak</th>
-                </tr>
-              </thead>
-              <tbody>
-                {team.athletes.map((a) => (
-                  <tr key={a.id}>
-                    <td style={td}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-                        <span style={{ width: 36, height: 36, flex: "none", borderRadius: "50%", overflow: "hidden", background: "var(--navy-50)", border: "1px solid var(--border-subtle)", display: "grid", placeItems: "center", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 13, color: "var(--navy-600)", position: "relative" }}>
-                          {a.photoUrl ? <Image src={a.photoUrl} alt="" fill sizes="36px" style={{ objectFit: "cover" }} /> : initials(a.name)}
-                        </span>
-                        <span style={{ fontWeight: 600, color: "var(--text-strong)" }}>{a.name}</span>
-                      </div>
-                    </td>
-                    <td style={td}>{a.position || "—"}</td>
-                    <td style={td}>{fmtDate(a.birthDate)}</td>
-                    <td style={{ ...td, textAlign: "right" }}>{a.height ? <span style={stat}>{a.height}<span style={{ color: "var(--ink-400)", fontSize: 12 }}> cm</span></span> : "—"}</td>
-                    <td style={{ ...td, textAlign: "right" }}>{a.weight ? <span style={stat}>{a.weight}<span style={{ color: "var(--ink-400)", fontSize: 12 }}> kg</span></span> : "—"}</td>
-                    <td style={{ ...td, textAlign: "center" }}>{a.number != null ? <span style={stat}>#{a.number}</span> : "—"}</td>
-                    <td style={{ ...td, textAlign: "center" }}>{a.foot || "—"}</td>
+          <>
+            {/* Masaüstü/tablet (≥900px): tablo — bkz. globals.css .by-squad-table */}
+            <div className="by-squad-table" style={{ overflowX: "auto", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", background: "var(--surface-card)" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
+                <thead>
+                  <tr>
+                    <th style={th}>Sporcu</th>
+                    <th style={th}>Mevki</th>
+                    <th style={th}>Doğum Tarihi</th>
+                    <th style={{ ...th, textAlign: "right" }}>Boy</th>
+                    <th style={{ ...th, textAlign: "right" }}>Kilo</th>
+                    <th style={{ ...th, textAlign: "center" }}>Forma No</th>
+                    <th style={{ ...th, textAlign: "center" }}>Ayak</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {team.athletes.map((a) => (
+                    <tr key={a.id}>
+                      <td style={td}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+                          <span style={{ width: 36, height: 36, flex: "none", borderRadius: "50%", overflow: "hidden", background: "var(--navy-50)", border: "1px solid var(--border-subtle)", display: "grid", placeItems: "center", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 13, color: "var(--navy-600)", position: "relative" }}>
+                            {a.photoUrl ? <Image src={a.photoUrl} alt="" fill sizes="36px" style={{ objectFit: "cover" }} /> : initials(a.name)}
+                          </span>
+                          <span style={{ fontWeight: 600, color: "var(--text-strong)" }}>{a.name}</span>
+                        </div>
+                      </td>
+                      <td style={td}>{a.position || "—"}</td>
+                      <td style={td}>{fmtDate(a.birthDate)}</td>
+                      <td style={{ ...td, textAlign: "right" }}>{a.height ? <span style={stat}>{a.height}<span style={{ color: "var(--ink-400)", fontSize: 12 }}> cm</span></span> : "—"}</td>
+                      <td style={{ ...td, textAlign: "right" }}>{a.weight ? <span style={stat}>{a.weight}<span style={{ color: "var(--ink-400)", fontSize: 12 }}> kg</span></span> : "—"}</td>
+                      <td style={{ ...td, textAlign: "center" }}>{a.number != null ? <span style={stat}>#{a.number}</span> : "—"}</td>
+                      <td style={{ ...td, textAlign: "center" }}>{a.foot || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobil (<900px): kart listesi — yatay kaydırma yerine dikey akış, bkz. globals.css .by-squad-cards */}
+            <div className="by-squad-cards">
+              {team.athletes.map((a) => (
+                <div className="by-squad-card" key={a.id}>
+                  <div className="by-squad-card-head">
+                    <span style={{ width: 36, height: 36, flex: "none", borderRadius: "50%", overflow: "hidden", background: "var(--navy-50)", border: "1px solid var(--border-subtle)", display: "grid", placeItems: "center", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 13, color: "var(--navy-600)", position: "relative" }}>
+                      {a.photoUrl ? <Image src={a.photoUrl} alt="" fill sizes="36px" style={{ objectFit: "cover" }} /> : initials(a.name)}
+                    </span>
+                    <span className="by-squad-card-name">{a.name}</span>
+                    <span className="by-squad-card-number">{a.number != null ? `#${a.number}` : "—"}</span>
+                  </div>
+                  <div className="by-squad-card-grid">
+                    <div className="by-squad-card-field">
+                      <span className="by-squad-card-label">Mevki</span>
+                      <span className="by-squad-card-value">{a.position || "—"}</span>
+                    </div>
+                    <div className="by-squad-card-field">
+                      <span className="by-squad-card-label">Doğum Tarihi</span>
+                      <span className="by-squad-card-value">{fmtDate(a.birthDate)}</span>
+                    </div>
+                    <div className="by-squad-card-field">
+                      <span className="by-squad-card-label">Boy</span>
+                      <span className="by-squad-card-value">{a.height ? `${a.height} cm` : "—"}</span>
+                    </div>
+                    <div className="by-squad-card-field">
+                      <span className="by-squad-card-label">Kilo</span>
+                      <span className="by-squad-card-value">{a.weight ? `${a.weight} kg` : "—"}</span>
+                    </div>
+                    <div className="by-squad-card-field">
+                      <span className="by-squad-card-label">Ayak</span>
+                      <span className="by-squad-card-value">{a.foot || "—"}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </Section>
 
