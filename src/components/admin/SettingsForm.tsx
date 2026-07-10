@@ -5,6 +5,7 @@ import { TextInput, TextArea, FileDrop } from "@/components/admin/controls";
 import { Field } from "@/components/admin/kit";
 import { Switch } from "@/components/ui/Switch";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { Icon, BrandGlyph, type IconName, type BrandName } from "@/lib/icons";
 import { SOCIAL_PLATFORMS, parseSocialLinks, type SocialLink } from "@/lib/social";
 import { saveSettings } from "@/app/admin/(panel)/ayarlar/actions";
@@ -57,17 +58,16 @@ function SocialLinksEditor({ value, onChange }: { value: SocialLink[]; onChange:
               <span style={{ width: 36, height: 36, flex: "none", borderRadius: 10, display: "grid", placeItems: "center", background: "var(--navy-900)", color: "var(--gold-300)" }}>
                 <BrandGlyph name={l.platform as BrandName} size={17} />
               </span>
-              <select
+              <Select
                 value={l.platform}
                 onChange={(e) => update(i, { platform: e.target.value })}
-                aria-label="Platform"
-                style={{ flex: "none", width: 140, fontFamily: "var(--font-body)", fontSize: 13.5, padding: "9px 10px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", background: "var(--surface-card)", color: "var(--text-body)" }}
-              >
-                <option value={l.platform}>{meta?.label ?? l.platform}</option>
-                {available.map((p) => (
-                  <option key={p.id} value={p.id}>{p.label}</option>
-                ))}
-              </select>
+                options={[
+                  { value: l.platform, label: meta?.label ?? l.platform },
+                  ...available.map((p) => ({ value: p.id, label: p.label })),
+                ]}
+                containerStyle={{ flex: "none" }}
+                style={{ width: 140, padding: "9px 10px", fontSize: 13.5 }}
+              />
               <TextInput value={l.url} onChange={(e) => update(i, { url: e.target.value })} placeholder={meta?.placeholder ?? "https://..."} style={{ flex: 1, minWidth: 0 }} />
               <button
                 type="button"
@@ -206,16 +206,14 @@ export function SettingsForm({ initial, smtpPassSet, mediaCategories = [] }: { i
             <div>
               <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 15, color: "var(--text-strong)" }}>Akademiden Kareler Kategorisi</div>
               <div style={{ fontSize: 13, color: "var(--text-muted)", margin: "3px 0 10px" }}>Ana sayfadaki galeri şeridi bu kategorideki medyayı gösterir. &quot;Tümü&quot; seçiliyken kütüphanedeki son medya dosyaları gelir.</div>
-              <select
+              <Select
                 value={v.homeGalleryCategoryId}
                 onChange={(e) => set("homeGalleryCategoryId", e.target.value)}
+                placeholder="Tümü (kategori filtresi yok)"
+                options={mediaCategories.map((c) => ({ value: c.id, label: c.name }))}
+                containerStyle={{ display: "inline-flex" }}
                 style={{ fontFamily: "var(--font-body)", fontSize: 14.5, padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", background: "var(--surface-card)", color: "var(--text-body)", minWidth: 260 }}
-              >
-                <option value="">Tümü (kategori filtresi yok)</option>
-                {mediaCategories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+              />
             </div>
 
             <div style={{ height: 1, background: "var(--border-subtle)" }} />

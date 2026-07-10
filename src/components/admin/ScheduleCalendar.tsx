@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Panel } from "@/components/admin/kit";
 import { Badge } from "@/components/ui/Badge";
 import { IconButton } from "@/components/ui/IconButton";
+import { Select } from "@/components/ui/Select";
 import { Icon } from "@/lib/icons";
 import { statusMeta } from "@/lib/trainingMeta";
 import { useOverlayDismiss } from "@/components/ui/useOverlayDismiss";
@@ -112,10 +113,13 @@ export function ScheduleCalendar({ teams, trainings, fixtures, todayYmd }: { tea
       title="Haftalık Program"
       action={
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <select value={teamFilter} onChange={(e) => { setTeamFilter(e.target.value); setTip(null); }} style={{ font: "inherit", fontSize: 13, padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid var(--ink-200)", background: "#fff", color: "var(--ink-700)" }}>
-            <option value="all">Tüm Takımlar</option>
-            {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-          </select>
+          <Select
+            value={teamFilter}
+            onChange={(e) => { setTeamFilter(e.target.value); setTip(null); }}
+            options={[{ value: "all", label: "Tüm Takımlar" }, ...teams.map((t) => ({ value: t.id, label: t.name }))]}
+            containerStyle={{ display: "inline-flex" }}
+            style={{ font: "inherit", fontSize: 13, padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid var(--ink-200)", background: "#fff", color: "var(--ink-700)", minWidth: 150 }}
+          />
           <IconButton label="Büyük takvim" variant="outline" size="sm" onClick={() => { setTip(null); setFullOpen(true); }}>
             <Icon name="calendar-days" size={16} />
           </IconButton>

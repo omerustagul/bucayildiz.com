@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateApplicationStatus } from "@/app/admin/(panel)/basvurular/actions";
+import { Select } from "@/components/ui/Select";
 
 const OPTIONS = [
   { value: "new", label: "Yeni" },
@@ -16,9 +17,10 @@ export function ApplicationStatusSelect({ id, status }: { id: string; status: st
   const [pending, startTransition] = useTransition();
 
   return (
-    <select
+    <Select
       defaultValue={status}
       disabled={pending}
+      options={OPTIONS}
       onChange={(e) => {
         const value = e.target.value;
         startTransition(async () => {
@@ -37,12 +39,6 @@ export function ApplicationStatusSelect({ id, status }: { id: string; status: st
         color: "var(--text-body)",
         cursor: pending ? "wait" : "pointer",
       }}
-    >
-      {OPTIONS.map((o) => (
-        <option key={o.value} value={o.value}>
-          {o.label}
-        </option>
-      ))}
-    </select>
+    />
   );
 }

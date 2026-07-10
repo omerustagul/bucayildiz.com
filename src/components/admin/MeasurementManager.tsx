@@ -7,6 +7,7 @@ import { Field } from "@/components/admin/kit";
 import { AthletePickerModal } from "@/components/admin/AthletePickerModal";
 import { CardList, DataCard, CardHeader, CardFields, CardActions } from "@/components/admin/MobileCardList";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { Icon, type IconName } from "@/lib/icons";
 import { computeVo2, YOYO_LEVELS, TESTS, TEST_BY_KEY, type TestKey } from "@/lib/perf";
 import { addMeasurement, deleteMeasurement } from "@/app/admin/(panel)/performans/actions";
@@ -153,9 +154,12 @@ function NewMeasurementModal({ athleteId, onClose }: { athleteId: string; onClos
             {g.title === "Dayanıklılık" && (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, alignItems: "end" }}>
                 <Field label="Yo-Yo Seviyesi" hint="VO2max bundan hesaplanır">
-                  <select value={v.yoyoLevel} onChange={(e) => set("yoyoLevel", e.target.value)} style={{ ...selStyle, minWidth: 0, width: "100%" }}>
-                    {YOYO_LEVELS.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
-                  </select>
+                  <Select
+                    value={v.yoyoLevel}
+                    onChange={(e) => set("yoyoLevel", e.target.value)}
+                    options={YOYO_LEVELS.map((l) => ({ value: l.value, label: l.label }))}
+                    style={{ ...selStyle, minWidth: 0, width: "100%" }}
+                  />
                 </Field>
                 <Field label={TEST_BY_KEY.yoyoDistance.label} hint={TEST_BY_KEY.yoyoDistance.unit}>
                   <TextInput type="number" inputMode="decimal" value={v.yoyoDistance ?? ""} onChange={(e) => set("yoyoDistance", e.target.value)} />
@@ -344,17 +348,18 @@ export function MeasurementHistory({ measurements }: { measurements: Measurement
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 18px", borderTop: "1px solid var(--border-subtle)", flexWrap: "wrap" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 12.5, color: "var(--text-muted)" }}>Sayfa başına</span>
-              <select
+              <Select
                 value={String(perPage)}
                 onChange={(e) => changePer(e.target.value)}
+                options={[
+                  { value: "10", label: "10" },
+                  { value: "25", label: "25" },
+                  { value: "50", label: "50" },
+                  { value: "100", label: "100" },
+                  { value: "all", label: "Tümü" },
+                ]}
                 style={{ fontFamily: "var(--font-body)", fontSize: 13, padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", background: "var(--surface-card)", color: "var(--text-body)", cursor: "pointer" }}
-              >
-                <option value="10">10</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-                <option value="all">Tümü</option>
-              </select>
+              />
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 12.5, color: "var(--text-muted)" }}>{rangeFrom}–{rangeTo} / {total}</span>

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { TextInput, TextArea } from "@/components/admin/controls";
 import { Field } from "@/components/admin/kit";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { sendNotification } from "@/app/admin/(panel)/bildirimler/actions";
 
 type Team = { id: string; name: string; subCount: number };
@@ -46,12 +47,15 @@ export function NotificationComposer({ teams, totalSubs }: { teams: Team[]; tota
       </p>
 
       <Field label="Hedef">
-        <select value={target} onChange={(e) => setTarget(e.target.value)} style={selStyle}>
-          <option value="all">Tüm aboneler ({totalSubs})</option>
-          {teams.map((t) => (
-            <option key={t.id} value={t.id}>{t.name} ({t.subCount})</option>
-          ))}
-        </select>
+        <Select
+          value={target}
+          onChange={(e) => setTarget(e.target.value)}
+          options={[
+            { value: "all", label: `Tüm aboneler (${totalSubs})` },
+            ...teams.map((t) => ({ value: t.id, label: `${t.name} (${t.subCount})` })),
+          ]}
+          style={selStyle}
+        />
       </Field>
 
       <Field label="Başlık">

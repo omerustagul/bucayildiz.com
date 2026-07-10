@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { Icon } from "@/lib/icons";
 import { AGE_GROUPS, applicationSchema } from "@/lib/validation";
 import { submitApplication } from "@/app/(site)/basvuru/actions";
@@ -318,14 +319,13 @@ export function ApplicationForm({ consentDocs }: { consentDocs: ConsentDocSummar
             <input type="date" style={fieldBase} value={values.birthDate} onChange={(e) => set("birthDate", e.target.value)} />
           </Field>
           <Field label="Yaş Grubu" required error={errors.ageGroup}>
-            <select style={fieldBase} value={values.ageGroup} onChange={(e) => set("ageGroup", e.target.value)}>
-              <option value="">Seçiniz</option>
-              {AGE_GROUPS.map((g) => (
-                <option key={g} value={g}>
-                  {g}
-                </option>
-              ))}
-            </select>
+            <Select
+              style={fieldBase}
+              value={values.ageGroup}
+              onChange={(e) => set("ageGroup", e.target.value)}
+              placeholder="Seçiniz"
+              options={[...AGE_GROUPS]}
+            />
           </Field>
           <Field label="Mevki" hint="İsteğe bağlı" error={errors.position}>
             <input style={fieldBase} placeholder="örn. Forvet" value={values.position} onChange={(e) => set("position", e.target.value)} />

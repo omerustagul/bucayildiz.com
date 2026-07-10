@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { Icon } from "@/lib/icons";
 import { AGE_GROUPS } from "@/lib/validation";
 
@@ -76,21 +77,13 @@ export function AppointmentForm({ fill = false }: { fill?: boolean }) {
         />
       ))}
 
-      <div style={{ position: "relative" }}>
-        <select
-          style={{ ...fieldStyle("ageGroup"), appearance: "none", WebkitAppearance: "none", cursor: "pointer", color: v.ageGroup ? "var(--ink-900)" : "var(--ink-400)", paddingRight: 40 }}
-          value={v.ageGroup}
-          onChange={(e) => set("ageGroup", e.target.value)}
-          onFocus={() => setFocus("ageGroup")}
-          onBlur={() => setFocus(null)}
-        >
-          <option value="">Yaş Grubu Seçiniz</option>
-          {AGE_GROUPS.map((g) => (
-            <option key={g} value={g}>{g}</option>
-          ))}
-        </select>
-        <span style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "var(--navy-600)", fontSize: 12 }}>▾</span>
-      </div>
+      <Select
+        style={{ ...inputStyle, cursor: "pointer" }}
+        value={v.ageGroup}
+        onChange={(e) => set("ageGroup", e.target.value)}
+        placeholder="Yaş Grubu Seçiniz"
+        options={[...AGE_GROUPS]}
+      />
 
       <Button type="submit" variant="accent" size="lg" fullWidth style={{ marginTop: 6 }} leftIcon={<Icon name="calendar-check" size={18} />} rightIcon={<Icon name="arrow-right" size={18} />}>
         Ücretsiz Randevu Al

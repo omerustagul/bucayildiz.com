@@ -6,6 +6,7 @@ import { TextInput } from "@/components/admin/controls";
 import { Field } from "@/components/admin/kit";
 import { CardList, DataCard, CardHeader, CardFields, CardActions } from "@/components/admin/MobileCardList";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { Icon } from "@/lib/icons";
 import { createPayment, setPaymentStatus, deletePayment } from "@/app/admin/(panel)/odemeler/actions";
 
@@ -20,6 +21,12 @@ const STATUS_LABEL: Record<string, { label: string; bg: string; fg: string }> = 
   pending: { label: "Bekliyor", bg: "var(--gold-100, #f7efd6)", fg: "var(--gold-700)" },
   overdue: { label: "Gecikti", bg: "var(--red-100)", fg: "var(--red-600)" },
 };
+
+const STATUS_OPTIONS = [
+  { value: "pending", label: "Bekliyor" },
+  { value: "paid", label: "Ödendi" },
+  { value: "overdue", label: "Gecikti" },
+];
 
 const selStyle: React.CSSProperties = {
   fontFamily: "var(--font-body)", fontSize: 14, padding: "10px 12px", borderRadius: "var(--radius-sm)",
@@ -68,20 +75,28 @@ export function PaymentsManager({ athletes, payments }: { athletes: AthleteOpt[]
         <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 14, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--text-strong)", margin: "0 0 14px" }}>Yeni Ödeme Kaydı</h3>
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1.5fr 1.2fr 1fr", gap: 12 }} className="pay-form">
           <Field label="Sporcu">
-            <select style={selStyle} value={athleteId} onChange={(e) => setAthleteId(e.target.value)}>
-              <option value="">Seçiniz</option>
-              {athletes.map((a) => <option key={a.id} value={a.id}>{a.name} ({a.teamName})</option>)}
-            </select>
+            <Select
+              style={selStyle}
+              value={athleteId}
+              onChange={(e) => setAthleteId(e.target.value)}
+              placeholder="Seçiniz"
+              options={athletes.map((a) => ({ value: a.id, label: `${a.name} (${a.teamName})` }))}
+            />
           </Field>
           <Field label="Tutar (₺)"><TextInput type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="1500" /></Field>
           <Field label="Dönem"><TextInput value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="Haziran 2026" /></Field>
           <Field label="Son Ödeme"><TextInput type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></Field>
           <Field label="Durum">
-            <select style={selStyle} value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option value="pending">Bekliyor</option>
-              <option value="paid">Ödendi</option>
-              <option value="overdue">Gecikti</option>
-            </select>
+            <Select
+              style={selStyle}
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              options={[
+                { value: "pending", label: "Bekliyor" },
+                { value: "paid", label: "Ödendi" },
+                { value: "overdue", label: "Gecikti" },
+              ]}
+            />
           </Field>
         </div>
         {err && <div style={{ marginTop: 10, padding: "9px 12px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>{err}</div>}
@@ -109,11 +124,14 @@ export function PaymentsManager({ athletes, payments }: { athletes: AthleteOpt[]
                       <td style={{ ...td, fontFamily: "var(--font-stat, inherit)", fontWeight: 700 }}>{p.amount.toLocaleString("tr-TR")} ₺</td>
                       <td style={{ ...td, color: "var(--text-muted)" }}>{p.dueDate || "—"}</td>
                       <td style={td}>
-                        <select value={p.status} disabled={busyId === p.id} onChange={(e) => changeStatus(p.id, e.target.value)} style={{ ...selStyle, width: "auto", padding: "6px 10px", background: s.bg, color: s.fg, fontWeight: 600, border: "none" }}>
-                          <option value="pending">Bekliyor</option>
-                          <option value="paid">Ödendi</option>
-                          <option value="overdue">Gecikti</option>
-                        </select>
+                        <Select
+                          value={p.status}
+                          disabled={busyId === p.id}
+                          onChange={(e) => changeStatus(p.id, e.target.value)}
+                          options={STATUS_OPTIONS}
+                          containerStyle={{ display: "inline-flex" }}
+                          style={{ ...selStyle, minWidth: 108, padding: "6px 10px", background: s.bg, color: s.fg, fontWeight: 600, border: "none" }}
+                        />
                       </td>
                       <td style={{ ...td, textAlign: "right" }}>
                         <button onClick={() => remove(p.id)} disabled={busyId === p.id} aria-label="Sil" title="Sil" style={{ border: "none", background: "transparent", color: "var(--red-600)", cursor: "pointer", padding: 6 }}>
@@ -136,11 +154,14 @@ export function PaymentsManager({ athletes, payments }: { athletes: AthleteOpt[]
                     title={p.athleteName}
                     subtitle={p.teamName}
                     badge={
-                      <select value={p.status} disabled={busyId === p.id} onChange={(e) => changeStatus(p.id, e.target.value)} style={{ ...selStyle, width: "auto", padding: "6px 10px", background: s.bg, color: s.fg, fontWeight: 600, border: "none" }}>
-                        <option value="pending">Bekliyor</option>
-                        <option value="paid">Ödendi</option>
-                        <option value="overdue">Gecikti</option>
-                      </select>
+                      <Select
+                        value={p.status}
+                        disabled={busyId === p.id}
+                        onChange={(e) => changeStatus(p.id, e.target.value)}
+                        options={STATUS_OPTIONS}
+                        containerStyle={{ display: "inline-flex" }}
+                        style={{ ...selStyle, minWidth: 108, padding: "6px 10px", background: s.bg, color: s.fg, fontWeight: 600, border: "none" }}
+                      />
                     }
                   />
                   <CardFields
