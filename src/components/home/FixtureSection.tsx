@@ -6,16 +6,17 @@ import { FixtureCard } from "./FixtureCard";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
+import { logoSrc } from "@/lib/branding";
+import { getSettings } from "@/lib/settings";
 
-const CREST = "/brand/logo-emblem.png";
 
 type Fx = {
   id: string; competition: string; opponent: string; opponentLogo: string | null; isHome: boolean;
   date: string; time: string; venue: string; status: string; ourScore: number | null; oppScore: number | null;
 };
 
-function toCard(f: Fx) {
-  const us = { name: "Buca Yıldız", crest: CREST, score: f.ourScore ?? undefined };
+function toCard(f: Fx, crest: string) {
+  const us = { name: "Buca Yıldız", crest, score: f.ourScore ?? undefined };
   const them = { name: f.opponent, crest: f.opponentLogo ?? undefined, score: f.oppScore ?? undefined, time: f.time };
   return {
     competition: f.competition,
@@ -28,6 +29,7 @@ function toCard(f: Fx) {
 }
 
 export async function FixtureSection() {
+  const CREST = logoSrc((await getSettings()).logoUrl);
   const fixtures = (await prisma.fixture.findMany({ orderBy: { date: "asc" } })) as Fx[];
   if (fixtures.length === 0) return null;
 
@@ -86,7 +88,7 @@ export async function FixtureSection() {
           {/* Recent / upcoming compact */}
           <div style={{ display: "grid", gridTemplateRows: "1fr 1fr", gap: 16 }}>
             {compact.map((f) => (
-              <FixtureCard key={f.id} {...toCard(f)} />
+              <FixtureCard key={f.id} {...toCard(f, CREST)} />
             ))}
           </div>
         </div>

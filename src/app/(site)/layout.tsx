@@ -13,14 +13,15 @@ export const revalidate = 60;
 
 /** Public website shell — sticky header + footer around every public page. */
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const socials = resolveSocialLinks(await getSettings());
+  const settings = await getSettings();
+  const socials = resolveSocialLinks(settings);
   return (
     <>
-      <SiteHeader socials={socials} />
+      <SiteHeader socials={socials} logoUrl={settings.logoUrl} />
       <main>
         <PageTransition>{children}</PageTransition>
       </main>
-      <SiteFooter socials={socials} />
+      <SiteFooter socials={socials} logoUrl={settings.logoUrl} />
     </>
   );
 }

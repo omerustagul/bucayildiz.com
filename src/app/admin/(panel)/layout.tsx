@@ -8,7 +8,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   if (!session) redirect("/admin/giris");
   const settings = await getSettings();
   return (
-    <AdminShell user={{ name: session.name, role: session.role }} mobileNav={settings.mobileNavAdmin}>
+    <AdminShell user={{ name: session.name, role: session.role }} mobileNav={settings.mobileNavAdmin} logoUrl={settings.logoUrl}>
       {children}
     </AdminShell>
   );

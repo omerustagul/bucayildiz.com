@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/lib/icons";
+import { logoSrc } from "@/lib/branding";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { MobileTabBar, type TabBarItem } from "@/components/ui/MobileTabBar";
 import { MobileMenu } from "@/components/ui/MobileMenu";
@@ -88,7 +89,7 @@ function initials(name: string) {
   );
 }
 
-export function AdminShell({ user, mobileNav = true, children }: { user: { name: string; role: string }; mobileNav?: boolean; children: React.ReactNode }) {
+export function AdminShell({ user, mobileNav = true, logoUrl, children }: { user: { name: string; role: string }; mobileNav?: boolean; logoUrl?: string | null; children: React.ReactNode }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -132,7 +133,7 @@ export function AdminShell({ user, mobileNav = true, children }: { user: { name:
           onClick={closeMobile}
           style={{ padding: showLabels ? "20px 22px 18px" : "20px 0", display: "flex", alignItems: "center", justifyContent: showLabels ? "flex-start" : "center", gap: 12, borderBottom: "1px solid rgba(255,255,255,.07)", textDecoration: "none" }}
         >
-          <Image src="/brand/logo-emblem.png" alt="" width={38} height={38} style={{ objectFit: "contain" }} />
+          <Image src={logoSrc(logoUrl)} alt="" width={38} height={38} style={{ objectFit: "contain" }} />
           {showLabels && (
             <div style={{ lineHeight: 1 }}>
               <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 16, color: "#fff", textTransform: "uppercase", letterSpacing: ".02em" }}>Buca Yıldız</div>

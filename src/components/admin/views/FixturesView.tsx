@@ -12,8 +12,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
 import { createFixture, updateFixture, deleteFixture } from "@/app/admin/(panel)/fikstur/actions";
+import { logoSrc } from "@/lib/branding";
 
-const CREST = "/brand/logo-emblem.png";
 
 export type FixtureRow = {
   id: string;
@@ -42,7 +42,7 @@ const fmtDate = (d: string) => {
 };
 const num = (v: string) => (v.trim() === "" ? null : Number(v));
 
-function FixtureDrawer({ fx, teams, onClose }: { fx: FixtureRow | null; teams: TeamOpt[]; onClose: () => void }) {
+function FixtureDrawer({ fx, teams, crest, onClose }: { fx: FixtureRow | null; teams: TeamOpt[]; crest: string; onClose: () => void }) {
   const router = useRouter();
   const isNew = !fx;
   const [v, setV] = useState({
@@ -139,7 +139,7 @@ function FixtureDrawer({ fx, teams, onClose }: { fx: FixtureRow | null; teams: T
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 14, alignItems: "flex-start" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center", padding: 14, border: "1.5px solid var(--navy-300)", borderRadius: "var(--radius-md)", background: "var(--navy-50)" }}>
-            <Image src={CREST} alt="" width={52} height={52} style={{ objectFit: "contain" }} />
+            <Image src={crest} alt="" width={52} height={52} style={{ objectFit: "contain" }} />
             <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 16, textTransform: "uppercase", color: "var(--navy-800)" }}>Buca Yıldız</span>
             <Badge tone="gold">{v.side === "home" ? "Ev Sahibi" : "Deplasman"}</Badge>
           </div>
@@ -237,7 +237,8 @@ function FixtureCards({ rows, onOpen, newIds }: { rows: FixtureRow[]; onOpen: (r
   );
 }
 
-export function FixturesView({ fixtures, teams }: { fixtures: FixtureRow[]; teams: TeamOpt[] }) {
+export function FixturesView({ fixtures, teams, logoUrl }: { fixtures: FixtureRow[]; teams: TeamOpt[]; logoUrl?: string | null }) {
+  const CREST = logoSrc(logoUrl);
   const [tab, setTab] = useState("all"); // takım filtresi: "all" | teamId
   const [statusFilter, setStatusFilter] = useState("all"); // all | upcoming | finished
   const [q, setQ] = useState("");
@@ -353,7 +354,7 @@ export function FixturesView({ fixtures, teams }: { fixtures: FixtureRow[]; team
       ) : (
         <Table columns={cols} rows={rows} getRowKey={(r) => r.id} onRowClick={(r) => setDrawer({ fx: r })} empty="Maç bulunamadı." />
       )}
-      {drawer && <FixtureDrawer fx={drawer.fx} teams={teams} onClose={() => setDrawer(null)} />}
+      {drawer && <FixtureDrawer fx={drawer.fx} teams={teams} crest={CREST} onClose={() => setDrawer(null)} />}
     </>
   );
 }

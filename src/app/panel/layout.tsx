@@ -26,6 +26,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
       }}
       unreadCount={unreadCount}
       mobileNav={settings.mobileNavPanel}
+      logoUrl={settings.logoUrl}
     >
       {children}
     </PanelShell>

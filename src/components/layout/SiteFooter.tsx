@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
+import { logoSrc } from "@/lib/branding";
 import { SocialLinks } from "@/components/layout/SocialLinks";
 import type { SocialLink } from "@/lib/social";
 
@@ -32,7 +33,7 @@ function Col({ title, links }: { title: string; links: { label: string; href: st
   );
 }
 
-export function SiteFooter({ socials = [] }: { socials?: SocialLink[] }) {
+export function SiteFooter({ socials = [], logoUrl }: { socials?: SocialLink[]; logoUrl?: string | null }) {
   // Arma üstteki bölümün üzerine taşar (beyaz bant yok); taşma payı
   // globals.css'te son bölüme verilen bottom padding ile açılır.
   return (
@@ -47,13 +48,11 @@ export function SiteFooter({ socials = [] }: { socials?: SocialLink[] }) {
           width: 92,
           height: 92,
           borderRadius: "50%",
-          background: "var(--navy-950)",
           display: "grid",
           placeItems: "center",
-          border: "1px solid var(--navy-700)",
         }}
       >
-        <Image src="/brand/logo-emblem.png" alt="Buca Yıldız" width={78} height={78} style={{ objectFit: "contain" }} />
+        <Image src={logoSrc(logoUrl)} alt="Buca Yıldız" width={78} height={78} style={{ objectFit: "contain" }} />
       </div>
       <div style={{ maxWidth: 1540, margin: "0 auto", padding: "78px 32px 28px" }}>
         <div className="hp-grid-footer" style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 1fr 1.4fr", gap: 40 }}>

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/lib/icons";
+import { logoSrc } from "@/lib/branding";
 import { Avatar } from "@/components/ui/Avatar";
 import { IconButton } from "@/components/ui/IconButton";
 import { panelLogout } from "@/app/panel/actions";
@@ -37,7 +38,7 @@ const TABBAR_ITEMS: TabBarItem[] = [
   { kind: "link", href: "/panel/maclar", label: "Maçlar", icon: "trophy" },
 ];
 
-export function PanelShell({ athlete, unreadCount = 0, mobileNav = true, children }: { athlete: Athlete; unreadCount?: number; mobileNav?: boolean; children: React.ReactNode }) {
+export function PanelShell({ athlete, unreadCount = 0, mobileNav = true, logoUrl, children }: { athlete: Athlete; unreadCount?: number; mobileNav?: boolean; logoUrl?: string | null; children: React.ReactNode }) {
   const pathname = usePathname();
   const numberLabel = athlete.number != null ? `${athlete.number} Numara` : athlete.position;
   const title = NAV.find((n) => n.href === pathname)?.label ?? "Genel Bakış";
@@ -77,7 +78,7 @@ export function PanelShell({ athlete, unreadCount = 0, mobileNav = true, childre
         }}
       >
         <div style={{ padding: "22px 22px 18px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid rgba(255,255,255,.07)" }}>
-          <Image src="/brand/logo-emblem.png" alt="" width={40} height={40} style={{ objectFit: "contain" }} />
+          <Image src={logoSrc(logoUrl)} alt="" width={40} height={40} style={{ objectFit: "contain" }} />
           <div style={{ lineHeight: 1 }}>
             <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 17, color: "#fff", textTransform: "uppercase", letterSpacing: ".02em" }}>Buca Yıldız</div>
             <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--gold-400)", marginTop: 3, fontWeight: 600 }}>Sporcu Paneli</div>

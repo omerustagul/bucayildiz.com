@@ -5,12 +5,14 @@ import Link from "next/link";
 import { getPanelSession } from "@/lib/auth";
 import { PanelLoginForm } from "@/components/PanelLoginForm";
 import { Icon } from "@/lib/icons";
+import { getSettings } from "@/lib/settings";
+import { logoSrc } from "@/lib/branding";
 
 export const metadata: Metadata = { title: "Panele Giriş" };
 
 export default async function GirisPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;
-  const session = await getPanelSession();
+  const [session, settings] = await Promise.all([getPanelSession(), getSettings()]);
   // Paneller ayrı: yalnız SPORCU oturumu panele yönlenir. Yönetici oturumu
   // varken bu sayfa yine sporcu giriş formunu gösterir (admin'e atmaz).
   if (session?.athleteId) redirect("/panel");
@@ -21,7 +23,7 @@ export default async function GirisPage({ searchParams }: { searchParams: Promis
         {/* Brand side */}
         <div className="login-brand" style={{ background: "var(--grad-navy-deep)", color: "#fff", padding: "52px 44px", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 40 }}>
           <span aria-hidden style={{ position: "absolute", right: -60, top: "40%", fontSize: 300, color: "rgba(201,162,39,0.05)", lineHeight: 1 }}>★</span>
-          <Image src="/brand/logo-emblem.png" alt="Buca Yıldız" width={64} height={64} style={{ objectFit: "contain", position: "relative" }} />
+          <Image src={logoSrc(settings.logoUrl)} alt="Buca Yıldız" width={64} height={64} style={{ objectFit: "contain", position: "relative" }} />
           <div style={{ position: "relative" }}>
             <h1 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 38, lineHeight: 0.98, textTransform: "uppercase", color: "#fff", margin: "0 0 12px" }}>
               Kulüp

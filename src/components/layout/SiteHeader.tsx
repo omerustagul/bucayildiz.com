@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { Icon, type IconName } from "@/lib/icons";
+import { logoSrc } from "@/lib/branding";
 import { SocialLinks } from "@/components/layout/SocialLinks";
 import type { SocialLink } from "@/lib/social";
 
@@ -87,7 +88,7 @@ function TeamStripe() {
 
 const navIcon = (name: IconName, size = 17) => <Icon name={name} size={size} />;
 
-export function SiteHeader({ active: activeOverride, socials = [] }: { active?: string; socials?: SocialLink[] }) {
+export function SiteHeader({ active: activeOverride, socials = [], logoUrl }: { active?: string; socials?: SocialLink[]; logoUrl?: string | null }) {
   const [open, setOpen] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [acc, setAcc] = useState<string | null>(null);
@@ -131,7 +132,7 @@ export function SiteHeader({ active: activeOverride, socials = [] }: { active?: 
         <div style={{ padding: "10px 14px 10px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           {/* yalnız arma — yazı yok */}
           <Link href="/" aria-label="Buca Yıldız — Anasayfa" style={{ display: "inline-flex" }}>
-            <Image src="/brand/logo-emblem.png" alt="Buca Yıldız" width={50} height={50} style={{ objectFit: "contain", display: "block" }} />
+            <Image src={logoSrc(logoUrl)} alt="Buca Yıldız" width={50} height={50} style={{ objectFit: "contain", display: "block" }} />
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Button as="a" href="/ucretsiz-deneme" variant="accent" size="sm">
@@ -257,7 +258,7 @@ export function SiteHeader({ active: activeOverride, socials = [] }: { active?: 
             aria-label="Buca Yıldız — Anasayfa"
             style={{ position: "absolute", left: 32, top: 50, zIndex: 55, display: "block", filter: "drop-shadow(0 10px 22px rgba(0,0,0,.45))" }}
           >
-            <Image src="/brand/logo-emblem.png" alt="Buca Yıldız" width={76} height={76} priority style={{ objectFit: "contain", display: "block" }} />
+            <Image src={logoSrc(logoUrl)} alt="Buca Yıldız" width={76} height={76} priority style={{ objectFit: "contain", display: "block" }} />
           </Link>
 
           {/* Üst bant: sosyal content alanının EN SOLUNDA + sağda panel/başvuru — 64px */}

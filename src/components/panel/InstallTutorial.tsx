@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Icon } from "@/lib/icons";
+import { DEFAULT_LOGO } from "@/lib/branding";
 import { useOverlayDismiss } from "@/components/ui/useOverlayDismiss";
 
 /** iOS 26 Safari "Ana Ekrana Ekle" eğitimi — framer-motion ile gerçeğe yakın akış:
@@ -254,7 +255,7 @@ function PhoneScene({ scene, reduced }: { scene: number; reduced: boolean }) {
                   transition={reduced ? { duration: 0 } : { type: "spring", stiffness: 320, damping: 14, delay: 0.35 }}
                   style={{ aspectRatio: "1", borderRadius: 12, background: "var(--grad-gold)", display: "grid", placeItems: "center", boxShadow: "0 6px 16px rgba(201,162,39,.35)" }}
                 >
-                  <Image src="/brand/logo-emblem.png" alt="" width={26} height={26} style={{ objectFit: "contain" }} />
+                  <Image src={DEFAULT_LOGO} alt="" width={26} height={26} style={{ objectFit: "contain" }} />
                 </motion.div>
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: reduced ? 0 : 0.55 }} style={{ marginTop: 3, textAlign: "center", fontSize: 6.2, color: "#fff" }}>
                   Buca Yıldız
@@ -291,7 +292,7 @@ function PhoneScene({ scene, reduced }: { scene: number; reduced: boolean }) {
             >
               <div style={{ textAlign: "center" }}>
                 <motion.div initial={{ scale: 0.7 }} animate={{ scale: 1 }} transition={t({ stiffness: 220 })}>
-                  <Image src="/brand/logo-emblem.png" alt="" width={52} height={52} style={{ objectFit: "contain" }} />
+                  <Image src={DEFAULT_LOGO} alt="" width={52} height={52} style={{ objectFit: "contain" }} />
                 </motion.div>
                 <div style={{ marginTop: 8, fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 11, letterSpacing: ".1em", color: "#fff", textTransform: "uppercase" }}>Buca Yıldız</div>
                 <div style={{ fontSize: 6.5, letterSpacing: ".22em", color: "var(--gold-400)", textTransform: "uppercase", marginTop: 2 }}>Futbol Akademisi</div>
