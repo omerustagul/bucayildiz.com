@@ -169,14 +169,53 @@ gider; boşsa yerel disk (`public/uploads`). Turkcell Object Storage / MinIO uyu
 (`sendSms`, `sendOtpSms`, `generateOtp`). **Not:** OTP'nin başvuru/onay akışına
 kapı olarak eklenmesi sağlayıcı bağlanınca yapılacak son entegrasyondur.
 
-## 8. Alan adı + TLS (son ops adımı)
+## 8. Alan adı + TLS + Cloudflare (son ops adımı)
 
-1. `bucayildiz.com` alan adını alın, DNS A/AAAA kaydını sunucu IP'sine yönlendirin.
-2. Reverse proxy (Nginx/Caddy) + TLS:
-   - **Caddy** otomatik Let's Encrypt: `bucayildiz.com { reverse_proxy 127.0.0.1:3000 }`
-   - veya Nginx + `certbot --nginx -d bucayildiz.com -d www.bucayildiz.com`
-3. `metadataBase` zaten `https://bucayildiz.com` (src/app/layout.tsx).
-4. Push ve PWA "Ana Ekrana Ekle" yalnızca HTTPS'te tam çalışır.
+**Karar (2026-07-10):** Üretim mimarisi = **TR VPS + Cloudflare önde**.
+Backend, PostgreSQL ve yüklenen dosyalar Türkiye'deki VPS'te kalır (KVKK);
+Cloudflare yalnız DNS/CDN/WAF/TLS katmanı olarak önde durur. Kişisel veri
+Cloudflare'de BARINMAZ (yalnız geçer — proxy). Tam-Cloudflare (Workers/D1/R2)
+bilinçli olarak reddedildi: sağlık verisi yurt dışında barınamaz + ciddi rework.
+
+### 8.1. Sunucu tarafı (origin)
+
+1. VPS'te uygulama `127.0.0.1:3000` (PM2/systemd), önünde Nginx/Caddy.
+2. TLS: **Cloudflare Origin Certificate** üret (SSL/TLS → Origin Server →
+   Create Certificate, 15 yıl) ve Nginx'e kur — Let's Encrypt yenileme derdi olmaz.
+   Alternatif: certbot (o zaman 80 portu ACME için açık kalmalı).
+3. Nginx'te gerçek ziyaretçi IP'si (KVKK denetim izleri IP kaydeder!):
+   ```nginx
+   # Cloudflare IP aralıkları: https://www.cloudflare.com/ips/
+   set_real_ip_from 173.245.48.0/20;  # (tüm CF aralıklarını ekleyin)
+   real_ip_header CF-Connecting-IP;
+   ```
+4. Güvenlik: origin'e yalnız Cloudflare IP'lerinden 443 kabul et (ufw/iptables) —
+   Cloudflare'i atlayıp origin'e doğrudan erişim kapansın.
+
+### 8.2. Cloudflare tarafı
+
+1. `bucayildiz.com`'u Cloudflare'e ekle (Free plan yeterli başlangıç için),
+   NS kayıtlarını registrar'da Cloudflare'e çevir.
+2. DNS: `A bucayildiz.com → VPS_IP` ve `A www → VPS_IP`, ikisi de **Proxied** (turuncu bulut).
+3. SSL/TLS modu: **Full (strict)** (origin sertifikası kuruluysa). Asla "Flexible" değil.
+4. Hız: Speed → Optimization varsayılanları; Caching → Browser Cache TTL "Respect
+   Existing Headers" (Next `_next/static` zaten immutable başlık gönderir).
+5. **Cache Rules:**
+   - `/_next/static/*` ve `/uploads/*` → Eligible for cache (statik varlıklar CDN'den)
+   - `/admin/*`, `/panel/*`, `/api/*`, `/giris*` → **Bypass cache** (oturumlu içerik)
+6. **WAF / güvenlik:**
+   - Managed Rules (Free'de temel set) + Bot Fight Mode açık
+   - Rate limiting: `/admin/giris`, `/giris`, `/api/upload` için (örn. 10 istek/dk/IP)
+   - Security Level: Medium; Challenge Passage: 30 dk
+7. HTTPS zorlaması: Always Use HTTPS + HSTS (alt alanlar dahil etmeden başla).
+
+### 8.3. Uygulama notları
+
+- Oturum çerezleri (`by_admin_session`, `by_panel_session`) httpOnly+secure —
+  Cloudflare proxy'sinden etkilenmez.
+- `metadataBase` zaten `https://bucayildiz.com` (src/app/layout.tsx).
+- Push ve PWA "Ana Ekrana Ekle" yalnızca HTTPS'te tam çalışır — CF ile hazır.
+- Web Push endpoint'leri (`/api/push/*`) cache bypass listesinde olmalı (üstte var).
 
 ## 9. KVKK — kalan (yazılım-dışı)
 
