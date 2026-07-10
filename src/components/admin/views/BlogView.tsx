@@ -14,6 +14,7 @@ import { IconButton } from "@/components/ui/IconButton";
 import { Button } from "@/components/ui/Button";
 import { Icon, type IconName } from "@/lib/icons";
 import { POST_TEMPLATES, POST_CATEGORIES } from "@/lib/enums";
+import { toast } from "@/components/ui/Toast";
 import { createPost, updatePost, deletePost } from "@/app/admin/(panel)/haberler/actions";
 
 export type PostRow = {
@@ -79,12 +80,14 @@ function Wizard({ post, onExit }: { post: PostRow | null; onExit: () => void }) 
     startTransition(async () => {
       const res = isNew ? await createPost(payload) : await updatePost(post!.id, payload);
       if (res?.error) setError(res.error);
+      else toast.success(status === "published" ? "Haber yayınlandı." : "Taslak kaydedildi.");
     });
   };
   const remove = () => {
     if (!post || !window.confirm("Bu haberi silmek istediğinize emin misiniz?")) return;
     startTransition(async () => {
       await deletePost(post.id);
+      toast.success("Haber silindi.");
     });
   };
 

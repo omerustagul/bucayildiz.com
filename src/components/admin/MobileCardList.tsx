@@ -12,10 +12,12 @@ import type { ReactNode } from "react";
  * her görünümde ayrı kalır; burada yalnız ortak iskelet var.
  */
 
-/** Kart listesi kapsayıcısı — masaüstünde gizli, ≤760px'te görünür. */
-export function CardList({ children, style }: { children: ReactNode; style?: React.CSSProperties }) {
+/** Kart listesi kapsayıcısı — masaüstünde gizli, ≤760px'te görünür.
+ *  `className` — ör. filtre değişiminde stagger/giriş animasyonu (`by-anim-pane`)
+ *  eklemek için; varsayılan `adm-cards` sınıfının yanına eklenir. */
+export function CardList({ children, style, className }: { children: ReactNode; style?: React.CSSProperties; className?: string }) {
   return (
-    <div className="adm-cards" style={style}>
+    <div className={className ? `adm-cards ${className}` : "adm-cards"} style={style}>
       {children}
     </div>
   );

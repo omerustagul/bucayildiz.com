@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
 import { POSITIONS } from "@/lib/enums";
+import { toast } from "@/components/ui/Toast";
 import { createAthlete, updateAthlete, deleteAthlete, provisionAthleteLogin } from "@/app/admin/(panel)/sporcular/actions";
 
 export type Team = { id: string; name: string };
@@ -103,6 +104,7 @@ function AthleteDrawer({ athlete, teams, onClose }: { athlete: AthleteRow | null
       const res = isNew ? await createAthlete(payload) : await updateAthlete(athlete!.id, payload);
       if (res?.error) setError(res.error);
       else {
+        toast.success(isNew ? "Sporcu oluşturuldu." : "Sporcu kaydedildi.");
         onClose();
         router.refresh();
       }
@@ -114,6 +116,7 @@ function AthleteDrawer({ athlete, teams, onClose }: { athlete: AthleteRow | null
     if (!window.confirm("Bu sporcuyu silmek istediğinize emin misiniz?")) return;
     startTransition(async () => {
       await deleteAthlete(athlete.id);
+      toast.success("Sporcu silindi.");
       onClose();
       router.refresh();
     });
@@ -310,10 +313,12 @@ export function AthletesView({ athletes, teams }: { athletes: AthleteRow[]; team
         <span style={{ marginLeft: "auto", fontSize: 13, color: "var(--ink-400)" }}>{rows.length} sonuç</span>
       </Toolbar>
 
-      <div className="adm-table-wrap">
+      {/* Filtre değişince satırlara hafif giriş: kapsayıcı key ile yeniden mount
+          edilir, .by-anim-pane fade+translateY oynatır (basit stagger yerine). */}
+      <div key={`${team}|${pos}|${status}|${q}`} className="adm-table-wrap by-anim-pane">
         <Table columns={cols} rows={rows} getRowKey={(r) => r.id} onRowClick={(r) => setDrawer({ athlete: r })} empty="Bu filtreye uygun sporcu yok." />
       </div>
-      <CardList>
+      <CardList key={`${team}|${pos}|${status}|${q}-cards`} className="by-anim-pane">
         {rows.length === 0 ? (
           <CardEmpty>Bu filtreye uygun sporcu yok.</CardEmpty>
         ) : (

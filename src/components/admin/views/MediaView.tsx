@@ -71,6 +71,10 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
   const isRoot = current?.id === root?.id;
   const shown = assets.filter((a) => (isRoot || a.folderId === folder) && (catFilter === "" || a.categoryId === catFilter));
 
+  // Küçük görsel yüklenene kadar shimmer placeholder gösterir.
+  const [loaded, setLoaded] = useState<Set<string>>(new Set());
+  const markLoaded = (id: string) => setLoaded((s) => (s.has(id) ? s : new Set(s).add(id)));
+
   async function upload(file: File) {
     setBusy(true);
     setUploadError(null);
@@ -132,7 +136,8 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
           </label>
           {shown.map((a) => (
             <div key={a.id} style={{ position: "relative", aspectRatio: "1 / 1", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--border-subtle)", background: "var(--surface-subtle)" }}>
-              <Image src={a.url} alt={a.title} fill style={{ objectFit: "cover" }} sizes="132px" />
+              {!loaded.has(a.id) && <div className="by-shimmer" style={{ position: "absolute", inset: 0 }} />}
+              <Image src={a.url} alt={a.title} fill style={{ objectFit: "cover" }} sizes="132px" onLoad={() => markLoaded(a.id)} />
               <button type="button" onClick={() => removeAsset(a.id)} style={{ position: "absolute", top: 6, right: 6, display: "grid", placeItems: "center", width: 24, height: 24, borderRadius: "var(--radius-sm)", border: "none", background: "rgba(0,0,0,0.55)", color: "#fff", cursor: "pointer" }}>
                 <Icon name="trash-2" size={13} />
               </button>

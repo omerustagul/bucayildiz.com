@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ViewHeader, Toolbar, Field } from "@/components/admin/kit";
@@ -186,8 +186,9 @@ function FixtureDrawer({ fx, teams, onClose }: { fx: FixtureRow | null; teams: T
   );
 }
 
-/** Mobil (<=560px) kart listesi — Table yerine; tıklayınca aynı Drawer açılır. */
-function FixtureCards({ rows, onOpen }: { rows: FixtureRow[]; onOpen: (r: FixtureRow) => void }) {
+/** Mobil (<=560px) kart listesi — Table yerine; tıklayınca aynı Drawer açılır.
+ *  `newIds` — az önce eklenen maçların id'si; kart .by-row-in ile yumuşak belirir. */
+function FixtureCards({ rows, onOpen, newIds }: { rows: FixtureRow[]; onOpen: (r: FixtureRow) => void; newIds: Set<string> }) {
   if (rows.length === 0) {
     return (
       <div style={{ padding: "40px 16px", textAlign: "center", color: "var(--ink-400)", fontSize: 14, background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)" }}>
@@ -208,6 +209,7 @@ function FixtureCards({ rows, onOpen }: { rows: FixtureRow[]; onOpen: (r: Fixtur
             key={r.id}
             type="button"
             onClick={() => onOpen(r)}
+            className={newIds.has(r.id) ? "by-row-in" : undefined}
             style={{ font: "inherit", textAlign: "left", cursor: "pointer", background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8, boxShadow: "var(--shadow-xs)" }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
@@ -248,6 +250,21 @@ export function FixturesView({ fixtures, teams }: { fixtures: FixtureRow[]; team
     mq.addEventListener("change", on);
     return () => mq.removeEventListener("change", on);
   }, []);
+
+  // Yeni eklenen maçı yakalamak için sunucudan gelen `fixtures` listesini
+  // önceki id kümesiyle kıyaslar — router.refresh() sonrası tespit edilen
+  // yeni id'ler kısa süreliğine .by-row-in ile işaretlenir (bkz. globals.css).
+  const prevIdsRef = useRef<Set<string>>(new Set(fixtures.map((f) => f.id)));
+  const [newIds, setNewIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const curIds = new Set(fixtures.map((f) => f.id));
+    const added = fixtures.filter((f) => !prevIdsRef.current.has(f.id)).map((f) => f.id);
+    prevIdsRef.current = curIds;
+    if (added.length === 0) return;
+    setNewIds(new Set(added));
+    const t = setTimeout(() => setNewIds(new Set()), 260);
+    return () => clearTimeout(t);
+  }, [fixtures]);
 
   const rows = useMemo(
     () =>
@@ -332,7 +349,7 @@ export function FixturesView({ fixtures, teams }: { fixtures: FixtureRow[]; team
         </div>
       </Toolbar>
       {isMobile ? (
-        <FixtureCards rows={rows} onOpen={(r) => setDrawer({ fx: r })} />
+        <FixtureCards rows={rows} onOpen={(r) => setDrawer({ fx: r })} newIds={newIds} />
       ) : (
         <Table columns={cols} rows={rows} getRowKey={(r) => r.id} onRowClick={(r) => setDrawer({ fx: r })} empty="Maç bulunamadı." />
       )}

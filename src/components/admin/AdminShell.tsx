@@ -8,6 +8,7 @@ import { Icon, type IconName } from "@/lib/icons";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { MobileTabBar, type TabBarItem } from "@/components/ui/MobileTabBar";
 import { MobileMenu } from "@/components/ui/MobileMenu";
+import { Toaster } from "@/components/ui/Toast";
 import { logoutAction } from "@/app/admin/actions";
 
 type NavItem = { href: string; label: string; icon: IconName; ready?: boolean };
@@ -247,6 +248,8 @@ export function AdminShell({ user, mobileNav = true, children }: { user: { name:
           </form>
         }
       />
+
+      <Toaster />
     </div>
   );
 }

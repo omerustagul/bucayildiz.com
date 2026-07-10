@@ -12,6 +12,7 @@ import { InstallHint } from "@/components/panel/InstallHint";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { MobileTabBar, type TabBarItem } from "@/components/ui/MobileTabBar";
 import { MobileMenu } from "@/components/ui/MobileMenu";
+import { Toaster } from "@/components/ui/Toast";
 
 type Athlete = { name: string; teamName: string; number: number | null; position: string; photoUrl: string | null };
 
@@ -177,6 +178,8 @@ export function PanelShell({ athlete, unreadCount = 0, mobileNav = true, childre
           </form>
         }
       />
+
+      <Toaster />
     </div>
   );
 }
