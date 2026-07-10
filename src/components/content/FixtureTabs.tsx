@@ -8,7 +8,8 @@ const TABS = [
 
 export function FixtureTabs({ active }: { active: "program" | "puan-durumu" | "sonuclar" }) {
   return (
-    <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 28, borderBottom: "1px solid var(--border-subtle)" }}>
+    // Sekmeler dar ekranda alt satıra kırılmaz; tek satırda yana kaydırılır
+    <div className="by-overlay-scroll" style={{ display: "flex", gap: 4, flexWrap: "nowrap", overflowX: "auto", marginBottom: 28, borderBottom: "1px solid var(--border-subtle)" }}>
       {TABS.map((t) => {
         const on = t.key === active;
         return (
@@ -17,6 +18,8 @@ export function FixtureTabs({ active }: { active: "program" | "puan-durumu" | "s
             href={t.href}
             style={{
               padding: "12px 18px",
+              flex: "none",
+              whiteSpace: "nowrap",
               fontFamily: "var(--font-heading)",
               fontWeight: 600,
               fontSize: 16,
