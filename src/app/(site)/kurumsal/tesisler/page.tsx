@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import { prisma } from "@/lib/prisma";
 import { PageHero } from "@/components/layout/PageHero";
-import { Section, Prose, FeatureGrid } from "@/components/content/blocks";
+import { Section, Prose } from "@/components/content/blocks";
+import { Badge } from "@/components/ui/Badge";
 
 export const metadata: Metadata = { title: "Tesisler" };
 
-export default function TesislerPage() {
+export default async function TesislerPage() {
+  const facilities = await prisma.facility.findMany({ orderBy: [{ sort: "asc" }, { name: "asc" }] });
+
   return (
     <>
       <PageHero
@@ -21,34 +26,54 @@ export default function TesislerPage() {
             tasarlanmıştır.
           </p>
         </Prose>
-        <div style={{ marginTop: 28 }}>
-          <FeatureGrid
-            items={[
-              { icon: "shield-check", title: "Hibrit Çim Saha", text: "Her hava koşulunda oynanabilen, profesyonel ölçülerde ana antrenman sahası." },
-              { icon: "users", title: "Gelişim Salonu", text: "Kondisyon, kuvvet ve esneklik çalışmaları için donanımlı kapalı alan." },
-              { icon: "calendar-check", title: "Soyunma & Dinlenme", text: "Sporcu ve veliler için konforlu soyunma odaları ve bekleme alanları." },
-            ]}
-          />
-        </div>
-      </Section>
-      <Section background="subtle">
-        <div
-          style={{
-            position: "relative",
-            minHeight: 320,
-            borderRadius: "var(--radius-xl)",
-            overflow: "hidden",
-            background: "var(--grad-navy)",
-            border: "1px solid var(--navy-700)",
-            display: "grid",
-            placeItems: "center",
-          }}
-        >
-          <span style={{ color: "rgba(255,255,255,0.08)", fontFamily: "var(--font-heading)", fontSize: 180 }}>★</span>
-          <span style={{ position: "absolute", bottom: 18, left: 22, fontSize: 13, color: "var(--navy-100)", letterSpacing: "0.04em" }}>
-            Tesis fotoğrafları yakında eklenecek
-          </span>
-        </div>
+        {facilities.length === 0 ? (
+          <p style={{ marginTop: 28, color: "var(--text-muted)" }}>Henüz içerik eklenmedi.</p>
+        ) : (
+          <div style={{ marginTop: 28, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
+            {facilities.map((f) => {
+              const features = f.features
+                .split(",")
+                .map((x) => x.trim())
+                .filter(Boolean);
+              return (
+                <div
+                  key={f.id}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    background: "var(--surface-card)",
+                    border: "1px solid var(--border-subtle)",
+                    borderRadius: "var(--radius-lg)",
+                    overflow: "hidden",
+                    boxShadow: "var(--shadow-sm)",
+                  }}
+                >
+                  <div style={{ position: "relative", aspectRatio: "16 / 10", background: "var(--grad-navy)", display: "grid", placeItems: "center" }}>
+                    {f.photoUrl ? (
+                      <Image src={f.photoUrl} alt="" fill style={{ objectFit: "cover" }} sizes="(max-width: 600px) 100vw, 400px" />
+                    ) : (
+                      <span style={{ color: "rgba(255,255,255,0.08)", fontFamily: "var(--font-heading)", fontSize: 96 }}>★</span>
+                    )}
+                  </div>
+                  <div style={{ padding: "var(--space-6)", display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+                      <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 19, textTransform: "uppercase", color: "var(--text-strong)", margin: 0, minWidth: 0 }}>{f.name}</h3>
+                      {f.capacity && <Badge tone="gold" style={{ flex: "none" }}>{f.capacity}</Badge>}
+                    </div>
+                    {f.description && <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--text-muted)", margin: 0 }}>{f.description}</p>}
+                    {features.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: "auto", paddingTop: 6 }}>
+                        {features.map((ft) => (
+                          <Badge key={ft} tone="neutral">{ft}</Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </Section>
     </>
   );

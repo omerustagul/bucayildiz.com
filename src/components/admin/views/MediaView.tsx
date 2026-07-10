@@ -12,16 +12,17 @@ import { Badge } from "@/components/ui/Badge";
 import { IconButton } from "@/components/ui/IconButton";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
-import { createMediaCategory, deleteMediaCategory, createMediaAsset, deleteMediaAsset, createFolder, updateHomeCard } from "@/app/admin/(panel)/medya/actions";
+import { createMediaCategory, deleteMediaCategory, createMediaAsset, deleteMediaAsset, createFolder, updateFolder, updateHomeCard } from "@/app/admin/(panel)/medya/actions";
 
-export type FolderNode = { id: string; name: string; parentId: string | null };
+export type FolderNode = { id: string; name: string; parentId: string | null; categoryId: string | null };
 export type AssetItem = { id: string; url: string; title: string; kind: string; categoryId: string | null; folderId: string | null };
 export type CategoryItem = { id: string; name: string; color: string; count: number };
 export type HomeCardItem = { id: string; title: string; categoryId: string | null; kind: string; featured: boolean; coverUrl: string | null; count: number };
 
 /* ---------- Folder tree ---------- */
-function FolderTree({ folders, counts, active, onPick }: { folders: FolderNode[]; counts: Record<string, number>; active: string; onPick: (id: string) => void }) {
+function FolderTree({ folders, counts, active, categories, onPick, onEdit }: { folders: FolderNode[]; counts: Record<string, number>; active: string; categories: CategoryItem[]; onPick: (id: string) => void; onEdit: (f: FolderNode) => void }) {
   const children = (pid: string | null) => folders.filter((f) => f.parentId === pid);
+  const catColor = (id: string | null) => (id ? categories.find((c) => c.id === id)?.color : undefined);
   const Node = ({ f, depth }: { f: FolderNode; depth: number }) => {
     const kids = children(f.id);
     const [open, setOpen] = useState(depth < 2);
@@ -42,8 +43,16 @@ function FolderTree({ folders, counts, active, onPick }: { folders: FolderNode[]
           <span style={{ display: "inline-flex", color: on ? "var(--gold-600)" : "var(--navy-400)" }}>
             <Icon name={on ? "folder-open" : "folder"} size={15} />
           </span>
-          <span style={{ flex: 1 }}>{f.name}</span>
+          <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</span>
+          {f.categoryId && <span title="Kategoriye bağlı" style={{ width: 7, height: 7, borderRadius: "50%", background: catColor(f.categoryId) ?? "var(--ink-300)", flex: "none" }} />}
           <span style={{ fontSize: 11.5, color: "var(--ink-400)", fontFamily: "var(--font-stat)" }}>{counts[f.id] ?? 0}</span>
+          <span
+            onClick={(e) => { e.stopPropagation(); onEdit(f); }}
+            title="Düzenle"
+            style={{ display: "inline-flex", color: "var(--ink-300)", padding: 2, borderRadius: "var(--radius-sm)", flex: "none" }}
+          >
+            <Icon name="pencil" size={12} />
+          </span>
         </div>
         {open && kids.map((k) => <Node key={k.id} f={k} depth={depth + 1} />)}
       </div>
@@ -59,8 +68,10 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
   const [folder, setFolder] = useState(root?.id ?? "");
   const [catFilter, setCatFilter] = useState("");
   const [newFolder, setNewFolder] = useState(false);
+  const [editFolder, setEditFolder] = useState<FolderNode | null>(null);
   const [busy, setBusy] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadCategoryId, setUploadCategoryId] = useState("");
   const [, startTransition] = useTransition();
 
   const counts: Record<string, number> = {};
@@ -69,13 +80,31 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
 
   const current = folders.find((f) => f.id === folder) ?? root;
   const isRoot = current?.id === root?.id;
+  // Kök klasörde tek bir kategoriye zorlamak yanlış olur (kök tüm klasörlerin
+  // dosyalarını gösterir) — yalnız alt klasörlerin kendi kategorisi bağlayıcıdır.
+  const folderCategoryId = !isRoot ? current?.categoryId ?? null : null;
+  const folderCategory = folderCategoryId ? categories.find((c) => c.id === folderCategoryId) ?? null : null;
   const shown = assets.filter((a) => (isRoot || a.folderId === folder) && (catFilter === "" || a.categoryId === catFilter));
+
+  // Klasör değişince yükleme kategorisi seçimini sıfırla (bir önceki klasörün
+  // seçimi yeni klasöre sızmasın) — render sırasında türetilir, effect gerekmez.
+  const [prevFolder, setPrevFolder] = useState(folder);
+  if (folder !== prevFolder) {
+    setPrevFolder(folder);
+    setUploadCategoryId("");
+  }
 
   // Küçük görsel yüklenene kadar shimmer placeholder gösterir.
   const [loaded, setLoaded] = useState<Set<string>>(new Set());
   const markLoaded = (id: string) => setLoaded((s) => (s.has(id) ? s : new Set(s).add(id)));
 
+  const effectiveCategoryId = folderCategoryId ?? uploadCategoryId;
+
   async function upload(file: File) {
+    if (!effectiveCategoryId) {
+      setUploadError("Kategori seçiniz.");
+      return;
+    }
     setBusy(true);
     setUploadError(null);
     try {
@@ -87,7 +116,7 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
         setUploadError(data?.error || "Yükleme başarısız. Lütfen tekrar deneyin.");
         return;
       }
-      const created = await createMediaAsset({ url: data.url, title: file.name, folderId: isRoot ? "" : folder, categoryId: catFilter, kind: "photo" });
+      const created = await createMediaAsset({ url: data.url, title: file.name, folderId: isRoot ? "" : folder, categoryId: effectiveCategoryId, kind: "photo" });
       if (!created.ok) {
         setUploadError(created.error || "Dosya kaydedilemedi.");
         return;
@@ -108,7 +137,7 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
   return (
     <div className="media-lib-grid" style={{ display: "grid", gridTemplateColumns: "252px 1fr", gap: 18, alignItems: "start" }}>
       <Panel title="Klasörler" pad={10} action={<IconButton label="Yeni klasör" variant="ghost" size="sm" onClick={() => setNewFolder(true)}><Icon name="folder-plus" size={16} /></IconButton>}>
-        <FolderTree folders={folders} counts={counts} active={folder} onPick={setFolder} />
+        <FolderTree folders={folders} counts={counts} active={folder} categories={categories} onPick={setFolder} onEdit={setEditFolder} />
       </Panel>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -125,9 +154,23 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
         {uploadError && (
           <div style={{ padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>{uploadError}</div>
         )}
+        <Field
+          label="Yükleme Kategorisi"
+          required
+          hint={folderCategoryId ? `Bu klasörün kategorisinden otomatik alındı: ${folderCategory?.name ?? ""}. Değiştirilemez.` : "Klasör bir kategoriye bağlı değil — her yükleme için kategori seçmelisiniz."}
+          style={{ maxWidth: 320 }}
+        >
+          <Select
+            placeholder={folderCategoryId ? undefined : "Kategori seç"}
+            options={categories.map((c) => ({ value: c.id, label: c.name }))}
+            value={effectiveCategoryId}
+            onChange={(e) => setUploadCategoryId(e.target.value)}
+            disabled={!!folderCategoryId}
+          />
+        </Field>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(132px, 1fr))", gap: 12 }}>
-          <label style={{ position: "relative", aspectRatio: "1 / 1", borderRadius: "var(--radius-md)", border: "1.5px dashed var(--ink-300)", background: "var(--ink-50)", display: "grid", placeItems: "center", cursor: busy ? "wait" : "pointer", textAlign: "center" }}>
-            <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
+          <label style={{ position: "relative", aspectRatio: "1 / 1", borderRadius: "var(--radius-md)", border: "1.5px dashed var(--ink-300)", background: "var(--ink-50)", display: "grid", placeItems: "center", cursor: busy ? "wait" : effectiveCategoryId ? "pointer" : "not-allowed", opacity: effectiveCategoryId ? 1 : 0.55, textAlign: "center" }}>
+            <input type="file" accept="image/*" disabled={busy || !effectiveCategoryId} style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
             <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, color: "var(--ink-600)", padding: 12 }}>
               <span style={{ width: 40, height: 40, borderRadius: "50%", background: "var(--navy-50)", color: "var(--navy-600)", display: "grid", placeItems: "center" }}><Icon name="image" size={18} /></span>
               <span style={{ fontSize: 12.5, fontWeight: 600 }}>{busy ? "Yükleniyor…" : "Sürükle / yükle"}</span>
@@ -146,29 +189,46 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
         </div>
       </div>
 
-      {newFolder && <NewFolderModal folders={folders} defaultParent={root?.id ?? null} onClose={() => setNewFolder(false)} />}
+      {newFolder && <FolderModal folders={folders} categories={categories} defaultParent={root?.id ?? null} onClose={() => setNewFolder(false)} />}
+      {editFolder && <FolderModal folders={folders} categories={categories} defaultParent={null} folder={editFolder} onClose={() => setEditFolder(null)} />}
     </div>
   );
 }
 
-function NewFolderModal({ folders, defaultParent, onClose }: { folders: FolderNode[]; defaultParent: string | null; onClose: () => void }) {
+function FolderModal({ folders, categories, defaultParent, folder, onClose }: { folders: FolderNode[]; categories: CategoryItem[]; defaultParent: string | null; folder?: FolderNode | null; onClose: () => void }) {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const isEdit = !!folder;
+  const [name, setName] = useState(folder?.name ?? "");
   const [parent, setParent] = useState(defaultParent ?? "");
+  const [categoryId, setCategoryId] = useState(folder?.categoryId ?? "");
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const save = () =>
     startTransition(async () => {
-      const res = await createFolder(name, parent || null);
+      const res = isEdit
+        ? await updateFolder(folder!.id, { name, categoryId })
+        : await createFolder({ name, parentId: parent, categoryId });
       if (res.ok) {
         onClose();
         router.refresh();
+      } else {
+        setError(res.error ?? "Kaydedilemedi.");
       }
     });
   return (
-    <Modal open onClose={onClose} title="Yeni Klasör" width={420} footer={<><Button variant="secondary" size="sm" onClick={onClose}>İptal</Button><Button variant="primary" size="sm" onClick={save} disabled={pending}>Oluştur</Button></>}>
+    <Modal open onClose={onClose} title={isEdit ? "Klasörü Düzenle" : "Yeni Klasör"} width={420} footer={<><Button variant="secondary" size="sm" onClick={onClose}>İptal</Button><Button variant="primary" size="sm" onClick={save} disabled={pending}>{isEdit ? "Kaydet" : "Oluştur"}</Button></>}>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {error && <div style={{ padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>{error}</div>}
         <Field label="Klasör Adı" required><TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="örn. U-16 Kamp" /></Field>
-        <Select label="Üst Klasör" options={folders.map((f) => ({ value: f.id, label: f.name }))} value={parent} onChange={(e) => setParent(e.target.value)} />
+        {!isEdit && <Select label="Üst Klasör" options={folders.map((f) => ({ value: f.id, label: f.name }))} value={parent} onChange={(e) => setParent(e.target.value)} />}
+        <Select
+          label="Kategori"
+          hint="Bağlarsanız bu klasöre yüklenen tüm dosyalar otomatik bu kategoriye atanır ve değiştirilemez."
+          placeholder="Kategori yok"
+          options={categories.map((c) => ({ value: c.id, label: c.name }))}
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+        />
       </div>
     </Modal>
   );

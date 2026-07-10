@@ -116,23 +116,6 @@ export const FIXTURES: Fixture[] = [
   { comp: "Hazırlık Maçı", home: "Buca Yıldız", away: "Bucaspor", date: "28 Haz 2026", time: "18:00", venue: "Buca Yıldız Tesisleri", status: "upcoming", hs: null, as: null },
 ];
 
-export type StandingRow = {
-  pos: number;
-  team: string;
-  played: number;
-  won: number;
-  drawn: number;
-  lost: number;
-  points: number;
-};
-
-export const STANDINGS: StandingRow[] = [
-  { pos: 1, team: "Buca Yıldız", played: 21, won: 16, drawn: 3, lost: 2, points: 51 },
-  { pos: 2, team: "Karşıyaka SK", played: 21, won: 15, drawn: 3, lost: 3, points: 48 },
-  { pos: 3, team: "Göztepe", played: 21, won: 13, drawn: 4, lost: 4, points: 43 },
-  { pos: 4, team: "Altay", played: 21, won: 11, drawn: 5, lost: 5, points: 38 },
-  { pos: 5, team: "Bornova 1877", played: 21, won: 9, drawn: 6, lost: 6, points: 33 },
-  { pos: 6, team: "Menemen FK", played: 21, won: 8, drawn: 5, lost: 8, points: 29 },
-  { pos: 7, team: "Aliağa FK", played: 21, won: 6, drawn: 6, lost: 9, points: 24 },
-  { pos: 8, team: "Bucaspor", played: 21, won: 3, drawn: 4, lost: 14, points: 13 },
-];
+// Not: statik puan durumu (STANDINGS) kaldırıldı — veri artık DB'deki
+// StandingRow tablosundan geliyor (bkz. src/app/(site)/fikstur/puan-durumu,
+// src/components/content/StandingsTable.tsx, scripts/backfill-puan.mjs).

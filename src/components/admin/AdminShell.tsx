@@ -27,6 +27,7 @@ const NAV: NavGroup[] = [
       { href: "/admin/takvim-programi", label: "Takvim Programı", icon: "calendar-check", ready: true },
       { href: "/admin/antrenmanlar", label: "Antrenmanlar", icon: "dumbbell", ready: true },
       { href: "/admin/fikstur", label: "Fikstür", icon: "calendar-days", ready: true },
+      { href: "/admin/puan-durumu", label: "Puan Durumu", icon: "trophy", ready: true },
       { href: "/admin/odemeler", label: "Ödemeler", icon: "clipboard-list", ready: true },
     ],
   },
@@ -36,6 +37,8 @@ const NAV: NavGroup[] = [
       { href: "/admin/haberler", label: "Haberler / Blog", icon: "newspaper", ready: true },
       { href: "/admin/medya", label: "Medya Kütüphanesi", icon: "images", ready: true },
       { href: "/admin/formalar", label: "Formalar", icon: "shirt", ready: true },
+      { href: "/admin/kadro", label: "Teknik Ekip & Yönetim", icon: "user-round", ready: true },
+      { href: "/admin/tesisler", label: "Tesisler", icon: "shield-check", ready: true },
     ],
   },
   {

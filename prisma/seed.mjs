@@ -237,6 +237,47 @@ if (existingHC === 0) {
   console.log(`• Ana sayfa kartları zaten var (${existingHC}), atlandı.`);
 }
 
+// --- Teknik ekip & yönetim (yalnızca hiç yoksa) ---
+const existingStaff = await prisma.staffMember.count();
+if (existingStaff === 0) {
+  const STAFF = [
+    // Yönetim
+    { name: "Mehmet Yıldırım", title: "Kulüp Başkanı", group: "yonetim", sort: 0 },
+    { name: "Ayşe Demir", title: "Genel Koordinatör", group: "yonetim", sort: 1 },
+    { name: "Serkan Aydın", title: "Sportif Direktör", group: "yonetim", sort: 2 },
+    { name: "Elif Kaya", title: "Akademi Müdürü", group: "yonetim", sort: 3 },
+    { name: "Burak Şahin", title: "Mali İşler", group: "yonetim", sort: 4 },
+    { name: "Deniz Çelik", title: "Basın & İletişim", group: "yonetim", sort: 5 },
+    // Antrenörler
+    { name: "Serkan Aydın", title: "A Takım — Baş Antrenör", group: "antrenor", licence: "UEFA A", sort: 0 },
+    { name: "Tolga Demir", title: "U-18 — Antrenör", group: "antrenor", licence: "UEFA B", sort: 1 },
+    { name: "Emre Kaya", title: "U-17 — Antrenör", group: "antrenor", licence: "UEFA B", sort: 2 },
+    { name: "Barış Şahin", title: "U-16 — Antrenör", group: "antrenor", licence: "UEFA C", sort: 3 },
+    { name: "Onur Çelik", title: "U-15 — Antrenör", group: "antrenor", licence: "UEFA C", sort: 4 },
+    { name: "Kerem Aslan", title: "Kaleci Antrenörü", group: "antrenor", licence: "TFF Kaleci", sort: 5 },
+    { name: "Mert Polat", title: "Atletik Performans", group: "antrenor", licence: "BESYO", sort: 6 },
+    { name: "Deniz Korkmaz", title: "Fizyoterapist", group: "antrenor", licence: "Lisanslı", sort: 7 },
+  ];
+  for (const s of STAFF) await prisma.staffMember.create({ data: s });
+  console.log(`✔ Teknik ekip & yönetim: ${STAFF.length}`);
+} else {
+  console.log(`• Teknik ekip & yönetim zaten var (${existingStaff}), atlandı.`);
+}
+
+// --- Tesisler (yalnızca hiç yoksa) ---
+const existingFacilities = await prisma.facility.count();
+if (existingFacilities === 0) {
+  const FACILITIES = [
+    { name: "Hibrit Çim Saha", description: "Her hava koşulunda oynanabilen, profesyonel ölçülerde ana antrenman sahası.", capacity: "2× tam saha", features: "Aydınlatma, Hibrit Çim, Otomatik Sulama", sort: 0 },
+    { name: "Gelişim Salonu", description: "Kondisyon, kuvvet ve esneklik çalışmaları için donanımlı kapalı alan.", features: "Kondisyon Aletleri, Ağırlık Alanı", sort: 1 },
+    { name: "Soyunma & Dinlenme", description: "Sporcu ve veliler için konforlu soyunma odaları ve bekleme alanları.", features: "Soyunma Odası, Bekleme Alanı, Duş", sort: 2 },
+  ];
+  for (const f of FACILITIES) await prisma.facility.create({ data: f });
+  console.log(`✔ Tesisler: ${FACILITIES.length}`);
+} else {
+  console.log(`• Tesisler zaten var (${existingFacilities}), atlandı.`);
+}
+
 // --- Athlete login (test) ---
 const existingAthleteUser = await prisma.user.count({ where: { role: "athlete" } });
 if (existingAthleteUser === 0) {

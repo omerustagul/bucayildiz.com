@@ -187,20 +187,26 @@ model MediaCategory {
   sort      Int             @default(0)
   assets    MediaAsset[]
   homeCards HomeMediaCard[]
+  folders   Folder[]
   createdAt DateTime        @default(now())
 }
 
 /// Medya klasörü (iç içe ağaç).
 model Folder {
-  id        String       @id @default(cuid())
-  name      String
-  parentId  String?
-  parent    Folder?      @relation("FolderTree", fields: [parentId], references: [id])
-  children  Folder[]     @relation("FolderTree")
-  assets    MediaAsset[]
-  createdAt DateTime     @default(now())
+  id         String         @id @default(cuid())
+  name       String
+  parentId   String?
+  parent     Folder?        @relation("FolderTree", fields: [parentId], references: [id])
+  children   Folder[]       @relation("FolderTree")
+  assets     MediaAsset[]
+  // Klasör bir kategoriye bağlanabilir; bağlıysa içine eklenen medya o kategoriyi
+  // otomatik devralır (değiştirilemez). Bağlı değilse medya için kategori zorunlu.
+  categoryId String?
+  category   MediaCategory? @relation(fields: [categoryId], references: [id])
+  createdAt  DateTime       @default(now())
 
   @@index([parentId])
+  @@index([categoryId])
 }
 
 /// Medya varlığı (foto/video).
@@ -390,6 +396,8 @@ model SiteSetting {
   mailToAdmin String?
 
   // Görünüm
+  heroImageUrl          String? // ana sayfa hero arka plan görseli (boş = varsayılan)
+  homeGalleryCategoryId String? // "Akademiden Kareler" kategori filtresi (boş = tümü)
   customCursor Boolean @default(false)
   cursorStyle  String  @default("star") // star | ball | whistle | default
   mobileNavAdmin Boolean @default(true) // yönetim panelinde mobil alt gezinme çubuğu
@@ -484,4 +492,47 @@ model MealLog {
 
   @@unique([mealId, athleteId, date])
   @@index([athleteId, date])
+}
+
+/// Teknik ekip / yönetim üyesi — site sayfaları (yonetim, antrenorler) buradan beslenir.
+model StaffMember {
+  id        String   @id @default(cuid())
+  name      String
+  title     String // "Teknik Direktör", "U-15 Antrenörü", "Başkan"...
+  group     String   @default("antrenor") // antrenor | yonetim
+  licence   String? // "UEFA A", "TFF B"...
+  photoUrl  String?
+  bio       String   @default("")
+  sort      Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([group])
+}
+
+/// Tesis — /kurumsal/tesisler buradan beslenir.
+model Facility {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @default("")
+  capacity    String? // "2× tam saha", "300 kişilik tribün"...
+  features    String   @default("") // virgülle ayrılmış özellik listesi
+  photoUrl    String?
+  sort        Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+/// Puan durumu satırı — admin tek tek yönetir; /fikstur/puan-durumu buradan beslenir.
+model StandingRow {
+  id           String   @id @default(cuid())
+  teamName     String
+  isOurs       Boolean  @default(false)
+  played       Int      @default(0)
+  wins         Int      @default(0)
+  draws        Int      @default(0)
+  losses       Int      @default(0)
+  goalsFor     Int      @default(0)
+  goalsAgainst Int      @default(0)
+  points       Int      @default(0)
+  sort         Int      @default(0) // sıralama (1 = lider)
+  createdAt    DateTime @default(now())
 }

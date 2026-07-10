@@ -1,10 +1,20 @@
 import type { Metadata } from "next";
+import { prisma } from "@/lib/prisma";
+import { getSettings } from "@/lib/settings";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section, Prose, StatStrip, FeatureGrid, NavyPanel } from "@/components/content/blocks";
 
 export const metadata: Metadata = { title: "Hakkımızda" };
 
-export default function HakkimizdaPage() {
+export default async function HakkimizdaPage() {
+  const [athleteCount, ageGroupCount, coachCount, settings] = await Promise.all([
+    prisma.athlete.count(),
+    prisma.team.count({ where: { isMain: false } }),
+    prisma.staffMember.count({ where: { group: "antrenor" } }),
+    getSettings(),
+  ]);
+  const foundedYear = settings.foundedYear ?? 2014;
+
   return (
     <>
       <PageHero
@@ -30,10 +40,10 @@ export default function HakkimizdaPage() {
       <Section background="subtle">
         <StatStrip
           stats={[
-            { value: "128", label: "Lisanslı Sporcu" },
-            { value: "5", label: "Yaş Grubu" },
-            { value: "12", label: "Antrenör" },
-            { value: "2014", label: "Kuruluş" },
+            { value: String(athleteCount), label: "Lisanslı Sporcu" },
+            { value: String(ageGroupCount), label: "Yaş Grubu" },
+            { value: String(coachCount), label: "Antrenör" },
+            { value: String(foundedYear), label: "Kuruluş" },
           ]}
         />
       </Section>

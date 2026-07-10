@@ -6,12 +6,12 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
 
-type Card = { id: string; title: string; kind: string; featured: boolean; coverUrl: string | null };
+type Card = { id: string; title: string; kind: string; featured: boolean; coverUrl: string | null; categoryId: string | null };
 
 function PhotoTile({ card }: { card: Card }) {
   return (
     <Link
-      href="/medya/fotograflar"
+      href={card.categoryId ? `/medya/kategori/${card.categoryId}` : "/medya/fotograflar"}
       style={{ position: "relative", display: "block", aspectRatio: "4 / 3", borderRadius: "var(--radius-md)", overflow: "hidden", background: "var(--grad-navy)", border: "1px solid var(--navy-700)", textDecoration: "none" }}
     >
       {card.coverUrl ? (
@@ -36,7 +36,7 @@ export async function MediaSection() {
 
   return (
     <section style={{ background: "var(--surface-subtle)" }}>
-      <div style={{ maxWidth: 1540, margin: "0 auto", padding: "88px clamp(16px, 5vw, 32px)" }}>
+      <div style={{ maxWidth: 1540, margin: "0 auto", padding: "38px clamp(16px, 5vw, 32px)" }}>
         <SectionHeading
           kicker="Medya"
           title="Görseller & Videolar"
@@ -46,7 +46,7 @@ export async function MediaSection() {
         <div className="hp-grid-2" style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 24 }}>
           {/* Featured */}
           <Link
-            href="/medya/videolar"
+            href={featured.categoryId ? `/medya/kategori/${featured.categoryId}` : "/medya/videolar"}
             style={{ position: "relative", display: "block", borderRadius: "var(--radius-lg)", overflow: "hidden", minHeight: 360, background: "var(--grad-navy)", border: "1px solid var(--navy-700)", textDecoration: "none" }}
           >
             {featured.coverUrl && <Image src={featured.coverUrl} alt={featured.title} fill style={{ objectFit: "cover" }} sizes="(max-width: 900px) 100vw, 760px" />}

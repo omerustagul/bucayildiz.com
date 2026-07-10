@@ -15,7 +15,7 @@ export default async function MedyaPage() {
   const countByCat: Record<string, number> = {};
   for (const a of assets) if (a.categoryId) countByCat[a.categoryId] = (countByCat[a.categoryId] ?? 0) + 1;
 
-  const folderNodes: FolderNode[] = folders.map((f) => ({ id: f.id, name: f.name, parentId: f.parentId }));
+  const folderNodes: FolderNode[] = folders.map((f) => ({ id: f.id, name: f.name, parentId: f.parentId, categoryId: f.categoryId }));
   const assetItems: AssetItem[] = assets.map((a) => ({ id: a.id, url: a.url, title: a.title, kind: a.kind, categoryId: a.categoryId, folderId: a.folderId }));
   const categoryItems: CategoryItem[] = categories.map((c) => ({ id: c.id, name: c.name, color: c.color, count: c._count.assets }));
   const cardItems: HomeCardItem[] = cards.map((c) => ({ id: c.id, title: c.title, categoryId: c.categoryId, kind: c.kind, featured: c.featured, coverUrl: c.coverUrl, count: c.categoryId ? countByCat[c.categoryId] ?? 0 : 0 }));

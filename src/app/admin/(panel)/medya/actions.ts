@@ -55,8 +55,19 @@ export async function createMediaAsset(input: unknown): Promise<MediaResult> {
   const parsed = assetSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
+
+  // Kategori kuralı: klasör bir kategoriye bağlıysa medya onu devralır — istemciden
+  // gelen categoryId'ye güvenme, klasörünkiyle EZ. Klasör bağlı değilse (kök yükleme
+  // dahil) kategori seçimi zorunludur.
+  let categoryId = d.categoryId ? d.categoryId : null;
+  if (d.folderId) {
+    const folder = await prisma.folder.findUnique({ where: { id: d.folderId }, select: { categoryId: true } });
+    if (folder?.categoryId) categoryId = folder.categoryId;
+  }
+  if (!categoryId) return { ok: false, error: "Kategori seçiniz." };
+
   await prisma.mediaAsset.create({
-    data: { url: d.url, title: d.title || "", kind: d.kind, categoryId: d.categoryId ? d.categoryId : null, folderId: d.folderId ? d.folderId : null },
+    data: { url: d.url, title: d.title || "", kind: d.kind, categoryId, folderId: d.folderId ? d.folderId : null },
   });
   revalidatePath("/admin/medya");
   revalidatePath("/medya");
@@ -65,10 +76,37 @@ export async function createMediaAsset(input: unknown): Promise<MediaResult> {
 }
 
 // --- Folders ---
-export async function createFolder(name: string, parentId: string | null): Promise<MediaResult> {
+const folderSchema = z.object({
+  name: z.string().trim().min(1, "Klasör adı zorunlu.").max(60),
+  parentId: z.string().trim().optional().or(z.literal("")),
+  categoryId: z.string().trim().optional().or(z.literal("")),
+});
+
+export async function createFolder(input: unknown): Promise<MediaResult> {
   if (!(await authed())) return { ok: false, error: "Yetkisiz." };
-  if (!name.trim()) return { ok: false, error: "Klasör adı zorunlu." };
-  await prisma.folder.create({ data: { name: name.trim(), parentId: parentId || null } });
+  const parsed = folderSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
+  const d = parsed.data;
+  await prisma.folder.create({
+    data: { name: d.name, parentId: d.parentId ? d.parentId : null, categoryId: d.categoryId ? d.categoryId : null },
+  });
+  revalidatePath("/admin/medya");
+  revalidatePath("/medya");
+  revalidatePath("/");
+  return { ok: true };
+}
+
+const folderUpdateSchema = folderSchema.omit({ parentId: true });
+
+export async function updateFolder(id: string, input: unknown): Promise<MediaResult> {
+  if (!(await authed())) return { ok: false, error: "Yetkisiz." };
+  const parsed = folderUpdateSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
+  const d = parsed.data;
+  await prisma.folder.update({
+    where: { id },
+    data: { name: d.name, categoryId: d.categoryId ? d.categoryId : null },
+  });
   revalidatePath("/admin/medya");
   revalidatePath("/medya");
   revalidatePath("/");

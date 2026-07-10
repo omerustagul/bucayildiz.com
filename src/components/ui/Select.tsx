@@ -16,6 +16,7 @@ export function Select({
   defaultValue,
   onChange,
   name,
+  disabled = false,
   containerStyle = {},
   style = {},
 }: {
@@ -29,6 +30,7 @@ export function Select({
   defaultValue?: string;
   onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   name?: string;
+  disabled?: boolean;
   containerStyle?: React.CSSProperties;
   style?: React.CSSProperties;
 }) {
@@ -49,6 +51,7 @@ export function Select({
           value={value}
           defaultValue={defaultValue}
           onChange={onChange}
+          disabled={disabled}
           onFocus={() => setFocus(true)}
           onBlur={() => setFocus(false)}
           style={{
@@ -57,13 +60,13 @@ export function Select({
             WebkitAppearance: "none",
             fontFamily: "var(--font-body)",
             fontSize: 15,
-            color: "var(--ink-900)",
-            background: "#fff",
+            color: disabled ? "var(--ink-500)" : "var(--ink-900)",
+            background: disabled ? "var(--ink-50)" : "#fff",
             border: `1.5px solid ${focus ? "var(--navy-700)" : "var(--ink-200)"}`,
             borderRadius: "var(--radius-sm)",
             padding: "12px 38px 12px 12px",
             boxShadow: focus ? "var(--ring-focus)" : "none",
-            cursor: "pointer",
+            cursor: disabled ? "not-allowed" : "pointer",
             transition: "all var(--dur-fast) var(--ease-out)",
             ...style,
           }}
