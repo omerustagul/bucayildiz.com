@@ -99,6 +99,26 @@ ilgili `test`) temiz olmalı.
 - **Web Push / bildirim gövdesine sağlık veya performans verisi yazma.**
 - Onay metni gövdeleri (`ConsentDocument.body`) şu an TASLAK — avukat onayı bekler.
 
+## Skill yönlendirme (her oturumda geçerli)
+
+Komutlar `.claude/commands/` altında ince sarmalayıcıdır — içerik yalnız
+çağrılınca yüklenir (token tasarrufu). Eşleme:
+
+| Komut | Skill / akış |
+|---|---|
+| `/plan` | `superpowers:brainstorming` → onay → `writing-plans` |
+| `/uygula` | `superpowers:subagent-driven-development` (builder=`bucayildiz-builder`) |
+| `/tasarim` | `impeccable` (mod + hedef argümanı) |
+| `/denetle` | `bucayildiz-reviewer` + `code-review` |
+| `/hafiza` | claude-mem `mem-search` / kalıcı not |
+| `/gozlem` | `task-observer` (skill fırsatı çıkarımı) |
+| `/rota` | bu tabloyu özetle |
+
+Komutsuz isteklerde otomatik eşle: yeni özellik → önce `/plan` akışı; UI
+tasarım/cila → `impeccable`; geçmiş oturum sorusu → önce `mem-search`.
+Çok adımlı işe başlarken `task-observer`ı sessizce etkinleştir (gözlem modu —
+akışı kesme). Oturumlar claude-mem tarafından otomatik özetlenir.
+
 ## Araç kullanımı
 
 - Next/React/Prisma/Zod API soruları → **`context7` MCP** (güncel doküman).
