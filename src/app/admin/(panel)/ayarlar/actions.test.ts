@@ -5,7 +5,7 @@ vi.mock("server-only", () => ({})); // storage.ts (isOwnStorageUrl) yüklensin
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 const H = vi.hoisted(() => ({
-  saved: "__unset__" as unknown,
+  saved: null as Record<string, unknown> | null,
   requireAdmin: vi.fn(async () => ({ role: "admin", sub: "u1", name: "A", email: "" })),
 }));
 
@@ -13,44 +13,55 @@ vi.mock("@/lib/auth", () => ({ requireAdmin: H.requireAdmin }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     siteSetting: {
-      upsert: vi.fn(async ({ update }: { update: { homeGalleryFeaturedUrl: unknown } }) => {
-        H.saved = update.homeGalleryFeaturedUrl;
+      upsert: vi.fn(async ({ update }: { update: Record<string, unknown> }) => {
+        H.saved = update;
         return {};
       }),
     },
   },
 }));
 
-import { setHomeGalleryFeatured } from "./actions";
+import { setHomeGalleryFeatured, setHeroMobileImage } from "./actions";
 
 beforeEach(() => {
-  H.saved = "__unset__";
+  H.saved = null;
   H.requireAdmin.mockClear();
 });
 
 describe("setHomeGalleryFeatured — yetki + URL allowlist", () => {
-  it("kendi depolamamızdan (/uploads/) görsel kaydedilir + requireAdmin'den geçer", async () => {
+  it("kendi /uploads/ görseli kaydedilir + requireAdmin'den geçer", async () => {
     const r = await setHomeGalleryFeatured("/uploads/kare.webp");
     expect(r).toEqual({ ok: true });
-    expect(H.saved).toBe("/uploads/kare.webp");
+    expect(H.saved?.homeGalleryFeaturedUrl).toBe("/uploads/kare.webp");
     expect(H.requireAdmin).toHaveBeenCalled();
   });
-
-  it("keyfi HARİCİ URL REDDEDİLİR (allowlist), kaydedilmez", async () => {
+  it("keyfi HARİCİ URL REDDEDİLİR, kaydedilmez", async () => {
     const r = await setHomeGalleryFeatured("https://evil.example/pixel.jpg");
     expect(r).toMatchObject({ ok: false });
-    expect(H.saved).toBe("__unset__");
+    expect(H.saved).toBeNull();
   });
-
-  it("null seçimi kaldırır (homeGalleryFeaturedUrl = null)", async () => {
+  it("null seçimi kaldırır", async () => {
     const r = await setHomeGalleryFeatured(null);
     expect(r).toEqual({ ok: true });
+    expect(H.saved?.homeGalleryFeaturedUrl).toBeNull();
+  });
+});
+
+describe("setHeroMobileImage — yetki + URL allowlist", () => {
+  it("kendi /uploads/ görseli kaydedilir + requireAdmin'den geçer", async () => {
+    const r = await setHeroMobileImage("/uploads/mobil.webp");
+    expect(r).toEqual({ ok: true });
+    expect(H.saved?.heroMobileImageUrl).toBe("/uploads/mobil.webp");
+    expect(H.requireAdmin).toHaveBeenCalled();
+  });
+  it("keyfi HARİCİ URL REDDEDİLİR, kaydedilmez", async () => {
+    const r = await setHeroMobileImage("https://evil.example/m.jpg");
+    expect(r).toMatchObject({ ok: false });
     expect(H.saved).toBeNull();
   });
-
-  it("boş string de kaldırır", async () => {
-    const r = await setHomeGalleryFeatured("");
+  it("boş string seçimi kaldırır (mobil hero → null → fallback)", async () => {
+    const r = await setHeroMobileImage("");
     expect(r).toEqual({ ok: true });
-    expect(H.saved).toBeNull();
+    expect(H.saved?.heroMobileImageUrl).toBeNull();
   });
 });

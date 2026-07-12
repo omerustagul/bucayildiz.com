@@ -52,6 +52,7 @@ export default async function AyarlarPage() {
         mediaCategories={categories}
         mediaAssets={assets}
         homeGalleryFeaturedUrl={str(s.homeGalleryFeaturedUrl)}
+        heroMobileImageUrl={str(s.heroMobileImageUrl)}
       />
     </>
   );

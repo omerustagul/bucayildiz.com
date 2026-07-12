@@ -8,30 +8,38 @@ import { isOwnStorageUrl } from "@/lib/storage";
 
 export type SettingsResult = { ok: true } | { ok: false; error: string };
 
-const featuredSchema = z.string().trim().max(500).nullable().optional();
+const imageUrlSchema = z.string().trim().max(500).nullable().optional();
 
 /**
- * "Akademiden Kareler" öne çıkan görselini kaydeder (medya seçici popup'ından).
+ * Tek bir görsel-URL ayar alanını kaydeder (öne çıkan görsel / mobil hero).
  * URL varsa yalnız kendi depolamamızdan olabilir (isOwnStorageUrl). null/boş =
- * seçimi kaldır. saveSettings bu alana dokunmaz — bağımsız kaydedilir.
+ * kaldır. saveSettings bu alanlara dokunmaz — bağımsız kaydedilir (medya seçici /
+ * FileDrop anında kaydeder).
  */
-export async function setHomeGalleryFeatured(input: unknown): Promise<SettingsResult> {
+async function saveImageSetting(field: "homeGalleryFeaturedUrl" | "heroMobileImageUrl", input: unknown): Promise<SettingsResult> {
   await requireAdmin();
-  const parsed = featuredSchema.safeParse(input);
+  const parsed = imageUrlSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Geçersiz veri." };
   const raw = parsed.data?.trim() || null;
   if (raw && !isOwnStorageUrl(raw)) return { ok: false, error: "Geçersiz görsel adresi." };
+  const data = { [field]: raw } as { homeGalleryFeaturedUrl?: string | null; heroMobileImageUrl?: string | null };
   try {
-    await prisma.siteSetting.upsert({
-      where: { id: "site" },
-      update: { homeGalleryFeaturedUrl: raw },
-      create: { id: "site", homeGalleryFeaturedUrl: raw },
-    });
+    await prisma.siteSetting.upsert({ where: { id: "site" }, update: data, create: { id: "site", ...data } });
     revalidatePath("/", "layout");
     return { ok: true };
   } catch {
     return { ok: false, error: "Kaydedilemedi." };
   }
+}
+
+/** "Akademiden Kareler" öne çıkan görseli (medya seçici popup'ından). */
+export async function setHomeGalleryFeatured(input: unknown): Promise<SettingsResult> {
+  return saveImageSetting("homeGalleryFeaturedUrl", input);
+}
+
+/** Mobil (1:1) hero görseli — boşsa masaüstü hero'ya düşer (bkz. TrialHero). */
+export async function setHeroMobileImage(input: unknown): Promise<SettingsResult> {
+  return saveImageSetting("heroMobileImageUrl", input);
 }
 
 const str = z.string().trim().max(300).optional().or(z.literal(""));

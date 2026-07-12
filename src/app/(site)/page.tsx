@@ -12,7 +12,7 @@ export default async function HomePage() {
   const settings = await getSettings();
   return (
     <>
-      <TrialHero href="/ucretsiz-deneme" heroImageUrl={settings.heroImageUrl} />
+      <TrialHero href="/ucretsiz-deneme" heroImageUrl={settings.heroImageUrl} heroMobileImageUrl={settings.heroMobileImageUrl} />
       <HowItWorksSection />
       <AcademyFramesSection />
       <NewsSection />

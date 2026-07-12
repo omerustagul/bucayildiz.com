@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { Icon, type IconName } from "@/lib/icons";
+import { heroImageVars } from "@/components/home/heroImage";
 
 /**
  * Buca Yıldız — Anasayfa üst hero: "Ücretsiz Futbolcu Gelişim Analizi".
@@ -23,8 +24,10 @@ const TESTS: { icon: IconName; label: string }[] = [
   { icon: "gauge", label: "10-20-30 m Sprint" },
 ];
 
-export function TrialHero({ href = "/ucretsiz-deneme", heroImageUrl }: { href?: string; heroImageUrl?: string | null }) {
+export function TrialHero({ href = "/ucretsiz-deneme", heroImageUrl, heroMobileImageUrl }: { href?: string; heroImageUrl?: string | null; heroMobileImageUrl?: string | null }) {
   const reduce = useReducedMotion();
+  // Masaüstü 16:9 + mobil 1:1; mobil boşsa masaüstüne düşer (fallback).
+  const heroImg = heroImageVars(heroImageUrl, heroMobileImageUrl);
 
   // Zarif giriş: fade + hafif yukarı kayma; testler 70ms arayla belirir.
   const fadeUp = reduce
@@ -45,9 +48,10 @@ export function TrialHero({ href = "/ucretsiz-deneme", heroImageUrl }: { href?: 
         position: "relative",
         overflow: "hidden",
         color: "#fff",
-        // Özel görsel ayarlardan gelir; boşsa varsayılan marka görselleri
-        ["--hero-img" as string]: `url("${heroImageUrl || "/brand/hero-trial.jpg"}")`,
-        ["--hero-img-m" as string]: `url("${heroImageUrl || "/brand/hero-trial-square.jpg"}")`,
+        // Özel görsel ayarlardan gelir; boşsa varsayılan marka görselleri.
+        // Mobil (--hero-img-m) 1:1 mobil görseli; yoksa masaüstüne düşer.
+        ["--hero-img" as string]: heroImg.desktop,
+        ["--hero-img-m" as string]: heroImg.mobile,
       }}
     >
       {/* Arka plan katmanı — açılışta yumuşak zoom-out (transform, bg'den ayrık) */}

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { Icon, BrandGlyph, type IconName, type BrandName } from "@/lib/icons";
 import { SOCIAL_PLATFORMS, parseSocialLinks, type SocialLink } from "@/lib/social";
-import { saveSettings, setHomeGalleryFeatured } from "@/app/admin/(panel)/ayarlar/actions";
+import { saveSettings, setHomeGalleryFeatured, setHeroMobileImage } from "@/app/admin/(panel)/ayarlar/actions";
 
 export type SettingsFormValues = {
   clubName: string; clubShortName: string; logoUrl: string; foundedYear: string;
@@ -135,7 +135,7 @@ function SocialLinksEditor({ value, onChange }: { value: SocialLink[]; onChange:
   );
 }
 
-export function SettingsForm({ initial, smtpPassSet, mediaCategories = [], mediaAssets = [], homeGalleryFeaturedUrl = "" }: { initial: SettingsFormValues; smtpPassSet: boolean; mediaCategories?: MediaCategoryOption[]; mediaAssets?: MediaAssetOption[]; homeGalleryFeaturedUrl?: string }) {
+export function SettingsForm({ initial, smtpPassSet, mediaCategories = [], mediaAssets = [], homeGalleryFeaturedUrl = "", heroMobileImageUrl = "" }: { initial: SettingsFormValues; smtpPassSet: boolean; mediaCategories?: MediaCategoryOption[]; mediaAssets?: MediaAssetOption[]; homeGalleryFeaturedUrl?: string; heroMobileImageUrl?: string }) {
   const router = useRouter();
   const [tab, setTab] = useState("kulup");
   const [v, setV] = useState<SettingsFormValues>(initial);
@@ -153,6 +153,14 @@ export function SettingsForm({ initial, smtpPassSet, mediaCategories = [], media
         setPickerOpen(false);
         router.refresh();
       } else setMsg({ ok: false, text: res.error });
+    });
+  // Mobil (1:1) hero görselini anında kaydeder (FileDrop yükler → URL'i sakla).
+  const [heroMobileUrl, setHeroMobileUrl] = useState(heroMobileImageUrl);
+  const saveHeroMobile = (url: string | null) =>
+    start(async () => {
+      const res = await setHeroMobileImage(url);
+      if (res.ok) { setHeroMobileUrl(url ?? ""); router.refresh(); }
+      else setMsg({ ok: false, text: res.error });
     });
   const set = <K extends keyof SettingsFormValues>(k: K, val: SettingsFormValues[K]) => { setV((s) => ({ ...s, [k]: val })); setMsg(null); };
 
@@ -249,9 +257,16 @@ export function SettingsForm({ initial, smtpPassSet, mediaCategories = [], media
             {/* Ana sayfa: hero arka planı + Akademiden Kareler kategorisi */}
             <div>
               <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 15, color: "var(--text-strong)" }}>Ana Sayfa Hero Görseli</div>
-              <div style={{ fontSize: 13, color: "var(--text-muted)", margin: "3px 0 10px" }}>Trial hero alanının arka plan görseli. Boş bırakılırsa varsayılan marka görseli kullanılır.</div>
-              <div style={{ maxWidth: 420 }}>
-                <FileDrop value={v.heroImageUrl || null} onChange={(url) => set("heroImageUrl", url ?? "")} label="Hero görseli yükle" aspect="16 / 9" />
+              <div style={{ fontSize: 13, color: "var(--text-muted)", margin: "3px 0 12px" }}>Masaüstünde 16:9 yatay görsel; mobilde 1:1 kare görsel gösterilir. Mobil seçilmezse masaüstü görseli her yerde kullanılır. Boşsa varsayılan marka görselleri.</div>
+              <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "flex-start" }}>
+                <div style={{ width: 360, maxWidth: "100%" }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink-600)", marginBottom: 6 }}>Masaüstü (16:9)</div>
+                  <FileDrop value={v.heroImageUrl || null} onChange={(url) => set("heroImageUrl", url ?? "")} label="Hero görseli yükle" aspect="16 / 9" />
+                </div>
+                <div style={{ width: 190, maxWidth: "100%" }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink-600)", marginBottom: 6 }}>Mobil (1:1)</div>
+                  <FileDrop value={heroMobileUrl || null} onChange={(url) => saveHeroMobile(url)} label="Mobil görsel" aspect="1 / 1" />
+                </div>
               </div>
             </div>
 
