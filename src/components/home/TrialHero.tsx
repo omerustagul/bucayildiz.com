@@ -20,6 +20,7 @@ const TESTS: { icon: IconName; label: string }[] = [
   { icon: "zap", label: "505 Çeviklik" },
   { icon: "user-round", label: "Boy-Kilo Analizi" },
   { icon: "dumbbell", label: "Yağ-Kas Oranı Ölçümü" },
+  { icon: "footprints", label: "Streching Testi" },
   { icon: "arrow-up-from-line", label: "Dikey Sıçrama" },
   { icon: "gauge", label: "10-20-30 m Sprint" },
 ];
