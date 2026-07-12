@@ -127,6 +127,7 @@ model Athlete {
   assignments        AthleteAssignment[]
   nutritionPlans     NutritionPlan[]
   mealLogs           MealLog[]
+  notifications      Notification[]
   createdAt    DateTime @default(now())
 
   @@index([teamId])
@@ -406,7 +407,9 @@ model SiteSetting {
 
   // Görünüm
   heroImageUrl          String? // ana sayfa hero arka plan görseli (boş = varsayılan)
+  heroMobileImageUrl    String? // mobil (1:1) hero görseli (boş = heroImageUrl'e düşer)
   homeGalleryCategoryId String? // "Akademiden Kareler" kategori filtresi (boş = tümü)
+  homeGalleryFeaturedUrl String? // "Akademiden Kareler" öne-çıkan görsel (medya kütüphanesinden)
   customCursor Boolean @default(false)
   cursorStyle  String  @default("star") // star | ball | whistle | default
   mobileNavAdmin Boolean @default(true) // yönetim panelinde mobil alt gezinme çubuğu
@@ -526,8 +529,12 @@ model Facility {
   capacity    String? // "2× tam saha", "300 kişilik tribün"...
   features    String   @default("") // virgülle ayrılmış özellik listesi
   photoUrl    String?
+  /// true ise Takvim Programı'nda "saha" seçeneği olarak listelenir (elle işaretlenir).
+  isPitch     Boolean  @default(false)
   sort        Int      @default(0)
   createdAt   DateTime @default(now())
+
+  @@index([isPitch])
 }
 
 /// Puan durumu satırı — admin tek tek yönetir; /fikstur/puan-durumu buradan beslenir.
@@ -544,4 +551,65 @@ model StandingRow {
   points       Int      @default(0)
   sort         Int      @default(0) // sıralama (1 = lider)
   createdAt    DateTime @default(now())
+}
+
+/// Sporcu/veli paneli bildirim feed'i. BİRİNCİL kanal — her sistem olayı (antrenman,
+/// maç, ölçüm, mesaj, beslenme) ve admin bildirimi önce buraya yazılır; Web Push
+/// opsiyonel/non-blocking ek katmandır.
+/// KVKK: body'ye sağlık/performans DEĞERİ yazılmaz (yalnız "yeni ölçümün eklendi" gibi).
+model Notification {
+  id        String    @id @default(cuid())
+  athleteId String
+  athlete   Athlete   @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  type      String // training | match | measurement | message | nutrition | admin
+  title     String
+  body      String    @default("")
+  url       String? // site içi yol (internalPath ile doğrulanır)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([athleteId, createdAt])
+  @@index([athleteId, readAt])
+}
+
+/// İş ilanı — /kurumsal/kariyer buradan beslenir; admin panelden yönetilir.
+model JobPosting {
+  id          String           @id @default(cuid())
+  title       String
+  department  String           @default("")
+  location    String           @default("")
+  employment  String           @default("full-time") // full-time | part-time | stajyer
+  description String           @default("")
+  active      Boolean          @default(true)
+  sort        Int              @default(0)
+  createdAt   DateTime         @default(now())
+  applications JobApplication[]
+
+  @@index([active])
+}
+
+/// İş başvurusu (public form). KVKK: aydınlatma+rıza kayıt-İÇİNDE denetim izli
+/// tutulur (metin hash + sürüm + an + IP/UA) — sporcu tarafının çok-belgeli
+/// ConsentRecord sistemi burada TEKRARLANMAZ (tek seferlik, yetişkin başvuran).
+model JobApplication {
+  id              String      @id @default(cuid())
+  postingId       String?
+  posting         JobPosting? @relation(fields: [postingId], references: [id], onDelete: SetNull)
+  name            String
+  email           String
+  phone           String?
+  message         String      @default("")
+  cvUrl           String? // isOwnStorageUrl ile doğrulanır (PDF/görsel)
+  status          String      @default("new") // new | reviewing | closed
+  // KVKK denetim izi (kayıt-içi)
+  consentTextHash String // gösterilen aydınlatma+rıza metninin SHA-256'sı
+  consentVersion  String // metin sürümü (ispat)
+  consentedAt     DateTime    @default(now())
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime    @default(now())
+
+  @@index([postingId])
+  @@index([status])
+  @@index([createdAt])
 }
