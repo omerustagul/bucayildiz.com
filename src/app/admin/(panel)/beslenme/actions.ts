@@ -45,10 +45,10 @@ export async function createNutritionPlan(input: unknown): Promise<{ error?: str
 }
 
 const basicsSchema = z.object({
-  title: z.string().trim().min(1, "Başlık zorunlu.").max(120),
+  title: z.string().trim().min(1, "Başlık zorunlu.").max(120, "Başlık en fazla 120 karakter olabilir."),
   startDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçerli bir tarih seçiniz."),
-  endDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
-  notes: z.string().trim().max(500).optional().or(z.literal("")),
+  endDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçerli bir bitiş tarihi giriniz.").optional().or(z.literal("")),
+  notes: z.string().trim().max(500, "Not en fazla 500 karakter olabilir.").optional().or(z.literal("")),
 });
 
 export async function updatePlanBasics(id: string, input: unknown): Promise<{ error?: string } | void> {

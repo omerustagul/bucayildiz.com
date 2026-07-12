@@ -150,7 +150,13 @@ export const attendanceSaveSchema = z.object({
 });
 
 // --- Sporcu Takip: Beslenme + Atama ---
-const macroField = z.number().int().min(0).max(10000).nullable().optional();
+const macroField = z
+  .number({ message: "Sayı giriniz." })
+  .int("Tam sayı giriniz (ondalık olamaz).")
+  .min(0, "Negatif olamaz.")
+  .max(10000, "En fazla 10000 olabilir.")
+  .nullable()
+  .optional();
 
 /** Yükleme URL'i güvenlik kısıtı: yalnız kendi upload yolumuz (/uploads/...)
  *  veya https:// (S3 public base). javascript:/data: gibi şemaları engeller —
@@ -163,26 +169,26 @@ const uploadUrlField = z
   .optional();
 
 export const nutritionMealSchema = z.object({
-  name: z.string().trim().min(1, "Öğün adı zorunlu.").max(60),
-  time: z.string().trim().max(5).optional().or(z.literal("")),
-  content: z.string().trim().max(500).optional().or(z.literal("")),
+  name: z.string().trim().min(1, "Öğün adı zorunlu.").max(60, "Öğün adı en fazla 60 karakter olabilir."),
+  time: z.string().trim().max(5, "Geçersiz saat biçimi.").optional().or(z.literal("")),
+  content: z.string().trim().max(500, "İçerik en fazla 500 karakter olabilir.").optional().or(z.literal("")),
   kcal: macroField, protein: macroField, carbs: macroField, fat: macroField,
 });
 
 export const nutritionPlanSchema = z.object({
   athleteId: z.string().min(1, "Sporcu seçiniz."),
-  title: z.string().trim().min(1, "Başlık zorunlu.").max(120),
+  title: z.string().trim().min(1, "Başlık zorunlu.").max(120, "Başlık en fazla 120 karakter olabilir."),
   startDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçerli bir tarih seçiniz."),
-  endDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
-  notes: z.string().trim().max(500).optional().or(z.literal("")),
-  meals: z.array(nutritionMealSchema).min(1, "En az bir öğün ekleyin.").max(12),
+  endDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçerli bir bitiş tarihi giriniz.").optional().or(z.literal("")),
+  notes: z.string().trim().max(500, "Not en fazla 500 karakter olabilir.").optional().or(z.literal("")),
+  meals: z.array(nutritionMealSchema).min(1, "En az bir öğün ekleyin.").max(12, "En fazla 12 öğün eklenebilir."),
 });
 
 export const mealLogSchema = z.object({
-  mealId: z.string().min(1),
+  mealId: z.string().min(1, "Geçersiz öğün."),
   date: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçerli bir tarih seçiniz."),
   photoUrl: uploadUrlField,
-  note: z.string().trim().max(400).optional().or(z.literal("")),
+  note: z.string().trim().max(400, "Not en fazla 400 karakter olabilir.").optional().or(z.literal("")),
   kcal: macroField, protein: macroField, carbs: macroField, fat: macroField,
 });
 
