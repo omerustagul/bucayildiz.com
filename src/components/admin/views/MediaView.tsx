@@ -19,7 +19,7 @@ import { UploadDropzone } from "./UploadDropzone";
 export type FolderNode = { id: string; name: string; parentId: string | null; categoryId: string | null };
 export type AssetItem = { id: string; url: string; title: string; kind: string; categoryId: string | null; folderId: string | null };
 export type CategoryItem = { id: string; name: string; color: string; count: number };
-export type HomeCardItem = { id: string; title: string; categoryId: string | null; kind: string; featured: boolean; coverUrl: string | null; count: number };
+export type HomeCardItem = { id: string; title: string; categoryId: string | null; kind: string; featured: boolean; coverUrl: string | null; coverVideoUrl: string | null; count: number };
 
 /* ---------- Folder tree ---------- */
 function FolderTree({ folders, counts, active, categories, onPick, onEdit }: { folders: FolderNode[]; counts: Record<string, number>; active: string; categories: CategoryItem[]; onPick: (id: string) => void; onEdit: (f: FolderNode) => void }) {
@@ -382,6 +382,7 @@ function CardDrawer({ card, categories, onClose }: { card: HomeCardItem | null; 
     kind: card?.kind ?? "photo",
     featured: card?.featured ?? false,
     coverUrl: card?.coverUrl ?? "",
+    coverVideoUrl: card?.coverVideoUrl ?? "",
   });
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -389,7 +390,7 @@ function CardDrawer({ card, categories, onClose }: { card: HomeCardItem | null; 
   const save = () =>
     startTransition(async () => {
       setError(null);
-      const payload = { title: v.title, categoryId: v.categoryId, kind: v.kind, featured: v.featured, coverUrl: v.coverUrl || null };
+      const payload = { title: v.title, categoryId: v.categoryId, kind: v.kind, featured: v.featured, coverUrl: v.coverUrl || null, coverVideoUrl: v.coverVideoUrl || null };
       const res = isNew ? await createHomeCard(payload) : await updateHomeCard(card!.id, payload);
       if (res.ok) {
         onClose();
@@ -431,7 +432,10 @@ function CardDrawer({ card, categories, onClose }: { card: HomeCardItem | null; 
         <Field label="Kart Adı" required><TextInput value={v.title} onChange={(e) => set("title", e.target.value)} /></Field>
         <Select label="Tür" options={[{ value: "photo", label: "Fotoğraf" }, { value: "video", label: "Video" }]} value={v.kind} onChange={(e) => set("kind", e.target.value)} />
         <Select label="Kategori" hint="Bu kategorideki medya karta otomatik dolar" placeholder="Seç" options={categories.map((c) => ({ value: c.id, label: c.name }))} value={v.categoryId} onChange={(e) => set("categoryId", e.target.value)} />
-        <Field label="Kapak Görseli"><FileDrop value={v.coverUrl || null} onChange={(url) => set("coverUrl", url ?? "")} label="Kapak seç" aspect="16 / 10" /></Field>
+        <Field label={v.kind === "video" ? "Kapak Görseli (poster)" : "Kapak Görseli"}><FileDrop value={v.coverUrl || null} onChange={(url) => set("coverUrl", url ?? "")} label="Kapak seç" aspect="16 / 10" /></Field>
+        {v.kind === "video" && (
+          <Field label="Kapak Videosu"><FileDrop kind="video" icon="play" value={v.coverVideoUrl || null} onChange={(url) => set("coverVideoUrl", url ?? "")} label="Video seç (MP4/WebM · 30MB)" aspect="16 / 9" /></Field>
+        )}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ fontSize: 13.5, color: "var(--ink-600)" }}>Öne çıkan kart (büyük gösterim)</span>
           <Switch checked={v.featured} onChange={(n) => set("featured", n)} />

@@ -18,7 +18,7 @@ export default async function MedyaPage() {
   const folderNodes: FolderNode[] = folders.map((f) => ({ id: f.id, name: f.name, parentId: f.parentId, categoryId: f.categoryId }));
   const assetItems: AssetItem[] = assets.map((a) => ({ id: a.id, url: a.url, title: a.title, kind: a.kind, categoryId: a.categoryId, folderId: a.folderId }));
   const categoryItems: CategoryItem[] = categories.map((c) => ({ id: c.id, name: c.name, color: c.color, count: c._count.assets }));
-  const cardItems: HomeCardItem[] = cards.map((c) => ({ id: c.id, title: c.title, categoryId: c.categoryId, kind: c.kind, featured: c.featured, coverUrl: c.coverUrl, count: c.categoryId ? countByCat[c.categoryId] ?? 0 : 0 }));
+  const cardItems: HomeCardItem[] = cards.map((c) => ({ id: c.id, title: c.title, categoryId: c.categoryId, kind: c.kind, featured: c.featured, coverUrl: c.coverUrl, coverVideoUrl: c.coverVideoUrl, count: c.categoryId ? countByCat[c.categoryId] ?? 0 : 0 }));
 
   return <MediaView folders={folderNodes} assets={assetItems} categories={categoryItems} cards={cardItems} />;
 }

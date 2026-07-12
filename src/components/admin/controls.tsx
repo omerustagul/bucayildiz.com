@@ -206,6 +206,7 @@ export function FileDrop({
   aspect = "16 / 10",
   compact = false,
   icon = "image",
+  kind = "image",
   style = {},
 }: {
   value?: string | null;
@@ -215,6 +216,8 @@ export function FileDrop({
   aspect?: string;
   compact?: boolean;
   icon?: IconName;
+  /** "video" → MP4/WebM yükler (kind=video, 30MB); varsayılan görsel. */
+  kind?: "image" | "video";
   style?: React.CSSProperties;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -228,6 +231,7 @@ export function FileDrop({
     try {
       const fd = new FormData();
       fd.append("file", file);
+      fd.append("kind", kind);
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Yükleme başarısız.");
@@ -270,7 +274,11 @@ export function FileDrop({
       >
         {value ? (
           <>
-            <Image src={value} alt="" fill style={{ objectFit: "contain" }} sizes="480px" />
+            {kind === "video" ? (
+              <video src={value} muted loop playsInline autoPlay style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <Image src={value} alt="" fill style={{ objectFit: "contain" }} sizes="480px" />
+            )}
             <button
               type="button"
               onClick={(e) => {
@@ -295,7 +303,7 @@ export function FileDrop({
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif"
+        accept={kind === "video" ? "video/mp4,video/webm" : "image/jpeg,image/png,image/webp,image/gif"}
         style={{ display: "none" }}
         onChange={(e) => {
           const f = e.target.files?.[0];

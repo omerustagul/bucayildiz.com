@@ -23,8 +23,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Dosya bulunamadı." }, { status: 400 });
   }
 
+  const kind = form.get("kind") === "video" ? "video" : "image";
+  // Video yükleme yalnız admin (30MB, kapak videosu); sporcu yalnız görsel yükler.
+  if (kind === "video" && !isAdmin) {
+    return NextResponse.json({ error: "Video yükleme yetkiniz yok." }, { status: 403 });
+  }
+
   try {
-    const { url } = await saveUpload(file);
+    const { url } = await saveUpload(file, { kind });
     return NextResponse.json({ url });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Yükleme başarısız.";

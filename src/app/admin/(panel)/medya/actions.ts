@@ -129,6 +129,7 @@ const cardSchema = z.object({
   kind: z.enum(["photo", "video"]).default("photo"),
   featured: z.boolean().default(false),
   coverUrl: z.string().trim().max(500).optional().nullable(),
+  coverVideoUrl: z.string().trim().max(500).optional().nullable(),
 });
 
 /** Kapak URL'i (varsa) yalnız kendi depolamamızdan olabilir — keyfi harici
@@ -141,6 +142,8 @@ function cardData(d: z.infer<typeof cardSchema>) {
     kind: d.kind,
     featured: d.featured,
     coverUrl: d.coverUrl && d.coverUrl.trim() ? d.coverUrl : null,
+    // Video URL yalnız video kartta anlamlı; foto kartta null'a çekilir.
+    coverVideoUrl: d.kind === "video" && d.coverVideoUrl && d.coverVideoUrl.trim() ? d.coverVideoUrl : null,
   };
 }
 
@@ -150,6 +153,7 @@ export async function createHomeCard(input: unknown): Promise<MediaResult> {
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
   if (d.coverUrl && !isOwnStorageUrl(d.coverUrl)) return { ok: false, error: "Geçersiz kapak adresi." };
+  if (d.coverVideoUrl && !isOwnStorageUrl(d.coverVideoUrl)) return { ok: false, error: "Geçersiz video adresi." };
   // Sona ekle: mevcut en yüksek sort + 1.
   const max = await prisma.homeMediaCard.aggregate({ _max: { sort: true } });
   try {
@@ -169,6 +173,7 @@ export async function updateHomeCard(id: string, input: unknown): Promise<MediaR
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
   if (d.coverUrl && !isOwnStorageUrl(d.coverUrl)) return { ok: false, error: "Geçersiz kapak adresi." };
+  if (d.coverVideoUrl && !isOwnStorageUrl(d.coverVideoUrl)) return { ok: false, error: "Geçersiz video adresi." };
   try {
     await prisma.homeMediaCard.update({ where: { id }, data: cardData(d) });
   } catch {

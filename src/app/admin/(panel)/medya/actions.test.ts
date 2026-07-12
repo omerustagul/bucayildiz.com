@@ -63,6 +63,24 @@ describe("createHomeCard — yetki + URL allowlist + boş durum", () => {
     expect(H.created[0].coverUrl).toBeNull();
     expect(H.created[0].kind).toBe("video");
   });
+
+  it("video kartta kendi depolamamızdan coverVideoUrl kabul edilir", async () => {
+    const r = await createHomeCard({ title: "Özet", kind: "video", coverUrl: "/uploads/p.webp", coverVideoUrl: "/uploads/v.mp4" });
+    expect(r).toEqual({ ok: true });
+    expect(H.created[0].coverVideoUrl).toBe("/uploads/v.mp4");
+  });
+
+  it("harici coverVideoUrl REDDEDİLİR (allowlist)", async () => {
+    const r = await createHomeCard({ title: "Özet", kind: "video", coverVideoUrl: "https://evil.example/x.mp4" });
+    expect(r).toMatchObject({ ok: false });
+    expect(H.created).toHaveLength(0);
+  });
+
+  it("foto kartında coverVideoUrl null'a çekilir (video değil)", async () => {
+    const r = await createHomeCard({ title: "Foto", kind: "photo", coverUrl: "/uploads/p.webp", coverVideoUrl: "/uploads/v.mp4" });
+    expect(r).toEqual({ ok: true });
+    expect(H.created[0].coverVideoUrl).toBeNull();
+  });
 });
 
 describe("deleteHomeCard", () => {

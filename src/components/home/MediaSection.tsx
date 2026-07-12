@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
 
-type Card = { id: string; title: string; kind: string; featured: boolean; coverUrl: string | null; categoryId: string | null };
+type Card = { id: string; title: string; kind: string; featured: boolean; coverUrl: string | null; coverVideoUrl: string | null; categoryId: string | null };
 
 /** Kompakt medya kartı — eşit boyutlu 4:3 tile. Öne çıkan altın çerçeve + rozet,
  *  video ise küçük oynat düğmesi. Tümü tek yatay satırda kaydırılır. */
@@ -29,7 +29,20 @@ function MediaCard({ card, featured }: { card: Card; featured?: boolean }) {
         boxShadow: featured ? "var(--shadow-md)" : "var(--shadow-sm)",
       }}
     >
-      {card.coverUrl ? (
+      {card.kind === "video" && card.coverVideoUrl ? (
+        // Kapak videosu: sessiz, döngü, otomatik oynar; coverUrl poster/yedek.
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          poster={card.coverUrl ?? undefined}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+        >
+          <source src={card.coverVideoUrl} />
+        </video>
+      ) : card.coverUrl ? (
         <Image src={card.coverUrl} alt={card.title} fill style={{ objectFit: "cover" }} sizes="(max-width: 900px) 72vw, 290px" />
       ) : (
         <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", color: "rgba(255,255,255,0.10)" }}>
@@ -38,7 +51,8 @@ function MediaCard({ card, featured }: { card: Card; featured?: boolean }) {
       )}
       <div style={{ position: "absolute", inset: 0, background: "var(--scrim-bottom)" }} />
 
-      {card.kind === "video" && (
+      {/* Kapak videosu YOKSA video kartında oynat ipucu kalır; varsa zaten oynuyor. */}
+      {card.kind === "video" && !card.coverVideoUrl && (
         <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 44, height: 44, borderRadius: "50%", background: "var(--grad-gold)", display: "grid", placeItems: "center", boxShadow: "var(--shadow-md)" }}>
           <Icon name="play" size={18} style={{ color: "var(--navy-900)", fill: "var(--navy-900)" }} />
         </span>

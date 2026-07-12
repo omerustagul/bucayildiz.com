@@ -228,15 +228,16 @@ model MediaAsset {
 
 /// Ana sayfa "Görseller & Videolar" kartı (bir kategoriyi besler).
 model HomeMediaCard {
-  id         String         @id @default(cuid())
-  title      String
-  categoryId String?
-  category   MediaCategory? @relation(fields: [categoryId], references: [id])
-  kind       String         @default("photo") // photo | video
-  featured   Boolean        @default(false)
-  coverUrl   String?
-  sort       Int            @default(0)
-  createdAt  DateTime       @default(now())
+  id            String         @id @default(cuid())
+  title         String
+  categoryId    String?
+  category      MediaCategory? @relation(fields: [categoryId], references: [id])
+  kind          String         @default("photo") // photo | video
+  featured      Boolean        @default(false)
+  coverUrl      String? // kapak görseli — video kartta POSTER olarak da kullanılır
+  coverVideoUrl String? // kapak videosu (yalnız kind=video; varsa autoplay-muted-loop oynar)
+  sort          Int            @default(0)
+  createdAt     DateTime       @default(now())
 }
 
 /// Haber / blog yazısı.
