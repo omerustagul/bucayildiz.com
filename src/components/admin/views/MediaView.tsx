@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/Badge";
 import { IconButton } from "@/components/ui/IconButton";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
-import { createMediaCategory, deleteMediaCategory, createMediaAsset, deleteMediaAsset, createFolder, updateFolder, deleteFolder, updateHomeCard } from "@/app/admin/(panel)/medya/actions";
+import { createMediaCategory, deleteMediaCategory, createMediaAsset, deleteMediaAsset, createFolder, updateFolder, deleteFolder, createHomeCard, updateHomeCard, deleteHomeCard } from "@/app/admin/(panel)/medya/actions";
 import { uploadFiles } from "@/lib/mediaUpload";
 import { UploadDropzone } from "./UploadDropzone";
 
@@ -321,12 +321,25 @@ function NewCategoryModal({ onClose }: { onClose: () => void }) {
 
 /* ---------- Home cards tab ---------- */
 function CardsTab({ cards, categories }: { cards: HomeCardItem[]; categories: CategoryItem[] }) {
+  const router = useRouter();
   const [edit, setEdit] = useState<HomeCardItem | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [, startTransition] = useTransition();
+  const remove = (c: HomeCardItem) => {
+    if (!window.confirm(`"${c.title}" kartını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) return;
+    startTransition(async () => {
+      await deleteHomeCard(c.id);
+      router.refresh();
+    });
+  };
   const catColor = (id: string | null) => categories.find((c) => c.id === id)?.color ?? "var(--ink-400)";
   const catName = (id: string | null) => categories.find((c) => c.id === id)?.name ?? "—";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <p style={{ margin: 0, fontSize: 13.5, color: "var(--ink-500)", maxWidth: 620 }}>Ana sayfadaki “Görseller & Videolar” bölümünü yönet. Kartın adını değiştir, bir kategori ata; ziyaretçi karta tıkladığında yalnızca o kategorideki medya görünür.</p>
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <Button variant="primary" size="sm" onClick={() => setCreating(true)}>Yeni Kart</Button>
+      </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 14 }}>
         {cards.map((c) => (
           <div key={c.id} style={{ ...cardStyle, overflow: "hidden", display: "flex" }}>
@@ -337,7 +350,10 @@ function CardsTab({ cards, categories }: { cards: HomeCardItem[]; categories: Ca
             <div style={{ flex: 1, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
                 <div style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 17, color: "var(--text-strong)", lineHeight: 1.1 }}>{c.title}</div>
-                <IconButton label="Düzenle" variant="ghost" size="sm" onClick={() => setEdit(c)}><Icon name="pencil" size={15} /></IconButton>
+                <div style={{ display: "flex", gap: 2, flex: "none" }}>
+                  <IconButton label="Düzenle" variant="ghost" size="sm" onClick={() => setEdit(c)}><Icon name="pencil" size={15} /></IconButton>
+                  <IconButton label="Sil" variant="ghost" size="sm" onClick={() => remove(c)}><Icon name="trash-2" size={15} /></IconButton>
+                </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: "var(--ink-600)" }}>
@@ -350,28 +366,70 @@ function CardsTab({ cards, categories }: { cards: HomeCardItem[]; categories: Ca
           </div>
         ))}
       </div>
-      {edit && <CardDrawer card={edit} categories={categories} onClose={() => setEdit(null)} />}
+      {(edit || creating) && (
+        <CardDrawer card={edit} categories={categories} onClose={() => { setEdit(null); setCreating(false); }} />
+      )}
     </div>
   );
 }
 
-function CardDrawer({ card, categories, onClose }: { card: HomeCardItem; categories: CategoryItem[]; onClose: () => void }) {
+function CardDrawer({ card, categories, onClose }: { card: HomeCardItem | null; categories: CategoryItem[]; onClose: () => void }) {
   const router = useRouter();
-  const [v, setV] = useState({ title: card.title, categoryId: card.categoryId ?? "", featured: card.featured, coverUrl: card.coverUrl ?? "" });
+  const isNew = !card;
+  const [v, setV] = useState({
+    title: card?.title ?? "",
+    categoryId: card?.categoryId ?? "",
+    kind: card?.kind ?? "photo",
+    featured: card?.featured ?? false,
+    coverUrl: card?.coverUrl ?? "",
+  });
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const set = <K extends keyof typeof v>(k: K, val: (typeof v)[K]) => setV((s) => ({ ...s, [k]: val }));
   const save = () =>
     startTransition(async () => {
-      const res = await updateHomeCard(card.id, { title: v.title, categoryId: v.categoryId, featured: v.featured, coverUrl: v.coverUrl || null });
+      setError(null);
+      const payload = { title: v.title, categoryId: v.categoryId, kind: v.kind, featured: v.featured, coverUrl: v.coverUrl || null };
+      const res = isNew ? await createHomeCard(payload) : await updateHomeCard(card!.id, payload);
       if (res.ok) {
         onClose();
         router.refresh();
+      } else {
+        setError(res.error ?? "Kaydedilemedi.");
       }
     });
+  const remove = () => {
+    if (!card) return;
+    if (!window.confirm(`"${card.title}" kartını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) return;
+    startTransition(async () => {
+      await deleteHomeCard(card.id);
+      onClose();
+      router.refresh();
+    });
+  };
   return (
-    <Drawer open onClose={onClose} title="Kartı Düzenle" subtitle="Ana sayfa medya kartı" width={460} footer={<><Button variant="secondary" size="sm" onClick={onClose}>İptal</Button><Button variant="primary" size="sm" onClick={save} disabled={pending}>Kaydet</Button></>}>
+    <Drawer
+      open
+      onClose={onClose}
+      title={isNew ? "Yeni Kart" : "Kartı Düzenle"}
+      subtitle="Ana sayfa medya kartı"
+      width={460}
+      footer={
+        <>
+          {!isNew && (
+            <span style={{ marginRight: "auto" }}>
+              <Button variant="ghost" size="sm" onClick={remove} disabled={pending}>Sil</Button>
+            </span>
+          )}
+          <Button variant="secondary" size="sm" onClick={onClose}>İptal</Button>
+          <Button variant="primary" size="sm" onClick={save} disabled={pending}>{isNew ? "Oluştur" : "Kaydet"}</Button>
+        </>
+      }
+    >
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        {error && <div style={{ padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>{error}</div>}
         <Field label="Kart Adı" required><TextInput value={v.title} onChange={(e) => set("title", e.target.value)} /></Field>
+        <Select label="Tür" options={[{ value: "photo", label: "Fotoğraf" }, { value: "video", label: "Video" }]} value={v.kind} onChange={(e) => set("kind", e.target.value)} />
         <Select label="Kategori" hint="Bu kategorideki medya karta otomatik dolar" placeholder="Seç" options={categories.map((c) => ({ value: c.id, label: c.name }))} value={v.categoryId} onChange={(e) => set("categoryId", e.target.value)} />
         <Field label="Kapak Görseli"><FileDrop value={v.coverUrl || null} onChange={(url) => set("coverUrl", url ?? "")} label="Kapak seç" aspect="16 / 10" /></Field>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>

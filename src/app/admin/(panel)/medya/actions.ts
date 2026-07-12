@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { isOwnStorageUrl } from "@/lib/storage";
+import { idSchema } from "@/lib/validation";
 
 const hex = /^#[0-9a-fA-F]{6}$/;
 
@@ -124,19 +126,65 @@ export async function deleteFolder(id: string): Promise<void> {
 const cardSchema = z.object({
   title: z.string().trim().min(1, "Kart adı zorunlu.").max(80),
   categoryId: z.string().trim().optional().or(z.literal("")),
+  kind: z.enum(["photo", "video"]).default("photo"),
   featured: z.boolean().default(false),
-  coverUrl: z.string().trim().refine((v) => !v || /^(https?:\/\/|\/)/.test(v), "Geçersiz URL.").nullable().optional(),
+  coverUrl: z.string().trim().max(500).optional().nullable(),
 });
+
+/** Kapak URL'i (varsa) yalnız kendi depolamamızdan olabilir — keyfi harici
+ *  adres reddedilir (tracking-pixel/SSRF-lite). FileDrop zaten /api/upload
+ *  üretir; bu sunucu-tarafı savunma derinliğidir. */
+function cardData(d: z.infer<typeof cardSchema>) {
+  return {
+    title: d.title,
+    categoryId: d.categoryId ? d.categoryId : null,
+    kind: d.kind,
+    featured: d.featured,
+    coverUrl: d.coverUrl && d.coverUrl.trim() ? d.coverUrl : null,
+  };
+}
+
+export async function createHomeCard(input: unknown): Promise<MediaResult> {
+  await requireAdmin();
+  const parsed = cardSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
+  const d = parsed.data;
+  if (d.coverUrl && !isOwnStorageUrl(d.coverUrl)) return { ok: false, error: "Geçersiz kapak adresi." };
+  // Sona ekle: mevcut en yüksek sort + 1.
+  const max = await prisma.homeMediaCard.aggregate({ _max: { sort: true } });
+  try {
+    await prisma.homeMediaCard.create({ data: { ...cardData(d), sort: (max._max.sort ?? 0) + 1 } });
+  } catch {
+    return { ok: false, error: "Kart oluşturulamadı." };
+  }
+  revalidatePath("/admin/medya");
+  revalidatePath("/medya");
+  revalidatePath("/");
+  return { ok: true };
+}
 
 export async function updateHomeCard(id: string, input: unknown): Promise<MediaResult> {
   await requireAdmin();
   const parsed = cardSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
-  await prisma.homeMediaCard.update({
-    where: { id },
-    data: { title: d.title, categoryId: d.categoryId ? d.categoryId : null, featured: d.featured, coverUrl: d.coverUrl && d.coverUrl.trim() ? d.coverUrl : null },
-  });
+  if (d.coverUrl && !isOwnStorageUrl(d.coverUrl)) return { ok: false, error: "Geçersiz kapak adresi." };
+  try {
+    await prisma.homeMediaCard.update({ where: { id }, data: cardData(d) });
+  } catch {
+    return { ok: false, error: "Kart güncellenemedi." };
+  }
+  revalidatePath("/admin/medya");
+  revalidatePath("/medya");
+  revalidatePath("/");
+  return { ok: true };
+}
+
+export async function deleteHomeCard(id: unknown): Promise<MediaResult> {
+  await requireAdmin();
+  const parsed = idSchema.safeParse(id);
+  if (!parsed.success) return { ok: false, error: "Geçersiz kayıt." };
+  await prisma.homeMediaCard.delete({ where: { id: parsed.data } }).catch(() => {});
   revalidatePath("/admin/medya");
   revalidatePath("/medya");
   revalidatePath("/");
