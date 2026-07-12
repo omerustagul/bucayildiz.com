@@ -47,6 +47,13 @@ vi.mock("@/lib/prisma", () => ({
 
 import { submitApplication } from "./actions";
 
+// Bugüne göreli tarih (yıl-brittleness'e karşı).
+const yearsAgo = (n: number): string => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - n);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
 const validInput = {
   athleteName: "Arda Yılmaz",
   birthDate: "2012-05-10",
@@ -107,5 +114,30 @@ describe("submitApplication (KVKK atomiklik)", () => {
     const sixth = await submitApplication(validInput);
     expect(sixth).toMatchObject({ ok: false });
     expect(H.store.apps).toHaveLength(5); // 6.'sı yazılmadı
+  });
+
+  // --- Madde 4: yaş dallı consent attribution ---
+  it("MİNÖR (<18): consent VELİYE bağlanır (granterRelation=veli, granterName=veli adı)", async () => {
+    H.activeDocs = [{ key: "acik-riza", version: "v1", title: "B", body: "b", ordering: 1 }];
+    const res = await submitApplication({ ...validInput, birthDate: yearsAgo(12), parentName: "Mehmet Yılmaz" });
+    expect(res).toEqual({ ok: true });
+    expect(H.store.apps[0]).toMatchObject({ parentName: "Mehmet Yılmaz" });
+    expect(H.store.consents[0]).toMatchObject({ granterRelation: "veli", granterName: "Mehmet Yılmaz" });
+  });
+
+  it("YETİŞKİN (≥18): veli OLMADAN geçer; consent SPORCUNUN KENDİSİNE bağlanır (kendisi)", async () => {
+    H.activeDocs = [{ key: "acik-riza", version: "v1", title: "B", body: "b", ordering: 1 }];
+    const res = await submitApplication({ ...validInput, birthDate: yearsAgo(25), parentName: "" });
+    expect(res).toEqual({ ok: true });
+    // Sorumlu kişi = sporcunun kendisi (athleteName), veli değil.
+    expect(H.store.apps[0]).toMatchObject({ parentName: "Arda Yılmaz" });
+    expect(H.store.consents[0]).toMatchObject({ granterRelation: "kendisi", granterName: "Arda Yılmaz" });
+  });
+
+  it("MİNÖR + veli adı BOŞ: reddedilir, DB'ye yazılmaz (yaş<18 veli zorunlu)", async () => {
+    H.activeDocs = [{ key: "acik-riza", version: "v1", title: "B", body: "b", ordering: 1 }];
+    const res = await submitApplication({ ...validInput, birthDate: yearsAgo(12), parentName: "" });
+    expect(res).toMatchObject({ ok: false });
+    expect(H.store.apps).toHaveLength(0);
   });
 });

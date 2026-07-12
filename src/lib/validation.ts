@@ -29,33 +29,74 @@ export function isValidIsoDate(s: string): boolean {
   return true;
 }
 
-/** Başvuru formu doğrulama şeması (istemci + sunucu ortak). */
-export const applicationSchema = z.object({
-  athleteName: z.string().trim().min(2, "Sporcu adını giriniz.").max(120),
-  birthDate: z
-    .string()
-    .trim()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Doğum tarihini giriniz.")
-    .refine(isValidIsoDate, "Geçerli bir doğum tarihi giriniz."),
-  ageGroup: z.enum(AGE_GROUPS, { message: "Yaş grubu seçiniz." }),
-  position: z.string().trim().max(60).optional().or(z.literal("")),
-  parentName: z.string().trim().min(2, "Veli adını giriniz.").max(120),
-  phone: z
-    .string()
-    .trim()
-    .min(7, "Geçerli bir telefon giriniz.")
-    .max(20)
-    .regex(/^[0-9+\s()-]+$/, "Telefon yalnızca rakam ve +()- içerebilir."),
-  email: z.string().trim().email("Geçerli bir e-posta giriniz.").optional().or(z.literal("")),
-  // Ayrı KVKK onayları — { [docKey]: boolean }. Zorunlu olanlar true olmalı
-  // (battaniye "hepsini kabul" yok; her belge ayrı işaretlenir).
-  consents: z
-    .record(z.string(), z.boolean())
-    .default({})
-    .refine((c) => REQUIRED_CONSENT_KEYS.every((k) => c[k] === true), {
-      message: "Devam etmek için zorunlu KVKK onaylarını işaretleyin.",
-    }),
-});
+/** Reşit sınırı — bu yaşın ALTINDA KVKK rızasını hukuken VELİ verir. */
+export const CONSENT_AGE = 18;
+
+/** "YYYY-MM-DD"tan bugüne göre tam yaş (yıl). Geçersiz tarihte null.
+ *  Doğum günü bu yıl henüz gelmediyse 1 eksiltir (gerçek yaş). */
+export function ageFromBirthDate(birthDate: string): number | null {
+  if (!isValidIsoDate(birthDate)) return null;
+  const [y, mo, d] = birthDate.split("-").map(Number);
+  const now = new Date();
+  let age = now.getFullYear() - y;
+  const beforeBirthday = now.getMonth() + 1 < mo || (now.getMonth() + 1 === mo && now.getDate() < d);
+  if (beforeBirthday) age -= 1;
+  return age;
+}
+
+/** Yaş grubunu (U-15…A Takım) doğum tarihinden TÜRETİR — form'da seçilmez,
+ *  admin paneli + e-posta bildirimi bunu kullanır. Yaş bazlı: ≤14→U-15,
+ *  15→U-16, 16→U-17, 17→U-18, ≥18→A Takım. Geçersiz tarihte "". */
+export function ageGroupFromBirthDate(birthDate: string): string {
+  const age = ageFromBirthDate(birthDate);
+  if (age === null) return "";
+  if (age <= 14) return "U-15";
+  if (age === 15) return "U-16";
+  if (age === 16) return "U-17";
+  if (age === 17) return "U-18";
+  return "A Takım";
+}
+
+/** Başvuru formu doğrulama şeması (istemci + sunucu ortak).
+ *  Yaş grubu artık gönderilmez (doğum tarihinden türetilir). Veli adı yalnız
+ *  minör (<18) başvurusunda zorunludur — superRefine yaşı doğum tarihinden hesaplar. */
+export const applicationSchema = z
+  .object({
+    athleteName: z.string().trim().min(2, "Sporcu adını giriniz.").max(120),
+    birthDate: z
+      .string()
+      .trim()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Doğum tarihini giriniz.")
+      .refine(isValidIsoDate, "Geçerli bir doğum tarihi giriniz."),
+    position: z.string().trim().max(60).optional().or(z.literal("")),
+    // Mevcut kulüp (var ise) — GERÇEKTEN opsiyonel; boş geçilebilir.
+    currentClub: z.string().trim().max(120).optional().or(z.literal("")),
+    // Veli adı: base'te opsiyonel; minörde superRefine ZORUNLU kılar. Yetişkinde
+    // istenmez (audit sporcunun kendisine yazılır — bkz. basvuru/actions.ts).
+    parentName: z.string().trim().max(120).optional().or(z.literal("")),
+    phone: z
+      .string()
+      .trim()
+      .min(7, "Geçerli bir telefon giriniz.")
+      .max(20)
+      .regex(/^[0-9+\s()-]+$/, "Telefon yalnızca rakam ve +()- içerebilir."),
+    email: z.string().trim().email("Geçerli bir e-posta giriniz.").optional().or(z.literal("")),
+    // Ayrı KVKK onayları — { [docKey]: boolean }. Zorunlu olanlar true olmalı
+    // (battaniye "hepsini kabul" yok; her belge ayrı işaretlenir).
+    consents: z
+      .record(z.string(), z.boolean())
+      .default({})
+      .refine((c) => REQUIRED_CONSENT_KEYS.every((k) => c[k] === true), {
+        message: "Devam etmek için zorunlu KVKK onaylarını işaretleyin.",
+      }),
+  })
+  .superRefine((v, ctx) => {
+    // Yaş dalı HUKUKİ, sadece UX değil: <18 ise rızayı veli verir → veli adı ZORUNLU.
+    const age = ageFromBirthDate(v.birthDate);
+    if (age !== null && age < CONSENT_AGE && (v.parentName ?? "").trim().length < 2) {
+      ctx.addIssue({ code: "custom", message: "Veli adını giriniz.", path: ["parentName"] });
+    }
+  });
 
 export type ApplicationInput = z.input<typeof applicationSchema>;
 export type ApplicationData = z.output<typeof applicationSchema>;

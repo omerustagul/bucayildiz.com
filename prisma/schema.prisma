@@ -17,9 +17,10 @@ model Application {
   id               String   @id @default(cuid())
   athleteName      String
   birthDate        String // "YYYY-MM-DD" — TZ sorunlarını önlemek için String
-  ageGroup         String
+  ageGroup         String // doğum tarihinden türetilir (form'da seçilmez)
   position         String?
-  parentName       String
+  currentClub      String? // mevcut kulüp (var ise) — opsiyonel
+  parentName       String // sorumlu kişi: minörde veli, yetişkinde sporcunun kendisi
   phone            String
   email            String?
   kvkkConsent      Boolean  @default(false) // aydınlatma + açık rıza (zorunlu)

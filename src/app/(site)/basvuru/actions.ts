@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { applicationSchema } from "@/lib/validation";
+import { applicationSchema, ageFromBirthDate, ageGroupFromBirthDate, CONSENT_AGE } from "@/lib/validation";
 import { CONSENT_VERSION } from "@/lib/consent";
 import { recordConsents } from "@/lib/consent.server";
 import { notifyNewApplication } from "@/lib/mail";
@@ -48,6 +48,15 @@ export async function submitApplication(input: unknown): Promise<SubmitResult> {
   const data = parsed.data;
   const consents = data.consents ?? {};
 
+  // Yaş dalı HUKUKİ: <18 ise rızayı VELİ verir; ≥18 ise sporcunun KENDİSİ.
+  // Yaş grubu (U-15…A Takım) doğum tarihinden türetilir (form'da seçilmez).
+  const age = ageFromBirthDate(data.birthDate);
+  const isMinor = age !== null && age < CONSENT_AGE;
+  const ageGroup = ageGroupFromBirthDate(data.birthDate);
+  // Sorumlu/iletişim kişisi + audit granter: minörde VELİ, yetişkinde SPORCUNUN KENDİSİ.
+  const contactName = isMinor ? (data.parentName || "").trim() : data.athleteName;
+  const granterRelation = isMinor ? "veli" : "kendisi";
+
   try {
     // KVKK atomiklik: Application + her belgenin denetim kaydı TEK transaction'da.
     // recordConsents aktif belge yoksa hata fırlatır → transaction geri alınır,
@@ -57,9 +66,10 @@ export async function submitApplication(input: unknown): Promise<SubmitResult> {
         data: {
           athleteName: data.athleteName,
           birthDate: data.birthDate,
-          ageGroup: data.ageGroup,
+          ageGroup,
           position: data.position || null,
-          parentName: data.parentName,
+          currentClub: data.currentClub || null,
+          parentName: contactName,
           phone: data.phone,
           email: data.email || null,
           // Geriye dönük özet alanlar (detay ConsentRecord'da):
@@ -72,9 +82,10 @@ export async function submitApplication(input: unknown): Promise<SubmitResult> {
       });
 
       // Her belge için ayrı denetim kaydı (verilen + verilmeyen) — aynı tx.
+      // Minör: granter = veli; Yetişkin: granter = sporcunun kendisi (hukuki).
       await recordConsents(consents, { applicationId: application.id }, {
-        granterName: data.parentName,
-        granterRelation: "veli",
+        granterName: contactName,
+        granterRelation,
         channel: "basvuru",
         ipAddress,
         userAgent,
@@ -89,8 +100,8 @@ export async function submitApplication(input: unknown): Promise<SubmitResult> {
   try {
     await notifyNewApplication({
       athleteName: data.athleteName,
-      ageGroup: data.ageGroup,
-      parentName: data.parentName,
+      ageGroup,
+      parentName: contactName,
       phone: data.phone,
       email: data.email || null,
     });

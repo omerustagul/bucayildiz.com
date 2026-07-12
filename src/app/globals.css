@@ -823,6 +823,23 @@ footer {
   animation: byDrawerIn .22s var(--ease-out) both;
 }
 
+/* Başvuru formu: yaş <18 olunca açılan veli bölümünün yumuşak girişi. */
+@keyframes byVeliReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.app-veli-reveal {
+  animation: byVeliReveal .38s var(--ease-out) both;
+}
+
 /* Kapanış (exit) animasyonları — bileşen unmount'u kısa süre geciktirip
    .is-closing sınıfıyla ters yönde oynatır (controls.tsx useDelayedUnmount) */
 @keyframes byFadeOut {
@@ -1050,7 +1067,8 @@ footer {
   .by-toast.is-closing,
   .by-row-in,
   .by-row-out,
-  .by-shimmer {
+  .by-shimmer,
+  .app-veli-reveal {
     animation: none;
   }
 }

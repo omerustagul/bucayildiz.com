@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
-import { Select } from "@/components/ui/Select";
 import { Icon } from "@/lib/icons";
-import { AGE_GROUPS, applicationSchema } from "@/lib/validation";
+import { applicationSchema, ageFromBirthDate, CONSENT_AGE } from "@/lib/validation";
 import { submitApplication } from "@/app/(site)/basvuru/actions";
 
 export type ConsentDocSummary = {
@@ -20,7 +19,7 @@ export type ConsentDocSummary = {
 type FormValues = {
   athleteName: string;
   birthDate: string;
-  ageGroup: string;
+  currentClub: string;
   position: string;
   parentName: string;
   phone: string;
@@ -31,7 +30,7 @@ type FormValues = {
 const EMPTY: Omit<FormValues, "consents"> = {
   athleteName: "",
   birthDate: "",
-  ageGroup: "",
+  currentClub: "",
   position: "",
   parentName: "",
   phone: "",
@@ -231,13 +230,12 @@ export function ApplicationForm({ consentDocs }: { consentDocs: ConsentDocSummar
     try {
       const raw = sessionStorage.getItem("by_basvuru_prefill");
       if (!raw) return;
-      const p = JSON.parse(raw) as { parentName?: string; phone?: string; athleteName?: string; ageGroup?: string };
+      const p = JSON.parse(raw) as { parentName?: string; phone?: string; athleteName?: string };
       setValues((s) => ({
         ...s,
         parentName: p.parentName || s.parentName,
         phone: p.phone || s.phone,
         athleteName: p.athleteName || s.athleteName,
-        ageGroup: p.ageGroup && (AGE_GROUPS as readonly string[]).includes(p.ageGroup) ? p.ageGroup : s.ageGroup,
       }));
       sessionStorage.removeItem("by_basvuru_prefill");
     } catch {
@@ -254,6 +252,11 @@ export function ApplicationForm({ consentDocs }: { consentDocs: ConsentDocSummar
     setValues((v) => ({ ...v, consents: { ...v.consents, [key]: val } }));
     if (errors.consents) setErrors((e) => ({ ...e, consents: "" }));
   };
+
+  // Yaş dalı (HUKUKİ): doğum tarihinden yaş → <18 ise altta veli bölümü animasyonla
+  // açılır ve ZORUNLU olur (rızayı veli verir); ≥18 ise sporcunun kendi iletişimi görünür.
+  const age = ageFromBirthDate(values.birthDate);
+  const isMinor = age !== null && age < CONSENT_AGE;
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -328,39 +331,51 @@ export function ApplicationForm({ consentDocs }: { consentDocs: ConsentDocSummar
         <SectionLabel>Sporcu Bilgileri</SectionLabel>
         <div className="form-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
           <Field label="Ad Soyad" required error={errors.athleteName} htmlFor="app-athleteName">
-            <input id="app-athleteName" style={fieldBase} placeholder="Öğrencinin adı" value={values.athleteName} onChange={(e) => set("athleteName", e.target.value)} />
+            <input id="app-athleteName" style={fieldBase} placeholder="Sporcunun adı" value={values.athleteName} onChange={(e) => set("athleteName", e.target.value)} />
           </Field>
           <Field label="Doğum Tarihi" required error={errors.birthDate} htmlFor="app-birthDate">
             <input id="app-birthDate" type="date" style={fieldBase} value={values.birthDate} onChange={(e) => set("birthDate", e.target.value)} />
           </Field>
-          <Field label="Yaş Grubu" required error={errors.ageGroup} htmlFor="app-ageGroup">
-            <Select
-              id="app-ageGroup"
-              style={fieldBase}
-              value={values.ageGroup}
-              onChange={(e) => set("ageGroup", e.target.value)}
-              placeholder="Seçiniz"
-              options={[...AGE_GROUPS]}
-            />
+          <Field label="Mevcut Kulüp" hint="Var ise — zorunlu değil" error={errors.currentClub} htmlFor="app-currentClub">
+            <input id="app-currentClub" style={fieldBase} placeholder="örn. bağımsız / kulüp adı" value={values.currentClub} onChange={(e) => set("currentClub", e.target.value)} />
           </Field>
-          <Field label="Mevki" hint="İsteğe bağlı" error={errors.position} htmlFor="app-position">
+          <Field label="Tercih Edilen Mevki" hint="İsteğe bağlı" error={errors.position} htmlFor="app-position">
             <input id="app-position" style={fieldBase} placeholder="örn. Forvet" value={values.position} onChange={(e) => set("position", e.target.value)} />
           </Field>
+          {/* Yetişkin (≥18) veya henüz yaş yok: iletişim sporcunun kendisine ait. */}
+          {!isMinor && (
+            <>
+              <Field label="Telefon" required error={errors.phone} htmlFor="app-phone">
+                <input id="app-phone" style={fieldBase} placeholder="05xx xxx xx xx" value={values.phone} onChange={(e) => set("phone", e.target.value)} />
+              </Field>
+              <Field label="E-posta" hint="İsteğe bağlı" error={errors.email} htmlFor="app-email">
+                <input id="app-email" type="email" style={fieldBase} placeholder="ornek@eposta.com" value={values.email} onChange={(e) => set("email", e.target.value)} />
+              </Field>
+            </>
+          )}
         </div>
 
-        <div style={{ height: 26 }} />
-        <SectionLabel>Veli İletişim</SectionLabel>
-        <div className="form-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
-          <Field label="Veli Ad Soyad" required error={errors.parentName} htmlFor="app-parentName">
-            <input id="app-parentName" style={fieldBase} placeholder="Veli adı" value={values.parentName} onChange={(e) => set("parentName", e.target.value)} />
-          </Field>
-          <Field label="Telefon" required error={errors.phone} htmlFor="app-phone">
-            <input id="app-phone" style={fieldBase} placeholder="05xx xxx xx xx" value={values.phone} onChange={(e) => set("phone", e.target.value)} />
-          </Field>
-          <Field label="E-posta" hint="İsteğe bağlı" error={errors.email} full htmlFor="app-email">
-            <input id="app-email" type="email" style={fieldBase} placeholder="ornek@eposta.com" value={values.email} onChange={(e) => set("email", e.target.value)} />
-          </Field>
-        </div>
+        {/* Yaş <18: rızayı ve iletişimi VELİ verir — bölüm animasyonla açılır, alanlar zorunlu. */}
+        {isMinor && (
+          <div key="veli-section" className="app-veli-reveal">
+            <div style={{ height: 26 }} />
+            <SectionLabel>Veli İletişim</SectionLabel>
+            <p style={{ fontSize: 12.5, color: "var(--text-muted)", margin: "-8px 0 14px", lineHeight: 1.5 }}>
+              Sporcu 18 yaşından küçük — KVKK rızasını ve iletişimi <strong>veli</strong> verir. Bu alanlar zorunludur.
+            </p>
+            <div className="form-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+              <Field label="Veli Ad Soyad" required error={errors.parentName} htmlFor="app-parentName">
+                <input id="app-parentName" style={fieldBase} placeholder="Veli adı" value={values.parentName} onChange={(e) => set("parentName", e.target.value)} />
+              </Field>
+              <Field label="Veli Telefon" required error={errors.phone} htmlFor="app-phone">
+                <input id="app-phone" style={fieldBase} placeholder="05xx xxx xx xx" value={values.phone} onChange={(e) => set("phone", e.target.value)} />
+              </Field>
+              <Field label="Veli E-posta" hint="İsteğe bağlı" error={errors.email} full htmlFor="app-email">
+                <input id="app-email" type="email" style={fieldBase} placeholder="ornek@eposta.com" value={values.email} onChange={(e) => set("email", e.target.value)} />
+              </Field>
+            </div>
+          </div>
+        )}
 
         <div style={{ height: 26 }} />
         <SectionLabel>KVKK Onayları</SectionLabel>
