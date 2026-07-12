@@ -13,6 +13,8 @@ import { IconButton } from "@/components/ui/IconButton";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
 import { createMediaCategory, deleteMediaCategory, createMediaAsset, deleteMediaAsset, createFolder, updateFolder, deleteFolder, updateHomeCard } from "@/app/admin/(panel)/medya/actions";
+import { uploadFiles } from "@/lib/mediaUpload";
+import { UploadDropzone } from "./UploadDropzone";
 
 export type FolderNode = { id: string; name: string; parentId: string | null; categoryId: string | null };
 export type AssetItem = { id: string; url: string; title: string; kind: string; categoryId: string | null; folderId: string | null };
@@ -71,6 +73,7 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
   const [editFolder, setEditFolder] = useState<FolderNode | null>(null);
   const [busy, setBusy] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [failures, setFailures] = useState<{ name: string; reason: string }[]>([]);
   const [uploadCategoryId, setUploadCategoryId] = useState("");
   const [, startTransition] = useTransition();
 
@@ -100,33 +103,38 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
 
   const effectiveCategoryId = folderCategoryId ?? uploadCategoryId;
 
-  async function upload(file: File) {
+  async function uploadMany(files: File[]) {
     if (!effectiveCategoryId) {
-      setUploadError("Kategori seçiniz.");
+      setUploadError("Yüklemeden önce bir kategori seçiniz.");
       return;
     }
     setBusy(true);
     setUploadError(null);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setUploadError(data?.error || "Yükleme başarısız. Lütfen tekrar deneyin.");
-        return;
-      }
-      const created = await createMediaAsset({ url: data.url, title: file.name, folderId: isRoot ? "" : folder, categoryId: effectiveCategoryId, kind: "photo" });
-      if (!created.ok) {
-        setUploadError(created.error || "Dosya kaydedilemedi.");
-        return;
-      }
-      startTransition(() => router.refresh());
-    } catch {
-      setUploadError("Yükleme sırasında bir hata oluştu.");
-    } finally {
-      setBusy(false);
-    }
+    setFailures([]);
+    // Her dosya AYRI /api/upload POST'u — böylece magic-byte + 5MB + rate-limit
+    // HER dosyaya uygulanır (sadece ilkine değil). Kısmi başarı desteklenir.
+    const outcome = await uploadFiles(
+      files,
+      async (file) => {
+        try {
+          const fd = new FormData();
+          fd.append("file", file);
+          const res = await fetch("/api/upload", { method: "POST", body: fd });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) return { ok: false as const, reason: data?.error || `Yükleme başarısız (${res.status}).` };
+          return { ok: true as const, url: data.url as string };
+        } catch {
+          return { ok: false as const, reason: "Ağ hatası." };
+        }
+      },
+      async (url, file) => {
+        const created = await createMediaAsset({ url, title: file.name, folderId: isRoot ? "" : folder, categoryId: effectiveCategoryId, kind: "photo" });
+        return created.ok ? { ok: true as const } : { ok: false as const, reason: created.error || "Kaydedilemedi." };
+      },
+    );
+    setFailures(outcome.failed);
+    setBusy(false);
+    if (outcome.okCount > 0) startTransition(() => router.refresh());
   }
   const removeAsset = (id: string) =>
     startTransition(async () => {
@@ -154,6 +162,18 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
         {uploadError && (
           <div style={{ padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>{uploadError}</div>
         )}
+        {failures.length > 0 && (
+          <div style={{ padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>
+            <strong>{failures.length} dosya reddedildi:</strong>
+            <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+              {failures.map((f) => (
+                <li key={f.name}>
+                  <span style={{ fontWeight: 600 }}>{f.name}</span> — {f.reason}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <Field
           label="Yükleme Kategorisi"
           required
@@ -169,14 +189,7 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
           />
         </Field>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(132px, 1fr))", gap: 12 }}>
-          <label style={{ position: "relative", aspectRatio: "1 / 1", borderRadius: "var(--radius-md)", border: "1.5px dashed var(--ink-300)", background: "var(--ink-50)", display: "grid", placeItems: "center", cursor: busy ? "wait" : effectiveCategoryId ? "pointer" : "not-allowed", opacity: effectiveCategoryId ? 1 : 0.55, textAlign: "center" }}>
-            <input type="file" accept="image/*" disabled={busy || !effectiveCategoryId} style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
-            <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, color: "var(--ink-600)", padding: 12 }}>
-              <span style={{ width: 40, height: 40, borderRadius: "50%", background: "var(--navy-50)", color: "var(--navy-600)", display: "grid", placeItems: "center" }}><Icon name="image" size={18} /></span>
-              <span style={{ fontSize: 12.5, fontWeight: 600 }}>{busy ? "Yükleniyor…" : "Sürükle / yükle"}</span>
-              <span style={{ fontSize: 11, color: "var(--ink-400)" }}>JPG, PNG</span>
-            </span>
-          </label>
+          <UploadDropzone onFiles={uploadMany} busy={busy} disabled={!effectiveCategoryId} />
           {shown.map((a) => (
             <div key={a.id} style={{ position: "relative", aspectRatio: "1 / 1", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--border-subtle)", background: "var(--surface-subtle)" }}>
               {!loaded.has(a.id) && <div className="by-shimmer" style={{ position: "absolute", inset: 0 }} />}
