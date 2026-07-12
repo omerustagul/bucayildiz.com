@@ -61,6 +61,7 @@ import {
   EyeOff,
   Camera,
   type LucideIcon,
+  Footprints,
 } from "lucide-react";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -107,6 +108,8 @@ const ICONS: Record<string, LucideIcon> = {
   megaphone: Megaphone,
   "heart-pulse": HeartPulse,
   send: Send,
+  foot: Footprints,
+  "footprints": Footprints,
   "folder-plus": FolderPlus,
   folder: Folder,
   "folder-open": FolderOpen,
