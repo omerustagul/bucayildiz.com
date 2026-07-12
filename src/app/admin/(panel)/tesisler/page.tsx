@@ -15,6 +15,7 @@ export default async function TesislerPage() {
     features: f.features,
     photoUrl: f.photoUrl,
     sort: f.sort,
+    isPitch: f.isPitch,
   }));
 
   return <TesislerView facilities={rows} />;

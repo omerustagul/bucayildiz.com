@@ -17,6 +17,16 @@ export async function createTraining(input: unknown): Promise<TrainingResult | v
   const parsed = trainingCreateSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
+
+  // Saha: seçildiyse gerçekten VAR OLAN ve isPitch=true bir Facility olmalı.
+  // Serbest metin değil — geçersiz/silinmiş/isPitch-olmayan id reddedilir; adı kaydedilir.
+  let pitchName = "";
+  if (d.pitch) {
+    const facility = await prisma.facility.findFirst({ where: { id: d.pitch, isPitch: true }, select: { name: true } });
+    if (!facility) return { error: "Geçersiz saha seçimi. Lütfen listeden bir saha seçin." };
+    pitchName = facility.name;
+  }
+
   try {
     await prisma.training.create({
       data: {
@@ -25,7 +35,7 @@ export async function createTraining(input: unknown): Promise<TrainingResult | v
         date: d.date,
         time: d.time || "",
         duration: d.duration ?? null,
-        pitch: d.pitch || "",
+        pitch: pitchName,
         notes: d.notes || "",
         drills: d.drills.length ? { create: d.drills.map((text, i) => ({ text, sort: i })) } : undefined,
         attendance: d.scope === "individual" ? { create: d.athleteIds.map((athleteId) => ({ athleteId })) } : undefined,

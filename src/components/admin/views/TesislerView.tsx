@@ -8,6 +8,7 @@ import { Table, type Column } from "@/components/ui/Table";
 import { CardList, CardEmpty, DataCard, CardHeader, CardFields } from "@/components/admin/MobileCardList";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Switch } from "@/components/ui/Switch";
 import { Icon } from "@/lib/icons";
 import { toast } from "@/components/ui/Toast";
 import { createFacility, updateFacility, deleteFacility } from "@/app/admin/(panel)/tesisler/actions";
@@ -20,6 +21,7 @@ export type FacilityRow = {
   features: string;
   photoUrl: string | null;
   sort: number;
+  isPitch: boolean;
 };
 
 /** "a, b,c" → ["a","b","c"] — boş parçalar atılır. */
@@ -52,6 +54,7 @@ function FacilityDrawer({ facility, onClose }: { facility: FacilityRow | null; o
     features: facility?.features ?? "",
     photoUrl: facility?.photoUrl ?? "",
     sort: facility?.sort?.toString() ?? "0",
+    isPitch: facility?.isPitch ?? false,
   });
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -66,6 +69,7 @@ function FacilityDrawer({ facility, onClose }: { facility: FacilityRow | null; o
       features: v.features,
       photoUrl: v.photoUrl || null,
       sort: v.sort.trim() === "" ? 0 : Number(v.sort),
+      isPitch: v.isPitch,
     };
     startTransition(async () => {
       const res = isNew ? await createFacility(payload) : await updateFacility(facility!.id, payload);
@@ -139,6 +143,14 @@ function FacilityDrawer({ facility, onClose }: { facility: FacilityRow | null; o
         </Field>
         {v.features.trim() && <FeatureChips features={v.features} />}
 
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderRadius: "var(--radius-md)", background: "var(--navy-50)", border: "1px solid var(--navy-100)" }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text-strong)" }}>Antrenman sahası</div>
+            <div style={{ fontSize: 12, color: "var(--ink-400)", lineHeight: 1.4 }}>Açıkken Takvim Programı&apos;nda saha seçeneği olarak listelenir</div>
+          </div>
+          <Switch checked={v.isPitch} onChange={(val) => set("isPitch", val)} />
+        </div>
+
         {error && <div style={{ padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>{error}</div>}
       </div>
     </Drawer>
@@ -163,7 +175,10 @@ export function TesislerView({ facilities }: { facilities: FacilityRow[] }) {
           <div style={{ width: 44, height: 32, borderRadius: "var(--radius-sm)", overflow: "hidden", background: r.photoUrl ? `center/cover no-repeat url("${r.photoUrl}")` : "var(--grad-navy)", flex: "none", display: "grid", placeItems: "center", color: "rgba(255,255,255,.2)" }}>
             {!r.photoUrl && <Icon name="shield-check" size={15} />}
           </div>
-          <div style={{ fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap" }}>{r.name}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
+            <span style={{ fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap" }}>{r.name}</span>
+            {r.isPitch && <Badge tone="gold">Saha</Badge>}
+          </div>
         </div>
       ),
     },
@@ -211,6 +226,7 @@ export function TesislerView({ facilities }: { facilities: FacilityRow[] }) {
               <CardFields
                 items={[
                   { label: "Özellikler", value: <FeatureChips features={r.features} /> },
+                  { label: "Saha", value: r.isPitch ? <Badge tone="gold">Evet</Badge> : "—" },
                   { label: "Sıra", value: r.sort },
                 ]}
               />

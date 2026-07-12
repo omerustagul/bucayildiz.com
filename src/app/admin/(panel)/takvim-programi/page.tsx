@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { listPitchFacilities } from "@/lib/facilities";
 import { ScheduleView } from "@/components/admin/views/ScheduleView";
 
 export const metadata: Metadata = { title: "Takvim Programı" };
 
 export default async function TakvimProgramiPage() {
-  const [teams, athletes, trainings, fixtures] = await Promise.all([
+  const [teams, athletes, trainings, fixtures, pitches] = await Promise.all([
     prisma.team.findMany({ orderBy: { sort: "asc" }, select: { id: true, name: true } }),
     prisma.athlete.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, teamId: true } }),
     prisma.training.findMany({
@@ -20,6 +21,7 @@ export default async function TakvimProgramiPage() {
       orderBy: { date: "asc" },
       select: { id: true, competition: true, opponent: true, isHome: true, date: true, time: true, venue: true, teamId: true, status: true, ourScore: true, oppScore: true },
     }),
+    listPitchFacilities(),
   ]);
 
   const now = new Date();
@@ -29,6 +31,7 @@ export default async function TakvimProgramiPage() {
     <ScheduleView
       teams={teams}
       athletes={athletes}
+      pitches={pitches}
       trainings={trainings.map((t) => ({
         id: t.id, teamId: t.teamId, scope: t.scope, status: t.status, date: t.date, time: t.time,
         duration: t.duration, pitch: t.pitch, notes: t.notes,

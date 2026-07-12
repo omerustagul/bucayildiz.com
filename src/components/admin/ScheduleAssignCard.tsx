@@ -13,9 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { Icon } from "@/lib/icons";
 import { createTraining } from "@/app/admin/(panel)/takvim-programi/actions";
-import type { SAthlete, SFixture, STeam } from "@/components/admin/views/ScheduleView";
-
-const PITCHES = ["Saha 1", "Saha 2", "Kapalı Salon", "Kondisyon Salonu"];
+import type { SAthlete, SFixture, SPitch, STeam } from "@/components/admin/views/ScheduleView";
 
 type ProgramKind = "team" | "individual" | "mac";
 
@@ -25,7 +23,7 @@ const KINDS: { id: ProgramKind; label: string; color: string }[] = [
   { id: "mac", label: "Maç", color: "var(--red-600)" },
 ];
 
-export function ScheduleAssignCard({ teams, athletes, fixtures }: { teams: STeam[]; athletes: SAthlete[]; fixtures: SFixture[] }) {
+export function ScheduleAssignCard({ teams, athletes, pitches, fixtures }: { teams: STeam[]; athletes: SAthlete[]; pitches: SPitch[]; fixtures: SFixture[] }) {
   const router = useRouter();
   const [kind, setKind] = useState<ProgramKind>("team");
   const [team, setTeam] = useState(teams[0]?.id ?? "");
@@ -33,7 +31,8 @@ export function ScheduleAssignCard({ teams, athletes, fixtures }: { teams: STeam
   const [date, setDate] = useState("");
   const [time, setTime] = useState("17:00");
   const [duration, setDuration] = useState("90");
-  const [pitch, setPitch] = useState("Saha 1");
+  // Saha değeri artık Facility id'sidir (serbest metin değil). Hiç saha yoksa boş.
+  const [pitch, setPitch] = useState(pitches[0]?.id ?? "");
   const [notes, setNotes] = useState("");
   const [drills, setDrills] = useState<string[]>([""]);
   const [notify, setNotify] = useState(true);
@@ -147,7 +146,15 @@ export function ScheduleAssignCard({ teams, athletes, fixtures }: { teams: STeam
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <Field label="Süre" hint="dakika"><TextInput type="number" value={duration} onChange={(e) => setDuration(e.target.value)} /></Field>
-              <Select label="Saha" options={PITCHES} value={pitch} onChange={(e) => setPitch(e.target.value)} />
+              {pitches.length > 0 ? (
+                <Select label="Saha" options={pitches.map((p) => ({ value: p.id, label: p.name }))} value={pitch} onChange={(e) => setPitch(e.target.value)} />
+              ) : (
+                <Field label="Saha" hint="Tesisler'de en az bir tesisi saha olarak işaretleyin">
+                  <Link href="/admin/tesisler" style={{ display: "inline-flex", alignItems: "center", gap: 6, minWidth: 0, padding: "9px 11px", borderRadius: "var(--radius-sm)", border: "1.5px dashed var(--ink-200)", fontSize: 12.5, fontWeight: 600, color: "var(--navy-700)", textDecoration: "none" }}>
+                    <Icon name="plus" size={13} /> Tesisler&apos;e git
+                  </Link>
+                </Field>
+              )}
             </div>
             <Field label="Antrenman İçeriği" hint="Çalışmaları madde madde ekleyin">
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

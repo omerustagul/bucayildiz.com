@@ -12,6 +12,8 @@ const schema = z.object({
   features: z.string().trim().max(500).optional().or(z.literal("")),
   photoUrl: z.string().trim().nullable().optional(),
   sort: z.coerce.number().int().min(0).max(999).default(0),
+  // true ise Takvim Programı'nda "saha" seçeneği olarak listelenir (elle işaretlenir).
+  isPitch: z.boolean().optional().default(false),
 });
 
 export type FacilityResult = { error: string };
@@ -24,6 +26,7 @@ function toData(d: z.infer<typeof schema>) {
     features: d.features ?? "",
     photoUrl: d.photoUrl && d.photoUrl.trim() ? d.photoUrl : null,
     sort: d.sort,
+    isPitch: d.isPitch,
   };
 }
 
