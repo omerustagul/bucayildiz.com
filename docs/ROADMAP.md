@@ -136,7 +136,7 @@ Antrenörün sporcuyu birebir izlediği sistemin ilk ayağı
 
 - **Veritabanı (dev, bu makine — Windows):** native **PostgreSQL 18, port 5432**
   (Docker/5433 kullanılmıyor; Docker Desktop bu makinede bozuk).
-  Bağlantı: `postgresql://bucayildiz:bucayildiz_dev@127.0.0.1:5432/bucayildiz`.
+  Bağlantı: `postgresql://bucayildiz:DEV_DB_PAROLA@127.0.0.1:5432/bucayildiz`.
   > Not: eski notlarda geçen "Homebrew :5433" macOS ortamına aittir; bu depo
   > artık Windows'ta 5432 üzerinde çalışıyor.
 - **Komutlar:** `npm run dev` · `db:migrate` · `db:seed` · `db:deploy` ·

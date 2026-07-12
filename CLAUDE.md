@@ -45,7 +45,7 @@ ilgili `test`) temiz olmalı.
 
 - **Native PostgreSQL 18, port `5432`** (Docker/5433 DEĞİL — Docker Desktop bu
   makinede bozuk).
-- Bağlantı: `postgresql://bucayildiz:bucayildiz_dev@127.0.0.1:5432/bucayildiz?schema=public`
+- Bağlantı: `postgresql://bucayildiz:DEV_DB_PAROLA@127.0.0.1:5432/bucayildiz?schema=public`
 - `.env` git'e girmez. Şablonlar: `.env.example`, `.env.production.example`.
 - Üretim: Türkiye veri merkezi (KVKK). Ayrıntı `docs/DEPLOYMENT.md`.
 

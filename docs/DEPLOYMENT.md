@@ -34,7 +34,7 @@ npm run dev            # http://localhost:3000
 
 Dev veritabanı bağlantısı (`.env`):
 ```
-DATABASE_URL="postgresql://bucayildiz:bucayildiz_dev@127.0.0.1:5432/bucayildiz?schema=public"
+DATABASE_URL="postgresql://bucayildiz:DEV_DB_PAROLA@127.0.0.1:5432/bucayildiz?schema=public"
 ```
 
 > Not: eski dokümanlardaki "Homebrew :5433" macOS ortamına aitti; artık geçerli değil.

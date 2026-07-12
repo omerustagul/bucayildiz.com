@@ -11,14 +11,14 @@ yerden devam etmek içindir. **Üretim verisi değildir.**
 npm ci
 
 # 2) .env oluştur (.env.example'ı kopyala; DATABASE_URL'i yerel Postgres'e göre ayarla)
-#    Örn: postgresql://bucayildiz:bucayildiz_dev@127.0.0.1:5432/bucayildiz?schema=public
+#    Örn: postgresql://bucayildiz:DEV_DB_PAROLA@127.0.0.1:5432/bucayildiz?schema=public
 
 # 3) Rol + boş veritabanı (psql ile, postgres süper kullanıcısıyla)
-#    CREATE ROLE bucayildiz LOGIN PASSWORD 'bucayildiz_dev' CREATEDB;
+#    CREATE ROLE bucayildiz LOGIN PASSWORD 'DEV_DB_PAROLA' CREATEDB;
 #    CREATE DATABASE bucayildiz OWNER bucayildiz;
 
 # 4) Dump'ı geri yükle
-pg_restore -d "postgresql://bucayildiz:bucayildiz_dev@127.0.0.1:5432/bucayildiz" --clean --if-exists --no-owner db-transfer/bucayildiz-dev.dump
+pg_restore -d "postgresql://bucayildiz:DEV_DB_PAROLA@127.0.0.1:5432/bucayildiz" --clean --if-exists --no-owner db-transfer/bucayildiz-dev.dump
 
 # 5) Prisma client + doğrulama
 npm run db:generate
