@@ -13,8 +13,10 @@ import crypto from "node:crypto";
 
 const ALLOWED_IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const ALLOWED_VIDEO = ["video/mp4", "video/webm"];
+const ALLOWED_DOCUMENT = ["application/pdf"];
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
 const MAX_VIDEO_BYTES = 30 * 1024 * 1024; // 30 MB (kısa kapak videosu)
+const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024; // 10 MB (CV / PDF)
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
 /**
@@ -43,6 +45,16 @@ export function sniffVideo(buf: Buffer): { type: string; ext: string } | null {
   if (buf.length < 12) return null;
   if (buf[0] === 0x1a && buf[1] === 0x45 && buf[2] === 0xdf && buf[3] === 0xa3) return { type: "video/webm", ext: "webm" };
   if (buf[4] === 0x66 && buf[5] === 0x74 && buf[6] === 0x79 && buf[7] === 0x70) return { type: "video/mp4", ext: "mp4" };
+  return null;
+}
+
+/**
+ * PDF magic-byte doğrulaması — istemci MIME'ına güvenmez. "%PDF-" (25 50 44 46 2D)
+ * imzası aranır; aksi halde null. CV yüklemesi (iş başvurusu) yalnız gerçek PDF kabul eder.
+ */
+export function sniffDocument(buf: Buffer): { type: string; ext: string } | null {
+  if (buf.length < 5) return null;
+  if (buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46 && buf[4] === 0x2d) return { type: "application/pdf", ext: "pdf" };
   return null;
 }
 
@@ -111,25 +123,37 @@ async function saveToS3(
   return { url: `https://${cfg.bucket}.s3.${cfg.region}.amazonaws.com/${key}` };
 }
 
-export async function saveUpload(file: File, opts: { kind?: "image" | "video" } = {}): Promise<{ url: string }> {
-  // Video modu yalnızca açıkça istenirse; varsayılan GÖRSEL (medya kütüphanesi,
-  // avatar vb. görsel-only + 5MB kalır — sertleştirme değişmez).
-  const isVideo = opts.kind === "video";
-  const allowed = isVideo ? ALLOWED_VIDEO : ALLOWED_IMAGE;
-  const maxBytes = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+export async function saveUpload(file: File, opts: { kind?: "image" | "video" | "document" } = {}): Promise<{ url: string }> {
+  // Video/belge modu yalnızca açıkça istenirse; varsayılan GÖRSEL (medya kütüphanesi,
+  // avatar vb. görsel-only + 5MB kalır — sertleştirme değişmez). Belge = CV (PDF).
+  const kind = opts.kind ?? "image";
+  const allowed = kind === "video" ? ALLOWED_VIDEO : kind === "document" ? ALLOWED_DOCUMENT : ALLOWED_IMAGE;
+  const maxBytes = kind === "video" ? MAX_VIDEO_BYTES : kind === "document" ? MAX_DOCUMENT_BYTES : MAX_IMAGE_BYTES;
 
   if (!allowed.includes(file.type)) {
-    throw new Error(isVideo ? "Yalnızca MP4 veya WebM video yükleyebilirsiniz." : "Yalnızca JPG, PNG, WEBP veya GIF yükleyebilirsiniz.");
+    throw new Error(
+      kind === "video" ? "Yalnızca MP4 veya WebM video yükleyebilirsiniz."
+        : kind === "document" ? "Yalnızca PDF belge yükleyebilirsiniz."
+          : "Yalnızca JPG, PNG, WEBP veya GIF yükleyebilirsiniz.",
+    );
   }
   if (file.size > maxBytes) {
-    throw new Error(isVideo ? "Video boyutu 30 MB'ı aşamaz." : "Dosya boyutu 5 MB'ı aşamaz.");
+    throw new Error(
+      kind === "video" ? "Video boyutu 30 MB'ı aşamaz."
+        : kind === "document" ? "Belge boyutu 10 MB'ı aşamaz."
+          : "Dosya boyutu 5 MB'ı aşamaz.",
+    );
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
   // İçerik imzası doğrulaması — istemci MIME'ına güvenme (HER dosya için).
-  const sniffed = isVideo ? sniffVideo(buffer) : sniffImage(buffer);
+  const sniffed = kind === "video" ? sniffVideo(buffer) : kind === "document" ? sniffDocument(buffer) : sniffImage(buffer);
   if (!sniffed) {
-    throw new Error(isVideo ? "Geçersiz veya bozuk video dosyası (yalnızca gerçek MP4/WebM)." : "Geçersiz veya bozuk görsel dosyası (yalnızca gerçek JPG/PNG/WEBP/GIF).");
+    throw new Error(
+      kind === "video" ? "Geçersiz veya bozuk video dosyası (yalnızca gerçek MP4/WebM)."
+        : kind === "document" ? "Geçersiz veya bozuk PDF dosyası (yalnızca gerçek PDF)."
+          : "Geçersiz veya bozuk görsel dosyası (yalnızca gerçek JPG/PNG/WEBP/GIF).",
+    );
   }
   const filename = `${Date.now()}-${crypto.randomUUID()}.${sniffed.ext}`;
 

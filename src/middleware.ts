@@ -28,6 +28,15 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // --- Kariyer (public) POST'ları --- iş başvurusu + CV yükleme edge flood-guard
+  //     (asıl kullanıcı-dostu sınır action/route'ta; bu, baypas edilse bile kaba üst sınır).
+  if ((pathname === "/kurumsal/kariyer" || pathname === "/api/kariyer/cv") && req.method === "POST") {
+    const ip = clientIp(req.headers) ?? "unknown";
+    const rl = rateLimit(`kariyer-edge:${ip}`, 20, 10 * 60 * 1000);
+    if (!rl.ok) return new NextResponse("Çok fazla istek. Lütfen sonra tekrar deneyin.", { status: 429 });
+    return NextResponse.next();
+  }
+
   // --- /admin --- yalnız admin çerezi geçerli
   if (pathname.startsWith("/admin")) {
     const admin = await verifyAdminToken(req.cookies.get(ADMIN_COOKIE)?.value);
@@ -48,5 +57,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/panel/:path*", "/basvuru"],
+  matcher: ["/admin/:path*", "/panel/:path*", "/basvuru", "/kurumsal/kariyer", "/api/kariyer/cv"],
 };

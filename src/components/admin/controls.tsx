@@ -207,6 +207,7 @@ export function FileDrop({
   compact = false,
   icon = "image",
   kind = "image",
+  endpoint = "/api/upload",
   style = {},
 }: {
   value?: string | null;
@@ -216,8 +217,10 @@ export function FileDrop({
   aspect?: string;
   compact?: boolean;
   icon?: IconName;
-  /** "video" → MP4/WebM yükler (kind=video, 30MB); varsayılan görsel. */
-  kind?: "image" | "video";
+  /** "video" → MP4/WebM (30MB); "document" → PDF (10MB); varsayılan görsel. */
+  kind?: "image" | "video" | "document";
+  /** Yükleme uç noktası — varsayılan admin /api/upload; public CV için /api/kariyer/cv. */
+  endpoint?: string;
   style?: React.CSSProperties;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -232,7 +235,7 @@ export function FileDrop({
       const fd = new FormData();
       fd.append("file", file);
       fd.append("kind", kind);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const res = await fetch(endpoint, { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Yükleme başarısız.");
       onChange(data.url);
@@ -287,6 +290,14 @@ export function FileDrop({
                 autoPlay
                 style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
               />
+            ) : kind === "document" ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: 14, textAlign: "center" }}>
+                <span style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--green-100)", color: "var(--green-600)", display: "grid", placeItems: "center" }}>
+                  <Icon name="check" size={22} />
+                </span>
+                <span style={{ fontWeight: 600, fontSize: 13.5, color: "var(--ink-700)" }}>PDF yüklendi</span>
+                <a href={value} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ fontSize: 12.5, fontWeight: 600, color: "var(--navy-700)", textDecoration: "underline" }}>Görüntüle</a>
+              </div>
             ) : (
               <Image src={value} alt="" fill style={{ objectFit: "contain" }} sizes="480px" />
             )}
@@ -314,7 +325,7 @@ export function FileDrop({
       <input
         ref={inputRef}
         type="file"
-        accept={kind === "video" ? "video/mp4,video/webm" : "image/jpeg,image/png,image/webp,image/gif"}
+        accept={kind === "video" ? "video/mp4,video/webm" : kind === "document" ? "application/pdf,.pdf" : "image/jpeg,image/png,image/webp,image/gif"}
         style={{ display: "none" }}
         onChange={(e) => {
           const f = e.target.files?.[0];

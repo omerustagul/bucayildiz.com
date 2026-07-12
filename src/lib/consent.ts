@@ -101,3 +101,21 @@ export const CONSENT_DOCS: ConsentDef[] = [
 ];
 
 export const REQUIRED_CONSENT_KEYS = CONSENT_DOCS.filter((d) => d.required).map((d) => d.key);
+
+/**
+ * İş başvurusu (kariyer) — kayıt-İÇİNDE aydınlatma+rıza metni ve sürümü.
+ * Sporcu tarafının çok-belgeli ConsentRecord sistemi burada TEKRARLANMAZ:
+ * tek seferlik, yetişkin başvuran. Form bu metni gösterir + gerçek onay kutusu;
+ * başvuru kaydına metnin SHA-256'sı (consentTextHash) + sürüm + an + IP/UA yazılır.
+ */
+export const CAREER_CONSENT_VERSION = "2026-06-15";
+export const CAREER_CONSENT_TEXT =
+  "Buca Yıldız Futbol Akademisi olarak, 6698 sayılı Kişisel Verilerin Korunması " +
+  "Kanunu (KVKK) kapsamında veri sorumlusu sıfatıyla; iş başvurunuz kapsamında " +
+  "ad-soyad, iletişim (e-posta/telefon) ve özgeçmiş (CV) bilgilerinizi YALNIZCA " +
+  "başvurunuzun değerlendirilmesi ve sizinle iletişim amacıyla işliyoruz. " +
+  "Verileriniz Türkiye'de barındırılır, işe alım süreci sonuçlanana kadar veya " +
+  "mevzuatın gerektirdiği süre boyunca saklanır ve üçüncü kişilerle paylaşılmaz. " +
+  "KVKK md.11 kapsamındaki haklarınızı (erişim, düzeltme, silme, itiraz) " +
+  "kullanabilirsiniz. Başvurumun bu kapsamda işlenmesine açık rıza veriyorum." +
+  DRAFT;

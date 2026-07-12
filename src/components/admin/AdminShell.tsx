@@ -40,6 +40,7 @@ const NAV: NavGroup[] = [
       { href: "/admin/formalar", label: "Formalar", icon: "shirt", ready: true },
       { href: "/admin/kadro", label: "Teknik Ekip & Yönetim", icon: "user-round", ready: true },
       { href: "/admin/tesisler", label: "Tesisler", icon: "shield-check", ready: true },
+      { href: "/admin/kariyer", label: "Kariyer / İş İlanları", icon: "file-text", ready: true },
     ],
   },
   {

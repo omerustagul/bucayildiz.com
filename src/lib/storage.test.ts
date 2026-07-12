@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect, vi } from "vitest";
 vi.mock("server-only", () => ({})); // node testinde server-only no-op
-import { isOwnStorageUrl, sniffVideo } from "@/lib/storage";
+import { isOwnStorageUrl, sniffVideo, sniffDocument, saveUpload } from "@/lib/storage";
 
 // S3_* env yok → yalnız yerel /uploads/ geçerli; tüm harici adresler reddedilir.
 describe("isOwnStorageUrl (yükleme allowlist)", () => {
@@ -37,5 +37,30 @@ describe("sniffVideo (video magic-byte)", () => {
   });
   it("çok kısa buffer null", () => {
     expect(sniffVideo(Buffer.from([1, 2, 3]))).toBeNull();
+  });
+});
+
+// CV yüklemesi (iş başvurusu) için PDF magic-byte + document modu.
+describe("sniffDocument (PDF magic-byte)", () => {
+  it("%PDF- imzası tanınır → application/pdf", () => {
+    expect(sniffDocument(Buffer.from([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37]))).toEqual({ type: "application/pdf", ext: "pdf" });
+  });
+  it("PDF olmayan (PNG imzası) REDDEDİLİR → null", () => {
+    expect(sniffDocument(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0, 0, 0, 0]))).toBeNull();
+  });
+  it("çok kısa buffer null", () => {
+    expect(sniffDocument(Buffer.from([0x25, 0x50]))).toBeNull();
+  });
+});
+
+describe("saveUpload document modu — PDF-dışı REDDEDİLİR (istemci MIME'ına güvenmez)", () => {
+  const notPdf = () => Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  it("PDF-olmayan MIME (image/png) reddedilir", async () => {
+    const file = new File([notPdf()], "sahte.png", { type: "image/png" });
+    await expect(saveUpload(file, { kind: "document" })).rejects.toThrow(/PDF/i);
+  });
+  it("MIME 'application/pdf' ama içerik PDF DEĞİL → magic-byte reddi", async () => {
+    const file = new File([notPdf()], "sahte.pdf", { type: "application/pdf" });
+    await expect(saveUpload(file, { kind: "document" })).rejects.toThrow(/PDF/i);
   });
 });

@@ -115,6 +115,41 @@ export const contactSchema = z.object({
   message: z.string().trim().min(5, "Mesajınızı yazınız.").max(2000),
 });
 
+// --- Kariyer: iş ilanı (admin) + iş başvurusu (public) ---
+export const JOB_EMPLOYMENT = ["full-time", "part-time", "stajyer"] as const;
+export const JOB_APPLICATION_STATUSES = ["new", "reviewing", "closed"] as const;
+
+/** İş ilanı — admin CRUD. */
+export const jobPostingSchema = z.object({
+  title: z.string().trim().min(2, "İlan başlığı giriniz.").max(120),
+  department: z.string().trim().max(80).optional().or(z.literal("")),
+  location: z.string().trim().max(120).optional().or(z.literal("")),
+  employment: z.enum(JOB_EMPLOYMENT, { message: "Çalışma türü seçiniz." }).default("full-time"),
+  description: z.string().trim().max(4000).optional().or(z.literal("")),
+  active: z.boolean().default(true),
+  sort: z.coerce.number().int().min(0).max(999).default(0),
+});
+
+/** İş başvurusu — PUBLIC form (sitenin ikinci PII-toplayan ucu; /basvuru
+ *  korumaları miras alınır). E-posta zorunlu; consent GERÇEK onay kutusu (true olmalı). */
+export const jobApplicationSchema = z.object({
+  postingId: z.string().trim().max(60).optional().or(z.literal("")),
+  name: z.string().trim().min(2, "Ad soyad giriniz.").max(120),
+  email: z.string().trim().email("Geçerli bir e-posta giriniz.").max(160),
+  phone: z
+    .string()
+    .trim()
+    .max(20)
+    .regex(/^[0-9+\s()-]*$/, "Telefon yalnızca rakam ve +()- içerebilir.")
+    .optional()
+    .or(z.literal("")),
+  message: z.string().trim().max(2000).optional().or(z.literal("")),
+  // cvUrl yalnız kendi depomuz olabilir — isOwnStorageUrl kontrolü action'da (harici/SSRF engeli).
+  cvUrl: z.string().trim().max(500).optional().or(z.literal("")),
+  // Gerçek onay kutusu: aydınlatma+rıza metnini onaylamadan başvuru gönderilemez.
+  consent: z.literal(true, { message: "Devam etmek için aydınlatma metnini onaylayın." }),
+});
+
 // --- Takvim Programı / Antrenman ---
 export const TRAINING_SCOPES = ["team", "individual"] as const;
 export const TRAINING_STATUSES = ["planned", "completed", "cancelled", "partial"] as const;
