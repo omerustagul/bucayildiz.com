@@ -275,7 +275,18 @@ export function FileDrop({
         {value ? (
           <>
             {kind === "video" ? (
-              <video src={value} muted loop playsInline autoPlay style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+              <video
+                ref={(el) => {
+                  // React 'muted' prop'u client'ta güvenilmez → DOM property'sini zorla.
+                  if (el) el.muted = true;
+                }}
+                src={value}
+                muted
+                loop
+                playsInline
+                autoPlay
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+              />
             ) : (
               <Image src={value} alt="" fill style={{ objectFit: "contain" }} sizes="480px" />
             )}

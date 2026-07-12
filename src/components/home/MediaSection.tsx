@@ -75,9 +75,9 @@ export async function MediaSection() {
   const cards = (await prisma.homeMediaCard.findMany({ orderBy: { sort: "asc" } })) as Card[];
   if (cards.length === 0) return null;
 
-  // Öne çıkan başa alınır (vurgulu); gerisi sort sırasıyla — hepsi tek satırda.
-  const featured = cards.find((c) => c.featured) ?? cards[0];
-  const ordered = [featured, ...cards.filter((c) => c.id !== featured.id)];
+  // Birden ÇOK kart öne çıkarılabilir: tüm öne çıkanlar vurgulu ve başta
+  // (sort sırasıyla), ardından diğerleri. Hiçbiri işaretli değilse hepsi normal.
+  const ordered = [...cards.filter((c) => c.featured), ...cards.filter((c) => !c.featured)];
 
   return (
     <section style={{ background: "var(--surface-subtle)" }}>
@@ -91,7 +91,7 @@ export async function MediaSection() {
         <div className="hp-media-scroll" style={{ display: "flex", gap: 14, overflowX: "auto", scrollSnapType: "x mandatory" }}>
           {ordered.map((c) => (
             <div key={c.id} style={{ flex: "0 0 auto", width: "clamp(230px, 72vw, 290px)", scrollSnapAlign: "start" }}>
-              <MediaCard card={c} featured={c.id === featured.id} />
+              <MediaCard card={c} featured={c.featured} />
             </div>
           ))}
         </div>
