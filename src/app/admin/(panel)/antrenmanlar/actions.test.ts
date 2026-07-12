@@ -19,7 +19,7 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-import { updateTrainingBasics } from "./actions";
+import { setTrainingPitch, updateTrainingBasics } from "./actions";
 
 beforeEach(() => {
   H.updated = null;
@@ -32,12 +32,10 @@ beforeEach(() => {
   });
 });
 
-const base = { date: "2026-08-01", time: "17:00", duration: 90, notes: "" };
-
-describe("updateTrainingBasics — DÜZENLEMEDE de saha yalnız gerçek isPitch=true Facility", () => {
-  it("geçersiz/silinmiş/isPitch-OLMAYAN id REDDEDİLİR; training.update çağrılmaz; sorgu isPitch:true ile", async () => {
+describe("setTrainingPitch — saha ANINDA kaydetme; yalnız gerçek isPitch=true Facility", () => {
+  it("geçersiz/silinmiş/isPitch-OLMAYAN id REDDEDİLİR; update çağrılmaz; sorgu isPitch:true ile", async () => {
     H.facility = null; // findFirst → null: id yok VEYA isPitch=false
-    const res = await updateTrainingBasics("tr1", { ...base, pitch: "yok-veya-tesis-id" });
+    const res = await setTrainingPitch("tr1", "yok-veya-tesis-id");
     expect(res).toMatchObject({ error: expect.stringContaining("saha") });
     expect(H.update).not.toHaveBeenCalled();
     expect(H.findFirst).toHaveBeenCalledWith({ where: { id: "yok-veya-tesis-id", isPitch: true }, select: { name: true } });
@@ -45,16 +43,25 @@ describe("updateTrainingBasics — DÜZENLEMEDE de saha yalnız gerçek isPitch=
 
   it("geçerli isPitch id → Facility ADI kaydedilir (serbest metin değil) + requireAdmin geçer", async () => {
     H.facility = { name: "Ana Saha" };
-    const res = await updateTrainingBasics("tr1", { ...base, pitch: "f1" });
+    const res = await setTrainingPitch("tr1", "f1");
     expect(res).toBeUndefined();
     expect(H.updated?.pitch).toBe("Ana Saha");
     expect(H.requireAdmin).toHaveBeenCalled();
   });
 
-  it("saha boş (temizlendi) → çökmez; pitch boş kaydedilir; facility sorgusu YAPILMAZ", async () => {
-    const res = await updateTrainingBasics("tr1", { ...base, pitch: "" });
+  it("boş id → saha temizlenir (pitch=''); facility sorgusu YAPILMAZ", async () => {
+    const res = await setTrainingPitch("tr1", "");
     expect(res).toBeUndefined();
     expect(H.updated?.pitch).toBe("");
+    expect(H.findFirst).not.toHaveBeenCalled();
+  });
+});
+
+describe("updateTrainingBasics — sahaya DOKUNMAZ (temiz ayrım)", () => {
+  it("yalnız tarih/saat/süre/not günceller; pitch alanı yazılmaz; facility sorgusu yok", async () => {
+    const res = await updateTrainingBasics("tr1", { date: "2026-08-01", time: "17:00", duration: 90, notes: "x" });
+    expect(res).toBeUndefined();
+    expect(H.updated).not.toHaveProperty("pitch");
     expect(H.findFirst).not.toHaveBeenCalled();
   });
 });

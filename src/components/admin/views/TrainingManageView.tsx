@@ -11,9 +11,10 @@ import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { Tabs } from "@/components/ui/Tabs";
 import { Icon } from "@/lib/icons";
+import { toast } from "@/components/ui/Toast";
 import { TRAINING_STATUS_META, statusMeta } from "@/lib/trainingMeta";
 import {
-  setTrainingStatus, updateTrainingBasics, toggleDrill, addDrill, removeDrill, saveAttendance,
+  setTrainingStatus, setTrainingPitch, updateTrainingBasics, toggleDrill, addDrill, removeDrill, saveAttendance,
 } from "@/app/admin/(panel)/antrenmanlar/actions";
 import { deleteTraining } from "@/app/admin/(panel)/takvim-programi/actions";
 
@@ -152,6 +153,19 @@ function TrainingDrawer({ training: t, teams, athletes, pitches, onClose }: { tr
     });
   };
 
+  // Saha seçilince ANINDA kaydet (durum butonları gibi) — ayrı "Bilgileri Güncelle"
+  // butonunu aramaya gerek kalmaz. Seçim state'i hemen güncellenir, sonra persist edilir.
+  const savePitch = (pitchId: string) => {
+    setBasics((b) => ({ ...b, pitch: pitchId }));
+    setError(null);
+    startTransition(async () => {
+      const res = await setTrainingPitch(t.id, pitchId);
+      if (res?.error) { setError(res.error); return; }
+      toast.success("Saha güncellendi.");
+      router.refresh();
+    });
+  };
+
   const saveAll = () => {
     const rows = roster
       .map((r) => ({ athleteId: r.athleteId, status: att[r.athleteId]?.status ?? "unknown", note: att[r.athleteId]?.note ?? "" }))
@@ -219,10 +233,11 @@ function TrainingDrawer({ training: t, teams, athletes, pitches, onClose }: { tr
               <Select
                 label="Saha"
                 placeholder="Saha seçin"
-                hint={pitchUnmatched ? `Kayıtlı "${t.pitch}" listede yok — yeniden seçin` : undefined}
+                hint={pitchUnmatched ? `Kayıtlı "${t.pitch}" listede yok — yeni saha seçince güncellenir` : "Seçince otomatik kaydedilir"}
                 options={pitches.map((p) => ({ value: p.id, label: p.name }))}
                 value={basics.pitch}
-                onChange={(e) => setBasics((b) => ({ ...b, pitch: e.target.value }))}
+                onChange={(e) => savePitch(e.target.value)}
+                disabled={pending}
               />
             ) : (
               <Field label="Saha" hint="Tesisler'de en az bir tesisi saha olarak işaretleyin">
@@ -240,7 +255,7 @@ function TrainingDrawer({ training: t, teams, athletes, pitches, onClose }: { tr
               variant="secondary"
               size="sm"
               disabled={pending}
-              onClick={() => run(() => updateTrainingBasics(t.id, { date: basics.date, time: basics.time, duration: basics.duration ? Number(basics.duration) : null, pitch: basics.pitch, notes: basics.notes }))}
+              onClick={() => run(() => updateTrainingBasics(t.id, { date: basics.date, time: basics.time, duration: basics.duration ? Number(basics.duration) : null, notes: basics.notes }))}
             >
               Bilgileri Güncelle
             </Button>
