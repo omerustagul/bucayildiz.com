@@ -57,8 +57,13 @@ next-env.d.ts
 # yerel veritabani yedekleri (asla commit edilmez)
 backups/
 
-# kisisel Claude ayarlari (takim ayarlari .claude/settings.json ile gelir)
-.claude/settings.local.json
+# Claude Code yerel arac dosyalari (launch.json, settings.local.json vb.) —
+# proje komut/agent/skill'leri (.claude/commands, agents, skills, settings.json) izlenir.
+.claude/*
+!.claude/agents/
+!.claude/commands/
+!.claude/skills/
+!.claude/settings.json
 
 # IDE
 .idea/
