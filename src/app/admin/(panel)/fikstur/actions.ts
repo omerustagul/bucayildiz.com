@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { notifyTeam, notifyAllAthletes } from "@/lib/notify";
+import { errLabel } from "@/lib/log";
 
 const schema = z.object({
   competition: z.string().trim().min(1, "Lig/turnuva zorunlu.").max(80),
@@ -43,8 +45,9 @@ export async function createFixture(input: unknown): Promise<FixtureResult | voi
   await requireAdmin();
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
+  const fx = toData(parsed.data);
   try {
-    await prisma.fixture.create({ data: toData(parsed.data) });
+    await prisma.fixture.create({ data: fx });
   } catch {
     return { error: "Maç kaydedilemedi." };
   }
@@ -52,6 +55,15 @@ export async function createFixture(input: unknown): Promise<FixtureResult | voi
   revalidatePath("/fikstur");
   revalidatePath("/fikstur/sonuclar");
   revalidatePath("/");
+
+  // Bildirim — takım maçıysa o takıma, kulüp maçıysa herkese. opponent public (PII değil).
+  try {
+    const payload = { type: "match" as const, title: "Yeni maç eklendi", body: `Rakip: ${fx.opponent}${fx.date ? ` · ${fx.date}` : ""}`, url: "/panel/maclar" };
+    if (fx.teamId) await notifyTeam(fx.teamId, payload);
+    else await notifyAllAthletes(payload);
+  } catch (e) {
+    console.error("[bildirim] maç:", errLabel(e));
+  }
 }
 
 export async function updateFixture(id: string, input: unknown): Promise<FixtureResult | void> {

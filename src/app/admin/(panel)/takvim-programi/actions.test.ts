@@ -9,9 +9,12 @@ const H = vi.hoisted(() => ({
   findFirst: vi.fn(),
   create: vi.fn(),
   requireAdmin: vi.fn(async () => ({ role: "admin", sub: "u1", name: "A", email: "" })),
+  notifyTeam: vi.fn(async (_teamId: string, _input: unknown) => ({ feedCount: 0, push: { sent: 0, configured: false } })),
+  notifyAthletes: vi.fn(async (_ids: string[], _input: unknown) => ({ feedCount: 0, push: { sent: 0, configured: false } })),
 }));
 
 vi.mock("@/lib/auth", () => ({ requireAdmin: H.requireAdmin }));
+vi.mock("@/lib/notify", () => ({ notifyTeam: H.notifyTeam, notifyAthletes: H.notifyAthletes }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     facility: { findFirst: H.findFirst },
@@ -30,6 +33,8 @@ beforeEach(() => {
     H.created = data;
     return {};
   });
+  H.notifyTeam.mockClear();
+  H.notifyAthletes.mockClear();
 });
 
 const base = { teamId: "t1", scope: "team", date: "2026-08-01", time: "17:00", duration: 90, notes: "", drills: [], athleteIds: [] };
@@ -56,5 +61,25 @@ describe("createTraining — saha yalnız gerçek isPitch=true Facility'den", ()
     expect(res).toBeUndefined();
     expect(H.created?.pitch).toBe("");
     expect(H.findFirst).not.toHaveBeenCalled();
+  });
+});
+
+describe("createTraining — SİSTEM OLAYI bildirimi (Madde 5)", () => {
+  it("takım antrenmanı → o TAKIMA bildirim (notifyTeam, type=training)", async () => {
+    const res = await createTraining({ ...base, scope: "team", pitch: "" });
+    expect(res).toBeUndefined();
+    expect(H.notifyTeam).toHaveBeenCalledOnce();
+    expect(H.notifyTeam.mock.calls[0][0]).toBe("t1"); // teamId
+    expect(H.notifyTeam.mock.calls[0][1]).toMatchObject({ type: "training", url: "/panel/antrenmanlar" });
+    expect(H.notifyAthletes).not.toHaveBeenCalled();
+  });
+
+  it("bireysel antrenman → SEÇİLİ SPORCULARA bildirim (notifyAthletes)", async () => {
+    const res = await createTraining({ ...base, scope: "individual", athleteIds: ["s1", "s2"], pitch: "" });
+    expect(res).toBeUndefined();
+    expect(H.notifyAthletes).toHaveBeenCalledOnce();
+    expect(H.notifyAthletes.mock.calls[0][0]).toEqual(["s1", "s2"]);
+    expect(H.notifyAthletes.mock.calls[0][1]).toMatchObject({ type: "training" });
+    expect(H.notifyTeam).not.toHaveBeenCalled();
   });
 });

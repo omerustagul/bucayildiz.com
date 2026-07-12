@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { resolvePitchName } from "@/lib/facilities";
+import { notifyAthletes, notifyTeam } from "@/lib/notify";
+import { errLabel } from "@/lib/log";
 import { trainingCreateSchema } from "@/lib/validation";
 
 export type TrainingResult = { error: string };
@@ -42,6 +44,18 @@ export async function createTraining(input: unknown): Promise<TrainingResult | v
     return { error: "Kaydedilemedi. Takım ve sporcu seçimini kontrol edin." };
   }
   revalidate();
+
+  // Bildirim (feed + push) — best-effort, olayı bloklamaz.
+  try {
+    const when = `${d.date}${d.time ? ` · ${d.time}` : ""}`;
+    if (d.scope === "individual") {
+      await notifyAthletes(d.athleteIds, { type: "training", title: "Yeni bireysel antrenman", body: when, url: "/panel/antrenmanlar" });
+    } else {
+      await notifyTeam(d.teamId, { type: "training", title: "Yeni takım antrenmanı", body: when, url: "/panel/antrenmanlar" });
+    }
+  } catch (e) {
+    console.error("[bildirim] antrenman:", errLabel(e));
+  }
 }
 
 export async function deleteTraining(id: string): Promise<void> {

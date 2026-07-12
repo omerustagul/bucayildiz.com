@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { notifyAthletes } from "@/lib/notify";
+import { errLabel } from "@/lib/log";
 import { assignmentCreateSchema } from "@/lib/validation";
 import { isOwnStorageUrl } from "@/lib/storage";
 
@@ -31,6 +33,13 @@ export async function createAssignments(input: unknown): Promise<{ error?: strin
     return { error: "Gönderilemedi." };
   }
   revalidate();
+
+  // Bildirim — mesaj/doküman BAŞLIĞI body (admin subject, güvenli).
+  try {
+    await notifyAthletes(d.athleteIds, { type: "message", title: d.kind === "document" ? "Yeni doküman" : "Yeni mesaj", body: d.title, url: "/panel/mesajlar" });
+  } catch (e) {
+    console.error("[bildirim] mesaj:", errLabel(e));
+  }
 }
 
 export async function deleteAssignment(id: string): Promise<void> {

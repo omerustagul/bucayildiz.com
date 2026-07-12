@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
-import { sendPush } from "@/lib/push";
+import { notifyAllAthletes, notifyTeam } from "@/lib/notify";
 import { idSchema, internalPath } from "@/lib/validation";
 
 export type SendResult = { ok: true; sent: number; configured: boolean } | { ok: false; error: string };
@@ -16,8 +16,9 @@ const notificationSchema = z.object({
 });
 
 /**
- * Yönetici → push bildirimi gönderir. Hedef "all" (tüm aboneler) veya bir
- * takım id'si (o takımdaki sporcuların aboneleri).
+ * Yönetici → sporcu bildirimi. Hedef "all" (tüm sporcular) veya bir takım id'si.
+ * Ortak notifyAthletes akışına bağlanır: feed BİRİNCİL (VAPID olmasa da sporcunun
+ * feed'inde görünür), Web Push EK + non-blocking. URL yalnız site-içi (internalPath).
  * KVKK: gövdeye sağlık/performans verisi yazma — genel tut.
  */
 export async function sendNotification(input: unknown): Promise<SendResult> {
@@ -27,11 +28,11 @@ export async function sendNotification(input: unknown): Promise<SendResult> {
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const { target, title, body, url } = parsed.data;
 
-  const where = target === "all" ? "all" : { athlete: { teamId: target } };
   try {
-    const res = await sendPush(where, { title, body, url: url || "/panel" });
-    if (!res.configured) return { ok: false, error: "Push yapılandırılmamış (VAPID anahtarları eksik)." };
-    return { ok: true, sent: res.sent, configured: true };
+    const payload = { type: "admin" as const, title, body, url: url || "/panel" };
+    const res = target === "all" ? await notifyAllAthletes(payload) : await notifyTeam(target, payload);
+    // sent = feed'e yazılan (bildirilen) sporcu sayısı; configured = push açık mı.
+    return { ok: true, sent: res.feedCount, configured: res.push.configured };
   } catch {
     return { ok: false, error: "Bildirim gönderilemedi." };
   }

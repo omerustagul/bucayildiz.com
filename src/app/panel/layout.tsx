@@ -8,9 +8,10 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const session = await getPanelSession();
   if (!session?.athleteId) redirect("/giris");
 
-  const [athlete, unreadCount, settings] = await Promise.all([
+  const [athlete, unreadCount, notifUnread, settings] = await Promise.all([
     prisma.athlete.findUnique({ where: { id: session.athleteId }, include: { team: true } }),
     prisma.athleteAssignment.count({ where: { athleteId: session.athleteId, readAt: null } }),
+    prisma.notification.count({ where: { athleteId: session.athleteId, readAt: null } }),
     getSettings(),
   ]);
   if (!athlete) redirect("/giris");
@@ -25,6 +26,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         photoUrl: athlete.photoUrl,
       }}
       unreadCount={unreadCount}
+      notifUnread={notifUnread}
       mobileNav={settings.mobileNavPanel}
       logoUrl={settings.logoUrl}
     >

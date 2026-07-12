@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { notifyAthletes } from "@/lib/notify";
+import { errLabel } from "@/lib/log";
 
 export type MeasurementResult = { ok: true } | { ok: false; error: string };
 
@@ -61,6 +63,12 @@ export async function addMeasurement(input: unknown): Promise<MeasurementResult>
     revalidatePath("/admin/performans");
     revalidatePath("/panel/performans");
     revalidatePath("/panel");
+    // Bildirim — KVKK: gövdeye ölçüm DEĞERİ yazma; yalnız "eklendi" bilgisi.
+    try {
+      await notifyAthletes([d.athleteId], { type: "measurement", title: "Yeni performans ölçümü", body: "Antrenörün yeni bir ölçüm ekledi.", url: "/panel/performans" });
+    } catch (e) {
+      console.error("[bildirim] ölçüm:", errLabel(e));
+    }
     return { ok: true };
   } catch {
     return { ok: false, error: "Ölçüm kaydedilemedi." };

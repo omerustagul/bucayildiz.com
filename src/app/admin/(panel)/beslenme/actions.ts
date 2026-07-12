@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { notifyAthletes } from "@/lib/notify";
+import { errLabel } from "@/lib/log";
 import { nutritionPlanSchema, nutritionMealSchema } from "@/lib/validation";
 
 function revalidate() {
@@ -42,6 +44,13 @@ export async function createNutritionPlan(input: unknown): Promise<{ error?: str
     return { error: "Kaydedilemedi. Sporcu seçimini kontrol edin." };
   }
   revalidate();
+
+  // Bildirim — plan BAŞLIĞI (admin etiketi, PII değil); makro/içerik ASLA yazılmaz.
+  try {
+    await notifyAthletes([d.athleteId], { type: "nutrition", title: "Yeni beslenme programı", body: d.title, url: "/panel/beslenme" });
+  } catch (e) {
+    console.error("[bildirim] beslenme:", errLabel(e));
+  }
 }
 
 const basicsSchema = z.object({

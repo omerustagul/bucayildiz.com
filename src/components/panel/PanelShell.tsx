@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/lib/icons";
 import { logoSrc } from "@/lib/branding";
 import { Avatar } from "@/components/ui/Avatar";
-import { IconButton } from "@/components/ui/IconButton";
+import { NotificationBell } from "@/components/panel/NotificationBell";
 import { panelLogout } from "@/app/panel/actions";
 import { InstallHint } from "@/components/panel/InstallHint";
 import { PageTransition } from "@/components/layout/PageTransition";
@@ -38,7 +38,7 @@ const TABBAR_ITEMS: TabBarItem[] = [
   { kind: "link", href: "/panel/maclar", label: "Maçlar", icon: "trophy" },
 ];
 
-export function PanelShell({ athlete, unreadCount = 0, mobileNav = true, logoUrl, children }: { athlete: Athlete; unreadCount?: number; mobileNav?: boolean; logoUrl?: string | null; children: React.ReactNode }) {
+export function PanelShell({ athlete, unreadCount = 0, notifUnread = 0, mobileNav = true, logoUrl, children }: { athlete: Athlete; unreadCount?: number; notifUnread?: number; mobileNav?: boolean; logoUrl?: string | null; children: React.ReactNode }) {
   const pathname = usePathname();
   const numberLabel = athlete.number != null ? `${athlete.number} Numara` : athlete.position;
   const title = NAV.find((n) => n.href === pathname)?.label ?? "Genel Bakış";
@@ -139,7 +139,7 @@ export function PanelShell({ athlete, unreadCount = 0, mobileNav = true, logoUrl
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 14, flex: "none" }}>
-              <IconButton label="Bildirimler" variant="outline"><Icon name="bell" size={18} /></IconButton>
+              <NotificationBell initialUnread={notifUnread} />
               <span className="pl-header-divider" style={{ width: 1, height: 30, background: "var(--ink-200)" }} />
               {/* Kullanıcı bloğu → profil sayfası */}
               <Link href="/panel/profil" title="Profilim" style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none", borderRadius: "var(--radius-sm)" }}>
