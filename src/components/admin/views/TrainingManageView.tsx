@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ViewHeader, Toolbar, Field } from "@/components/admin/kit";
 import { TextInput, TextArea, Drawer } from "@/components/admin/controls";
 import { Select } from "@/components/ui/Select";
@@ -17,6 +18,7 @@ import {
 import { deleteTraining } from "@/app/admin/(panel)/takvim-programi/actions";
 
 export type MTeam = { id: string; name: string };
+export type MPitch = { id: string; name: string };
 export type MAthlete = { id: string; name: string; teamId: string };
 export type MDrill = { id: string; text: string; done: boolean };
 export type MAttendance = { athleteId: string; status: string; note: string };
@@ -33,7 +35,7 @@ const ATT_OPTIONS = [
 
 const fmtDate = (d: string) => { const [y, m, day] = d.split("-"); return day && m && y ? `${day}.${m}.${y}` : d; };
 
-export function TrainingManageView({ teams, athletes, trainings }: { teams: MTeam[]; athletes: MAthlete[]; trainings: MTraining[] }) {
+export function TrainingManageView({ teams, athletes, pitches, trainings }: { teams: MTeam[]; athletes: MAthlete[]; pitches: MPitch[]; trainings: MTraining[] }) {
   const [teamTab, setTeamTab] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -109,17 +111,21 @@ export function TrainingManageView({ teams, athletes, trainings }: { teams: MTea
         </div>
       )}
 
-      {open && <TrainingDrawer key={open.id} training={open} teams={teams} athletes={athletes} onClose={() => setOpenId(null)} />}
+      {open && <TrainingDrawer key={open.id} training={open} teams={teams} athletes={athletes} pitches={pitches} onClose={() => setOpenId(null)} />}
     </>
   );
 }
 
-function TrainingDrawer({ training: t, teams, athletes, onClose }: { training: MTraining; teams: MTeam[]; athletes: MAthlete[]; onClose: () => void }) {
+function TrainingDrawer({ training: t, teams, athletes, pitches, onClose }: { training: MTraining; teams: MTeam[]; athletes: MAthlete[]; pitches: MPitch[]; onClose: () => void }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [newDrill, setNewDrill] = useState("");
-  const [basics, setBasics] = useState({ date: t.date, time: t.time, duration: t.duration?.toString() ?? "", pitch: t.pitch, notes: t.notes });
+  // Depolanan pitch bir AD'dır; dropdown id ile çalışır → adı id'ye eşle. Eşleşmezse
+  // (eski serbest metin / silinmiş / yeniden adlandırılmış tesis) boş bırakılır + uyarılır.
+  const initialPitchId = pitches.find((p) => p.name === t.pitch)?.id ?? "";
+  const pitchUnmatched = !!t.pitch && !initialPitchId;
+  const [basics, setBasics] = useState({ date: t.date, time: t.time, duration: t.duration?.toString() ?? "", pitch: initialPitchId, notes: t.notes });
 
   // Yoklama satırları: bireyselde attendance kayıtları (katılımcılar); takımda
   // takım kadrosu + mevcut kayıtlarla birleşim.
@@ -209,7 +215,22 @@ function TrainingDrawer({ training: t, teams, athletes, onClose }: { training: M
             <Field label="Tarih"><TextInput type="date" value={basics.date} onChange={(e) => setBasics((b) => ({ ...b, date: e.target.value }))} /></Field>
             <Field label="Saat"><TextInput type="time" value={basics.time} onChange={(e) => setBasics((b) => ({ ...b, time: e.target.value }))} /></Field>
             <Field label="Süre" hint="dakika"><TextInput type="number" value={basics.duration} onChange={(e) => setBasics((b) => ({ ...b, duration: e.target.value }))} /></Field>
-            <Field label="Saha"><TextInput value={basics.pitch} onChange={(e) => setBasics((b) => ({ ...b, pitch: e.target.value }))} /></Field>
+            {pitches.length > 0 ? (
+              <Select
+                label="Saha"
+                placeholder="Saha seçin"
+                hint={pitchUnmatched ? `Kayıtlı "${t.pitch}" listede yok — yeniden seçin` : undefined}
+                options={pitches.map((p) => ({ value: p.id, label: p.name }))}
+                value={basics.pitch}
+                onChange={(e) => setBasics((b) => ({ ...b, pitch: e.target.value }))}
+              />
+            ) : (
+              <Field label="Saha" hint="Tesisler'de en az bir tesisi saha olarak işaretleyin">
+                <Link href="/admin/tesisler" style={{ display: "inline-flex", alignItems: "center", gap: 6, minWidth: 0, padding: "12px 12px", borderRadius: "var(--radius-sm)", border: "1.5px dashed var(--ink-200)", fontSize: 13, fontWeight: 600, color: "var(--navy-700)", textDecoration: "none" }}>
+                  <Icon name="plus" size={13} /> Tesisler&apos;e git
+                </Link>
+              </Field>
+            )}
           </div>
           <div style={{ marginTop: 12 }}>
             <Field label="Genel Not"><TextArea rows={2} value={basics.notes} onChange={(e) => setBasics((b) => ({ ...b, notes: e.target.value }))} /></Field>

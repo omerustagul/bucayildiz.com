@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { resolvePitchName } from "@/lib/facilities";
 import { trainingCreateSchema } from "@/lib/validation";
 
 export type TrainingResult = { error: string };
@@ -18,14 +19,10 @@ export async function createTraining(input: unknown): Promise<TrainingResult | v
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
 
-  // Saha: seçildiyse gerçekten VAR OLAN ve isPitch=true bir Facility olmalı.
+  // Saha: seçildiyse gerçek + isPitch=true Facility olmalı (düzenleme ile ORTAK helper).
   // Serbest metin değil — geçersiz/silinmiş/isPitch-olmayan id reddedilir; adı kaydedilir.
-  let pitchName = "";
-  if (d.pitch) {
-    const facility = await prisma.facility.findFirst({ where: { id: d.pitch, isPitch: true }, select: { name: true } });
-    if (!facility) return { error: "Geçersiz saha seçimi. Lütfen listeden bir saha seçin." };
-    pitchName = facility.name;
-  }
+  const pitchName = await resolvePitchName(d.pitch || "");
+  if (pitchName === null) return { error: "Geçersiz saha seçimi. Lütfen listeden bir saha seçin." };
 
   try {
     await prisma.training.create({

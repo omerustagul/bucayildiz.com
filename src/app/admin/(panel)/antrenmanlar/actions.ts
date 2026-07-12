@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { resolvePitchName } from "@/lib/facilities";
 import { attendanceSaveSchema, TRAINING_STATUSES } from "@/lib/validation";
 
 function revalidate() {
@@ -32,8 +33,14 @@ export async function updateTrainingBasics(id: string, input: unknown): Promise<
   const parsed = basicsSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
+
+  // Saha: oluşturma ile AYNI doğrulama (ortak helper) — serbest metin deliği kapalı.
+  // Geçersiz/silinmiş/isPitch-olmayan id reddedilir; doğrulanan Facility'nin adı kaydedilir.
+  const pitchName = await resolvePitchName(d.pitch || "");
+  if (pitchName === null) return { error: "Geçersiz saha seçimi. Lütfen listeden bir saha seçin." };
+
   await prisma.training
-    .update({ where: { id }, data: { date: d.date, time: d.time || "", duration: d.duration ?? null, pitch: d.pitch || "", notes: d.notes || "" } })
+    .update({ where: { id }, data: { date: d.date, time: d.time || "", duration: d.duration ?? null, pitch: pitchName, notes: d.notes || "" } })
     .catch(() => {});
   revalidate();
 }

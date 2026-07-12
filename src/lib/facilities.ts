@@ -12,3 +12,16 @@ export function listPitchFacilities() {
     select: { id: true, name: true },
   });
 }
+
+/**
+ * Antrenman kaydı için saha id'sini doğrular ve ADINI döndürür. Oluşturma ve
+ * düzenleme action'ları bunu ORTAK kullanır (serbest metin deliği yok):
+ * - `""` (boş) → `""`: saha seçilmedi, geçerli — DB'ye gidilmez.
+ * - dolu id → gerçekten VAR OLAN + isPitch=true Facility olmalı; adını döndürür.
+ * - id var ama tesis yok / isPitch=false / silinmiş → `null` (çağıran reddeder).
+ */
+export async function resolvePitchName(pitchId: string): Promise<string | null> {
+  if (!pitchId) return "";
+  const facility = await prisma.facility.findFirst({ where: { id: pitchId, isPitch: true }, select: { name: true } });
+  return facility ? facility.name : null;
+}
