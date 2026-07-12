@@ -1,17 +1,16 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getAdminSession } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 
 const hex = /^#[0-9a-fA-F]{6}$/;
 
 const schema = z.object({
   name: z.string().trim().min(1, "Forma adı zorunlu.").max(60),
   kind: z.enum(["home", "away", "third", "gk", "other"]).default("home"),
-  primary: z.string().trim().regex(hex, "Geçerli bir renk seçin.").default("#15295A"),
+  primary: z.string().trim().regex(hex, "Geçerli bir renk seçin.").default("#26215F"),
   accent: z.string().trim().regex(hex, "Geçerli bir renk seçin.").default("#C9A227"),
   description: z.string().trim().max(160).optional().or(z.literal("")),
   imageUrl: z.string().trim().nullable().optional(),
@@ -21,10 +20,6 @@ const schema = z.object({
 
 export type JerseyResult = { error: string };
 
-async function requireAuth() {
-  const s = await getAdminSession();
-  if (!s) redirect("/admin/giris");
-}
 
 function toData(d: z.infer<typeof schema>) {
   return {
@@ -40,25 +35,33 @@ function toData(d: z.infer<typeof schema>) {
 }
 
 export async function createJersey(input: unknown): Promise<JerseyResult | void> {
-  await requireAuth();
+  await requireAdmin();
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
-  await prisma.jersey.create({ data: toData(parsed.data) });
+  try {
+    await prisma.jersey.create({ data: toData(parsed.data) });
+  } catch {
+    return { error: "Forma kaydedilemedi." };
+  }
   revalidatePath("/admin/formalar");
   revalidatePath("/");
 }
 
 export async function updateJersey(id: string, input: unknown): Promise<JerseyResult | void> {
-  await requireAuth();
+  await requireAdmin();
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
-  await prisma.jersey.update({ where: { id }, data: toData(parsed.data) });
+  try {
+    await prisma.jersey.update({ where: { id }, data: toData(parsed.data) });
+  } catch {
+    return { error: "Forma güncellenemedi." };
+  }
   revalidatePath("/admin/formalar");
   revalidatePath("/");
 }
 
 export async function deleteJersey(id: string): Promise<void> {
-  await requireAuth();
+  await requireAdmin();
   await prisma.jersey.delete({ where: { id } }).catch(() => {});
   revalidatePath("/admin/formalar");
   revalidatePath("/");

@@ -345,6 +345,9 @@ model User {
   role         String   @default("admin") // admin | athlete
   athleteId    String?  @unique
   athlete      Athlete? @relation(fields: [athleteId], references: [id])
+  // Oturum sürümü: artırılınca bu kullanıcının eski JWT'leri geçersizleşir
+  // (şifre değişimi / "her yerden çıkış"). Yetki kapısı DB'deki değerle karşılaştırır.
+  tokenVersion Int      @default(0)
   pushSubs     PushSubscription[]
   createdAt    DateTime @default(now())
 }

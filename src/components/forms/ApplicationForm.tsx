@@ -74,6 +74,7 @@ function Field({
   error,
   children,
   full,
+  htmlFor,
 }: {
   label: string;
   required?: boolean;
@@ -81,10 +82,12 @@ function Field({
   error?: string;
   children: React.ReactNode;
   full?: boolean;
+  /** İlişkili input/Select id'si — ekran okuyucu etiketi bu alana bağlar. */
+  htmlFor?: string;
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6, gridColumn: full ? "1 / -1" : undefined }}>
-      <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-strong)" }}>
+      <label htmlFor={htmlFor} style={{ fontSize: 13, fontWeight: 600, color: "var(--text-strong)" }}>
         {label} {required && <span style={{ color: "var(--red-600)" }}>*</span>}
         {hint && <span style={{ fontWeight: 400, color: "var(--text-muted)" }}> · {hint}</span>}
       </label>
@@ -220,6 +223,8 @@ export function ApplicationForm({ consentDocs }: { consentDocs: ConsentDocSummar
   const [sent, setSent] = useState(false);
   const [pending, startTransition] = useTransition();
   const [modalDoc, setModalDoc] = useState<ConsentDocSummary | null>(null);
+  // Honeypot: gerçek kullanıcılar bu gizli alanı görmez/doldurmaz; botlar doldurur.
+  const honeypotRef = useRef<HTMLInputElement>(null);
 
   // Ana sayfa hızlı randevu formundan gelen bilgileri ön-doldur (yalnızca client; URL/sunucu kullanılmaz).
   useEffect(() => {
@@ -269,7 +274,7 @@ export function ApplicationForm({ consentDocs }: { consentDocs: ConsentDocSummar
     }
 
     startTransition(async () => {
-      const res = await submitApplication(values);
+      const res = await submitApplication({ ...values, website: honeypotRef.current?.value ?? "" });
       if (res.ok) {
         setSent(true);
       } else {
@@ -310,16 +315,27 @@ export function ApplicationForm({ consentDocs }: { consentDocs: ConsentDocSummar
       </p>
 
       <form onSubmit={onSubmit} noValidate>
+        {/* Honeypot — ekran dışı, klavye/erişilebilirlik dışı; yalnız botlar doldurur. */}
+        <input
+          ref={honeypotRef}
+          type="text"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+        />
         <SectionLabel>Sporcu Bilgileri</SectionLabel>
         <div className="form-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
-          <Field label="Ad Soyad" required error={errors.athleteName}>
-            <input style={fieldBase} placeholder="Öğrencinin adı" value={values.athleteName} onChange={(e) => set("athleteName", e.target.value)} />
+          <Field label="Ad Soyad" required error={errors.athleteName} htmlFor="app-athleteName">
+            <input id="app-athleteName" style={fieldBase} placeholder="Öğrencinin adı" value={values.athleteName} onChange={(e) => set("athleteName", e.target.value)} />
           </Field>
-          <Field label="Doğum Tarihi" required error={errors.birthDate}>
-            <input type="date" style={fieldBase} value={values.birthDate} onChange={(e) => set("birthDate", e.target.value)} />
+          <Field label="Doğum Tarihi" required error={errors.birthDate} htmlFor="app-birthDate">
+            <input id="app-birthDate" type="date" style={fieldBase} value={values.birthDate} onChange={(e) => set("birthDate", e.target.value)} />
           </Field>
-          <Field label="Yaş Grubu" required error={errors.ageGroup}>
+          <Field label="Yaş Grubu" required error={errors.ageGroup} htmlFor="app-ageGroup">
             <Select
+              id="app-ageGroup"
               style={fieldBase}
               value={values.ageGroup}
               onChange={(e) => set("ageGroup", e.target.value)}
@@ -327,22 +343,22 @@ export function ApplicationForm({ consentDocs }: { consentDocs: ConsentDocSummar
               options={[...AGE_GROUPS]}
             />
           </Field>
-          <Field label="Mevki" hint="İsteğe bağlı" error={errors.position}>
-            <input style={fieldBase} placeholder="örn. Forvet" value={values.position} onChange={(e) => set("position", e.target.value)} />
+          <Field label="Mevki" hint="İsteğe bağlı" error={errors.position} htmlFor="app-position">
+            <input id="app-position" style={fieldBase} placeholder="örn. Forvet" value={values.position} onChange={(e) => set("position", e.target.value)} />
           </Field>
         </div>
 
         <div style={{ height: 26 }} />
         <SectionLabel>Veli İletişim</SectionLabel>
         <div className="form-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
-          <Field label="Veli Ad Soyad" required error={errors.parentName}>
-            <input style={fieldBase} placeholder="Veli adı" value={values.parentName} onChange={(e) => set("parentName", e.target.value)} />
+          <Field label="Veli Ad Soyad" required error={errors.parentName} htmlFor="app-parentName">
+            <input id="app-parentName" style={fieldBase} placeholder="Veli adı" value={values.parentName} onChange={(e) => set("parentName", e.target.value)} />
           </Field>
-          <Field label="Telefon" required error={errors.phone}>
-            <input style={fieldBase} placeholder="05xx xxx xx xx" value={values.phone} onChange={(e) => set("phone", e.target.value)} />
+          <Field label="Telefon" required error={errors.phone} htmlFor="app-phone">
+            <input id="app-phone" style={fieldBase} placeholder="05xx xxx xx xx" value={values.phone} onChange={(e) => set("phone", e.target.value)} />
           </Field>
-          <Field label="E-posta" hint="İsteğe bağlı" error={errors.email} full>
-            <input type="email" style={fieldBase} placeholder="ornek@eposta.com" value={values.email} onChange={(e) => set("email", e.target.value)} />
+          <Field label="E-posta" hint="İsteğe bağlı" error={errors.email} full htmlFor="app-email">
+            <input id="app-email" type="email" style={fieldBase} placeholder="ornek@eposta.com" value={values.email} onChange={(e) => set("email", e.target.value)} />
           </Field>
         </div>
 
@@ -359,7 +375,9 @@ export function ApplicationForm({ consentDocs }: { consentDocs: ConsentDocSummar
             return (
               <div
                 key={d.key}
-                role="button"
+                role="checkbox"
+                aria-checked={checked}
+                aria-label={d.summary}
                 tabIndex={0}
                 onClick={toggle}
                 onKeyDown={(e) => {

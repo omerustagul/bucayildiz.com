@@ -12,6 +12,8 @@ export async function NewsSection() {
     where: { status: "published" },
     orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
     take: 6,
+    // Listede yalnız kart alanları — ağır `body`/`templateData` çekilmez (perf).
+    select: { id: true, slug: true, title: true, excerpt: true, coverUrl: true, category: true, publishedAt: true, featured: true },
   });
 
   if (posts.length === 0) return null;

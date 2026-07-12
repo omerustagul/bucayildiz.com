@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/Badge";
 import { IconButton } from "@/components/ui/IconButton";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
-import { createMediaCategory, deleteMediaCategory, createMediaAsset, deleteMediaAsset, createFolder, updateFolder, updateHomeCard } from "@/app/admin/(panel)/medya/actions";
+import { createMediaCategory, deleteMediaCategory, createMediaAsset, deleteMediaAsset, createFolder, updateFolder, deleteFolder, updateHomeCard } from "@/app/admin/(panel)/medya/actions";
 
 export type FolderNode = { id: string; name: string; parentId: string | null; categoryId: string | null };
 export type AssetItem = { id: string; url: string; title: string; kind: string; categoryId: string | null; folderId: string | null };
@@ -215,8 +215,19 @@ function FolderModal({ folders, categories, defaultParent, folder, onClose }: { 
         setError(res.error ?? "Kaydedilemedi.");
       }
     });
+  // Klasörü sil: içindeki medya klasörsüz kalır, alt klasörler üst klasöre taşınır
+  // (deleteFolder action'ı bunu yapar) — medya SİLİNMEZ.
+  const del = () => {
+    if (!folder) return;
+    if (!window.confirm(`"${folder.name}" klasörü silinsin mi? İçindeki medya klasörsüz kalır (silinmez), alt klasörler üst klasöre taşınır.`)) return;
+    startTransition(async () => {
+      await deleteFolder(folder.id);
+      onClose();
+      router.refresh();
+    });
+  };
   return (
-    <Modal open onClose={onClose} title={isEdit ? "Klasörü Düzenle" : "Yeni Klasör"} width={420} footer={<><Button variant="secondary" size="sm" onClick={onClose}>İptal</Button><Button variant="primary" size="sm" onClick={save} disabled={pending}>{isEdit ? "Kaydet" : "Oluştur"}</Button></>}>
+    <Modal open onClose={onClose} title={isEdit ? "Klasörü Düzenle" : "Yeni Klasör"} width={420} footer={<>{isEdit && <span style={{ marginRight: "auto" }}><Button variant="ghost" size="sm" onClick={del} disabled={pending}>Sil</Button></span>}<Button variant="secondary" size="sm" onClick={onClose}>İptal</Button><Button variant="primary" size="sm" onClick={save} disabled={pending}>{isEdit ? "Kaydet" : "Oluştur"}</Button></>}>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {error && <div style={{ padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>{error}</div>}
         <Field label="Klasör Adı" required><TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="örn. U-16 Kamp" /></Field>
@@ -268,9 +279,9 @@ function CategoriesTab({ categories }: { categories: CategoryItem[] }) {
 function NewCategoryModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [color, setColor] = useState("#15295A");
+  const [color, setColor] = useState("#26215F");
   const [pending, startTransition] = useTransition();
-  const COLORS = ["#15295A", "#C9A227", "#1E7D4F", "#B23A3A", "#3D5790"];
+  const COLORS = ["#26215F", "#C9A227", "#1E7D4F", "#B23A3A", "#3D5790"];
   const save = () =>
     startTransition(async () => {
       const res = await createMediaCategory({ name, color });

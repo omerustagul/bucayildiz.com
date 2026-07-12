@@ -426,6 +426,12 @@ main:has(+ footer) .by-page-transition> :last-child {
     grid-template-columns: 1fr 1fr !important;
   }
 
+  /* Ana takım kartı burada tek başına tam satıra düşer — stretch edecek
+     komşusu kalmaz; çökmesin diye kendi oranıyla yükseklik alır. */
+  .by-age-card--wide {
+    aspect-ratio: 16 / 9;
+  }
+
   .hp-grid-footer {
     grid-template-columns: 1fr 1fr !important;
   }

@@ -48,6 +48,29 @@ function s3Config() {
   };
 }
 
+/** Yapılandırılmış S3 public taban URL'leri (varsa) — isOwnStorageUrl için. */
+function storageBases(): string[] {
+  const cfg = s3Config();
+  if (!cfg) return [];
+  const bases: string[] = [];
+  if (cfg.publicBase) bases.push(cfg.publicBase.replace(/\/$/, ""));
+  if (cfg.endpoint) bases.push(`${cfg.endpoint.replace(/\/$/, "")}/${cfg.bucket}`);
+  bases.push(`https://${cfg.bucket}.s3.${cfg.region}.amazonaws.com`);
+  return bases;
+}
+
+/**
+ * Bir URL BİZİM depolama alanımıza mı ait? Yerel `/uploads/...` VEYA yapılandırılmış
+ * S3 public tabanı altında olmalı. Keyfi harici `http(s)://...` adreslerini reddeder
+ * (tracking-pixel / SSRF-lite riski). Kullanıcının verdiği tüm foto/dosya URL'leri
+ * DB'ye yazılmadan önce bu kapıdan geçer — çünkü sonradan <img src>/<a href> olur.
+ */
+export function isOwnStorageUrl(url: string): boolean {
+  const u = url.trim();
+  if (u.startsWith("/uploads/")) return true;
+  return storageBases().some((b) => u === b || u.startsWith(b + "/"));
+}
+
 async function saveToS3(
   buffer: Buffer,
   filename: string,

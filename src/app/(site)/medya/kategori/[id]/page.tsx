@@ -17,7 +17,11 @@ export default async function MediaCategoryPage({ params }: { params: Promise<{ 
   const category = await prisma.mediaCategory.findUnique({ where: { id } });
   if (!category) notFound();
 
-  const assets = await prisma.mediaAsset.findMany({ where: { categoryId: id }, orderBy: { createdAt: "desc" } });
+  const assets = await prisma.mediaAsset.findMany({
+    where: { categoryId: id },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, url: true, title: true, kind: true, createdAt: true },
+  });
   const items: GalleryAsset[] = assets.map((a) => ({ id: a.id, url: a.url, title: a.title, kind: a.kind, category: category.name, date: fmtTrDateShort(a.createdAt) }));
 
   return (

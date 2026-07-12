@@ -1,10 +1,9 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getAdminSession } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 
 const schema = z.object({
   teamName: z.string().trim().min(1, "Takım adı zorunlu.").max(80),
@@ -21,10 +20,6 @@ const schema = z.object({
 
 export type StandingResult = { error: string };
 
-async function requireAuth() {
-  const s = await getAdminSession();
-  if (!s) redirect("/admin/giris");
-}
 
 /** "Bizim takım" tekildir: bir satır işaretlenirken diğerlerinin işareti kaldırılır. */
 async function clearOtherOurs(exceptId?: string) {
@@ -40,27 +35,35 @@ function revalidateStandingsPages() {
 }
 
 export async function createStanding(input: unknown): Promise<StandingResult | void> {
-  await requireAuth();
+  await requireAdmin();
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
-  await prisma.$transaction(async (tx) => {
-    if (parsed.data.isOurs) await tx.standingRow.updateMany({ data: { isOurs: false } });
-    await tx.standingRow.create({ data: parsed.data });
-  });
+  try {
+    await prisma.$transaction(async (tx) => {
+      if (parsed.data.isOurs) await tx.standingRow.updateMany({ data: { isOurs: false } });
+      await tx.standingRow.create({ data: parsed.data });
+    });
+  } catch {
+    return { error: "Satır eklenemedi." };
+  }
   revalidateStandingsPages();
 }
 
 export async function updateStanding(id: string, input: unknown): Promise<StandingResult | void> {
-  await requireAuth();
+  await requireAdmin();
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
-  if (parsed.data.isOurs) await clearOtherOurs(id);
-  await prisma.standingRow.update({ where: { id }, data: parsed.data });
+  try {
+    if (parsed.data.isOurs) await clearOtherOurs(id);
+    await prisma.standingRow.update({ where: { id }, data: parsed.data });
+  } catch {
+    return { error: "Satır güncellenemedi." };
+  }
   revalidateStandingsPages();
 }
 
 export async function deleteStanding(id: string): Promise<void> {
-  await requireAuth();
+  await requireAdmin();
   await prisma.standingRow.delete({ where: { id } }).catch(() => {});
   revalidateStandingsPages();
 }

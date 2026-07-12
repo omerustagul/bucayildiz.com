@@ -48,13 +48,14 @@ export async function createPayment(input: unknown): Promise<PaymentResult> {
   }
 }
 
-export async function setPaymentStatus(id: string, status: string): Promise<PaymentResult> {
+export async function setPaymentStatus(id: unknown, status: unknown): Promise<PaymentResult> {
   await requireAdmin();
-  if (!STATUSES.includes(status as (typeof STATUSES)[number])) return { ok: false, error: "Geçersiz durum." };
+  const parsed = z.object({ id: z.string().trim().min(1).max(60), status: z.enum(STATUSES) }).safeParse({ id, status });
+  if (!parsed.success) return { ok: false, error: "Geçersiz durum." };
   try {
     await prisma.payment.update({
-      where: { id },
-      data: { status, paidAt: status === "paid" ? todayYmd() : null },
+      where: { id: parsed.data.id },
+      data: { status: parsed.data.status, paidAt: parsed.data.status === "paid" ? todayYmd() : null },
     });
     revalidatePath("/admin/odemeler");
     revalidatePath("/panel/odemeler");

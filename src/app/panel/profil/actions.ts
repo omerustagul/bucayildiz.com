@@ -2,9 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireAthlete } from "@/lib/auth";
+import { requireAthlete, createPanelSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, verifyPassword } from "@/lib/auth";
+import { isOwnStorageUrl } from "@/lib/storage";
 
 export type ProfileResult = { ok: true } | { ok: false; error: string };
 
@@ -30,23 +31,19 @@ export async function updateContact(parentPhone: string): Promise<ProfileResult>
   }
 }
 
-const photoUrlSchema = z
-  .string()
-  .trim()
-  .min(1, "Geçersiz fotoğraf.")
-  .max(500)
-  .refine((v) => v.startsWith("/uploads/") || /^https?:\/\//.test(v), "Geçersiz fotoğraf adresi.");
+const photoUrlSchema = z.string().trim().min(1, "Geçersiz fotoğraf.").max(500);
 
 /**
  * Profil fotoğrafını günceller. Dosyanın kendisi `/api/upload` üzerinden
  * (src/lib/storage.ts, magic-byte doğrulamalı) yüklenip URL alınır; bu action
  * yalnızca o URL'yi oturumdaki sporcunun KENDİ kaydına yazar — session dışı
- * bir athleteId asla kabul edilmez.
+ * bir athleteId asla kabul edilmez. URL kendi depolama alanımıza ait olmalı
+ * (keyfi harici adres reddedilir — tracking-pixel deliği kapalı).
  */
-export async function updatePhoto(url: string): Promise<ProfileResult> {
+export async function updatePhoto(url: unknown): Promise<ProfileResult> {
   const session = await requireAthlete();
   const parsed = photoUrlSchema.safeParse(url);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz fotoğraf." };
+  if (!parsed.success || !isOwnStorageUrl(parsed.data)) return { ok: false, error: "Geçersiz fotoğraf adresi." };
 
   try {
     await prisma.athlete.update({ where: { id: session.athleteId! }, data: { photoUrl: parsed.data } });
@@ -76,7 +73,14 @@ export async function changePassword(current: string, next: string): Promise<Pro
   if (!ok) return { ok: false, error: "Mevcut şifre yanlış." };
 
   try {
-    await prisma.user.update({ where: { id: user.id }, data: { passwordHash: await hashPassword(parsed.data.next) } });
+    // Şifre değişince tokenVersion'ı artır → diğer cihazlardaki oturumlar düşer.
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: await hashPassword(parsed.data.next), tokenVersion: { increment: 1 } },
+      select: { tokenVersion: true },
+    });
+    // Bu oturum düşmesin: mevcut çerezi yeni sürümle yeniden imzala.
+    await createPanelSession({ ...session, tv: updated.tokenVersion });
     return { ok: true };
   } catch {
     return { ok: false, error: "Şifre güncellenemedi." };

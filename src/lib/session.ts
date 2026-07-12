@@ -17,6 +17,9 @@ export type SessionPayload = {
   role: string;
   name: string;
   athleteId?: string;
+  /** Oturum sürümü — DB'deki User.tokenVersion ile eşleşmeli (iptal kontrolü).
+   *  Eski token'lar taşımaz → 0 sayılır (mevcut kullanıcılar da 0, zorla çıkış yok). */
+  tv?: number;
 };
 
 function secretKey() {
@@ -38,12 +41,17 @@ export async function verifySession(token: string | undefined): Promise<SessionP
   try {
     const { payload } = await jwtVerify(token, secretKey());
     if (typeof payload.sub === "string" && typeof payload.email === "string") {
+      // Bilinmeyen rolü sessizce "athlete"e DÜŞÜRME — token'ı reddet (fail-closed,
+      // açık). Meşru token'lar yalnız "admin"|"athlete" taşır; diğerleri bozuktur.
+      const role = payload.role;
+      if (role !== "admin" && role !== "athlete") return null;
       return {
         sub: payload.sub,
         email: payload.email,
-        role: payload.role === "admin" ? "admin" : "athlete",
+        role,
         name: String(payload.name ?? ""),
         athleteId: typeof payload.athleteId === "string" ? payload.athleteId : undefined,
+        tv: typeof payload.tv === "number" ? payload.tv : 0,
       };
     }
     return null;

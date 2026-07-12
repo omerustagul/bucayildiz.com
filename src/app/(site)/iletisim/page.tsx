@@ -3,17 +3,21 @@ import { PageHero } from "@/components/layout/PageHero";
 import { Section } from "@/components/content/blocks";
 import { ContactForm } from "@/components/forms/ContactForm";
 import { Icon, type IconName } from "@/lib/icons";
+import { getSettings } from "@/lib/settings";
 
 export const metadata: Metadata = { title: "İletişim" };
 
-const INFO: { icon: IconName; label: string; value: string }[] = [
-  { icon: "map-pin", label: "Adres", value: "Buca Yıldız Tesisleri, Buca / İzmir" },
-  { icon: "phone", label: "Telefon", value: "+90 232 000 00 00" },
-  { icon: "mail", label: "E-posta", value: "info@bucayildiz.com" },
-  { icon: "clock", label: "Çalışma Saatleri", value: "Hafta içi 09:00 – 20:00" },
-];
+export default async function IletisimPage() {
+  // İletişim bilgisi admin > Ayarlar'dan (SiteSetting) — sabit placeholder değil.
+  // Yalnız gerçekten girilmiş alanlar gösterilir; boşlar hiç render edilmez.
+  const s = await getSettings();
+  const INFO: { icon: IconName; label: string; value: string }[] = [
+    ...(s.address ? [{ icon: "map-pin" as IconName, label: "Adres", value: s.address }] : []),
+    ...(s.phone ? [{ icon: "phone" as IconName, label: "Telefon", value: s.phone }] : []),
+    ...(s.email ? [{ icon: "mail" as IconName, label: "E-posta", value: s.email }] : []),
+    { icon: "clock", label: "Çalışma Saatleri", value: "Hafta içi 09:00 – 20:00" },
+  ];
 
-export default function IletisimPage() {
   return (
     <>
       <PageHero

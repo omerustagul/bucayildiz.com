@@ -1,6 +1,7 @@
 import "server-only";
 import nodemailer from "nodemailer";
 import { getSettings } from "@/lib/settings";
+import { errLabel } from "@/lib/log";
 
 /**
  * E-posta gönderimi (SMTP). Yapılandırma önce admin > Ayarlar (DB), yoksa
@@ -23,7 +24,8 @@ async function getSmtpConfig() {
 export async function sendMail(input: MailInput): Promise<{ sent: boolean; reason?: string }> {
   const cfg = await getSmtpConfig();
   if (!cfg.host || !cfg.user || !cfg.pass) {
-    console.warn(`[mail] SMTP yapılandırılmadı — atlandı: "${input.subject}" → ${input.to}`);
+    // KVKK: konu (çocuk adı) ve alıcı adresini loglama.
+    console.warn("[mail] SMTP yapılandırılmadı — e-posta gönderimi atlandı.");
     return { sent: false, reason: "smtp-not-configured" };
   }
   try {
@@ -36,12 +38,38 @@ export async function sendMail(input: MailInput): Promise<{ sent: boolean; reaso
     await transport.sendMail({ from: cfg.from, to: input.to, subject: input.subject, html: input.html, text: input.text });
     return { sent: true };
   } catch (e) {
-    console.error("[mail] gönderim hatası:", e);
+    // Hata nesnesi alıcı adresini içerebilir → yalnız kararlı etiket.
+    console.error("[mail] gönderim hatası:", errLabel(e));
     return { sent: false, reason: "send-failed" };
   }
 }
 
 const esc = (s: string) => s.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]!));
+
+/** İletişim formu → yöneticiye e-posta. SMTP yoksa {sent:false} döner (çağıran
+ *  buna göre kullanıcıya dürüst geri bildirim verir — sessiz kayıp yok). */
+export async function notifyContactMessage(msg: {
+  name: string;
+  email: string;
+  phone?: string;
+  message: string;
+}): Promise<{ sent: boolean }> {
+  const { adminTo } = await getSmtpConfig();
+  if (!adminTo) return { sent: false };
+  const r = await sendMail({
+    to: adminTo,
+    subject: `İletişim formu: ${msg.name}`,
+    html: `<h2 style="font-family:sans-serif">Yeni İletişim Mesajı</h2>
+      <table style="font-family:sans-serif;font-size:14px;border-collapse:collapse">
+        <tr><td style="padding:4px 10px;color:#666">Ad</td><td style="padding:4px 10px"><b>${esc(msg.name)}</b></td></tr>
+        <tr><td style="padding:4px 10px;color:#666">E-posta</td><td style="padding:4px 10px">${esc(msg.email)}</td></tr>
+        ${msg.phone ? `<tr><td style="padding:4px 10px;color:#666">Telefon</td><td style="padding:4px 10px">${esc(msg.phone)}</td></tr>` : ""}
+      </table>
+      <p style="font-family:sans-serif;font-size:14px;white-space:pre-wrap;margin-top:12px">${esc(msg.message)}</p>`,
+    text: `${msg.name} (${msg.email}${msg.phone ? ", " + msg.phone : ""}):\n\n${msg.message}`,
+  });
+  return { sent: r.sent };
+}
 
 /** Yeni başvuru → yöneticiye bildirim + (e-posta verildiyse) veliye teşekkür. */
 export async function notifyNewApplication(app: {

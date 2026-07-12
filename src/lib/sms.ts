@@ -1,4 +1,5 @@
 import "server-only";
+import { errLabel } from "@/lib/log";
 
 /**
  * SMS gönderimi — sağlayıcıdan bağımsız HTTP geçidi (Netgsm, İletimerkezi,
@@ -24,7 +25,8 @@ export async function sendSms(phone: string, text: string): Promise<{ sent: bool
   const sender = process.env.SMS_SENDER;
 
   if (!url || !user || !key) {
-    console.warn(`[sms] SMS sağlayıcı yapılandırılmadı — atlandı: ${phone} "${text.slice(0, 40)}"`);
+    // KVKK: telefon ve mesaj içeriğini (OTP dahil) loglama.
+    console.warn("[sms] SMS sağlayıcı yapılandırılmadı — gönderim atlandı.");
     return { sent: false, reason: "sms-not-configured" };
   }
 
@@ -37,7 +39,7 @@ export async function sendSms(phone: string, text: string): Promise<{ sent: bool
     });
     return res.ok ? { sent: true } : { sent: false, reason: `http-${res.status}` };
   } catch (e) {
-    console.error("[sms] gönderim hatası:", e);
+    console.error("[sms] gönderim hatası:", errLabel(e));
     return { sent: false, reason: "send-failed" };
   }
 }

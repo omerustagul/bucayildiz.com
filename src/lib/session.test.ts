@@ -34,9 +34,18 @@ describe("session", () => {
     expect(await verifySession("çöp")).toBeNull();
   });
 
-  it("bilinmeyen rol 'athlete'e düşürülür (yetki yükseltmesini önler)", async () => {
+  it("bilinmeyen rol REDDEDİLİR (sessiz düşürme yok, fail-closed)", async () => {
     const token = await signSession({ ...payload, role: "superadmin" });
-    const decoded = await verifySession(token);
-    expect(decoded?.role).toBe("athlete");
+    expect(await verifySession(token)).toBeNull();
+  });
+
+  it("tokenVersion (tv) taşınır", async () => {
+    const token = await signSession({ ...payload, tv: 5 });
+    expect((await verifySession(token))?.tv).toBe(5);
+  });
+
+  it("token'da tv yoksa 0'a düşer (eski token uyumu — zorla çıkış yok)", async () => {
+    const token = await signSession(payload); // tv alanı yok
+    expect((await verifySession(token))?.tv).toBe(0);
   });
 });

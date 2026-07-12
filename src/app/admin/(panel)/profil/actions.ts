@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { requireAdmin, hashPassword, verifyPassword } from "@/lib/auth";
+import { requireAdmin, hashPassword, verifyPassword, createAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export type AdminProfileResult = { ok: true } | { ok: false; error: string };
@@ -30,10 +30,14 @@ export async function changeAdminPassword(input: unknown): Promise<AdminProfileR
   if (!ok) return { ok: false, error: "Mevcut şifre hatalı." };
 
   try {
-    await prisma.user.update({
+    // Şifre değişince tokenVersion'ı artır → başka cihazlardaki eski oturumlar düşer.
+    const updated = await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash: await hashPassword(parsed.data.newPassword) },
+      data: { passwordHash: await hashPassword(parsed.data.newPassword), tokenVersion: { increment: 1 } },
+      select: { tokenVersion: true },
     });
+    // Bu oturum düşmesin: mevcut çerezi yeni sürümle yeniden imzala.
+    await createAdminSession({ ...session, tv: updated.tokenVersion });
     return { ok: true };
   } catch {
     return { ok: false, error: "Şifre güncellenemedi." };

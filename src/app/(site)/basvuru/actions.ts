@@ -6,6 +6,9 @@ import { applicationSchema } from "@/lib/validation";
 import { CONSENT_VERSION } from "@/lib/consent";
 import { recordConsents } from "@/lib/consent.server";
 import { notifyNewApplication } from "@/lib/mail";
+import { clientIp } from "@/lib/net";
+import { rateLimit } from "@/lib/rate-limit";
+import { errLabel } from "@/lib/log";
 
 export type SubmitResult =
   | { ok: true }
@@ -17,6 +20,21 @@ export type SubmitResult =
  * (veli), nasıl (IP/UA) ve ne zaman. İspat yükü veri sorumlusundadır.
  */
 export async function submitApplication(input: unknown): Promise<SubmitResult> {
+  // Honeypot: gizli alan doluysa gönderen bir bottur → sessizce başarı taklidi
+  // yap (saldırgana ipucu verme), hiçbir şey yazma.
+  const honeypot = (input as { website?: unknown } | null)?.website;
+  if (typeof honeypot === "string" && honeypot.trim() !== "") return { ok: true };
+
+  // KVKK audit izi + rate-limit için güvenilir IP (CF-Connecting-IP → x-real-ip).
+  const h = await headers();
+  const ipAddress = clientIp(h);
+  const userAgent = h.get("user-agent") || null;
+
+  // Spam/DoS koruması: IP başına 10 dakikada en çok 5 başvuru (uygulama-katmanı
+  // savunma derinliği; asıl kaba filtre reverse-proxy/Cloudflare'de olmalı).
+  const rl = rateLimit(`basvuru:${ipAddress ?? "unknown"}`, 5, 10 * 60 * 1000);
+  if (!rl.ok) return { ok: false, error: "Çok fazla başvuru denemesi. Lütfen birkaç dakika sonra tekrar deneyin." };
+
   const parsed = applicationSchema.safeParse(input);
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};
@@ -30,54 +48,55 @@ export async function submitApplication(input: unknown): Promise<SubmitResult> {
   const data = parsed.data;
   const consents = data.consents ?? {};
 
-  // KVKK audit izi: ispat yükü veri sorumlusunda.
-  const h = await headers();
-  const ipAddress = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || null;
-  const userAgent = h.get("user-agent") || null;
-
   try {
-    const application = await prisma.application.create({
-      data: {
-        athleteName: data.athleteName,
-        birthDate: data.birthDate,
-        ageGroup: data.ageGroup,
-        position: data.position || null,
-        parentName: data.parentName,
-        phone: data.phone,
-        email: data.email || null,
-        // Geriye dönük özet alanlar (detay ConsentRecord'da):
-        kvkkConsent: consents["acik-riza"] === true,
-        marketingConsent: consents["pazarlama"] === true,
-        consentVersion: CONSENT_VERSION,
+    // KVKK atomiklik: Application + her belgenin denetim kaydı TEK transaction'da.
+    // recordConsents aktif belge yoksa hata fırlatır → transaction geri alınır,
+    // audit izi olmayan (yetim) Application ASLA kalmaz.
+    await prisma.$transaction(async (tx) => {
+      const application = await tx.application.create({
+        data: {
+          athleteName: data.athleteName,
+          birthDate: data.birthDate,
+          ageGroup: data.ageGroup,
+          position: data.position || null,
+          parentName: data.parentName,
+          phone: data.phone,
+          email: data.email || null,
+          // Geriye dönük özet alanlar (detay ConsentRecord'da):
+          kvkkConsent: consents["acik-riza"] === true,
+          marketingConsent: consents["pazarlama"] === true,
+          consentVersion: CONSENT_VERSION,
+          ipAddress,
+          userAgent,
+        },
+      });
+
+      // Her belge için ayrı denetim kaydı (verilen + verilmeyen) — aynı tx.
+      await recordConsents(consents, { applicationId: application.id }, {
+        granterName: data.parentName,
+        granterRelation: "veli",
+        channel: "basvuru",
         ipAddress,
         userAgent,
-      },
+      }, tx);
     });
-
-    // Her belge için ayrı denetim kaydı (verilen + verilmeyen).
-    await recordConsents(consents, { applicationId: application.id }, {
-      granterName: data.parentName,
-      granterRelation: "veli",
-      channel: "basvuru",
-      ipAddress,
-      userAgent,
-    });
-
-    // E-posta bildirimi — non-blocking (SMTP yoksa sessizce atlanır).
-    try {
-      await notifyNewApplication({
-        athleteName: data.athleteName,
-        ageGroup: data.ageGroup,
-        parentName: data.parentName,
-        phone: data.phone,
-        email: data.email || null,
-      });
-    } catch (e) {
-      console.error("[basvuru] e-posta bildirimi başarısız:", e);
-    }
-
-    return { ok: true };
   } catch {
     return { ok: false, error: "Başvuru kaydedilemedi. Lütfen daha sonra tekrar deneyin." };
   }
+
+  // E-posta bildirimi — transaction DIŞINDA + non-blocking (harici/yavaş işlem
+  // DB transaction'ını tutmamalı; SMTP yoksa sessizce atlanır).
+  try {
+    await notifyNewApplication({
+      athleteName: data.athleteName,
+      ageGroup: data.ageGroup,
+      parentName: data.parentName,
+      phone: data.phone,
+      email: data.email || null,
+    });
+  } catch (e) {
+    console.error("[basvuru] e-posta bildirimi başarısız:", errLabel(e));
+  }
+
+  return { ok: true };
 }

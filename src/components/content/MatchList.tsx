@@ -1,5 +1,17 @@
-import type { Fixture } from "@/lib/data";
 import { Badge } from "@/components/ui/Badge";
+
+/** MatchList görünüm-modeli. DB Fixture'ı bu biçime `lib/publicData.ts` çevirir. */
+export type Fixture = {
+  comp: string;
+  home: string;
+  away: string;
+  date: string;
+  time: string;
+  venue: string;
+  status: "upcoming" | "finished";
+  hs: number | null;
+  as: number | null;
+};
 
 /** Maç listesi — mobil öncelikli; dar ekranda kaydırmasız iki satırlı kart. */
 export function MatchList({ fixtures }: { fixtures: Fixture[] }) {

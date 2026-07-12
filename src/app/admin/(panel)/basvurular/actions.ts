@@ -1,18 +1,24 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getAdminSession } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
+import { idSchema } from "@/lib/validation";
 
-const VALID = ["new", "contacted", "scheduled", "closed"];
+const updateStatusSchema = z.object({
+  id: idSchema,
+  status: z.enum(["new", "contacted", "scheduled", "closed"]),
+});
 
-export async function updateApplicationStatus(id: string, status: string): Promise<{ ok: boolean }> {
-  const session = await getAdminSession();
-  if (!session || session.role !== "admin") return { ok: false };
-  if (!VALID.includes(status)) return { ok: false };
+export async function updateApplicationStatus(id: unknown, status: unknown): Promise<{ ok: boolean }> {
+  await requireAdmin();
+
+  const parsed = updateStatusSchema.safeParse({ id, status });
+  if (!parsed.success) return { ok: false };
 
   try {
-    await prisma.application.update({ where: { id }, data: { status } });
+    await prisma.application.update({ where: { id: parsed.data.id }, data: { status: parsed.data.status } });
     revalidatePath("/admin/basvurular");
     revalidatePath("/admin");
     return { ok: true };

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getAdminSession } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { POST_TEMPLATE_IDS } from "@/lib/enums";
 
 const schema = z.object({
@@ -94,10 +94,6 @@ const TEMPLATE_DATA_SCHEMAS: Record<string, z.ZodTypeAny> = {
 
 export type PostResult = { error: string };
 
-async function requireAuth() {
-  const s = await getAdminSession();
-  if (!s) redirect("/admin/giris");
-}
 
 /** templateData JSON'unu şablona göre doğrular; başarısızsa Türkçe hata döner. */
 function validateTemplateData(template: string, raw: string): { error: string } | { data: string } {
@@ -131,7 +127,7 @@ function toData(d: z.infer<typeof schema>, templateData: string) {
 }
 
 export async function createPost(input: unknown): Promise<PostResult | void> {
-  await requireAuth();
+  await requireAdmin();
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const tResult = validateTemplateData(parsed.data.template, parsed.data.templateData);
@@ -148,7 +144,7 @@ export async function createPost(input: unknown): Promise<PostResult | void> {
 }
 
 export async function updatePost(id: string, input: unknown): Promise<PostResult | void> {
-  await requireAuth();
+  await requireAdmin();
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const tResult = validateTemplateData(parsed.data.template, parsed.data.templateData);
@@ -165,7 +161,7 @@ export async function updatePost(id: string, input: unknown): Promise<PostResult
 }
 
 export async function deletePost(id: string): Promise<void> {
-  await requireAuth();
+  await requireAdmin();
   await prisma.post.delete({ where: { id } }).catch(() => {});
   revalidatePath("/admin/haberler");
   revalidatePath("/haberler");

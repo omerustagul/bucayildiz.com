@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow, Barlow_Condensed, Barlow_Semi_Condensed } from "next/font/google";
+import { Barlow, Barlow_Condensed, Barlow_Semi_Condensed, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import { getSettings, activeCursor } from "@/lib/settings";
 
@@ -26,9 +26,15 @@ const barlowSemiCondensed = Barlow_Semi_Condensed({
   display: "swap",
 });
 
-/* Başlık fontu: Barlow Condensed — FCB Condensed Pro'ya (kulübe özel,
-   lisanslanamaz) glif metrik analiziyle en yakın yasal eş.
-   typography.css'te --font-heading/--font-display buna bağlıdır. */
+/* Başlık/display fontu: Bebas Neue (tek ağırlık, all-caps kondens display).
+   latin-ext alt kümesi Türkçe glifleri (ç ğ ı İ ö ş ü) kapsar.
+   Barlow Condensed fallback olarak kalır (SSR/yükleme + eksik glif). */
+const bebasNeue = Bebas_Neue({
+  variable: "--font-bebas",
+  subsets: ["latin", "latin-ext"],
+  weight: "400",
+  display: "swap",
+});
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
@@ -68,7 +74,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#0E2148",
+  themeColor: "#181547",
   width: "device-width",
   initialScale: 1,
   // İki parmak yakınlaştırma ve input odağında otomatik zoom kapalı —
@@ -89,7 +95,7 @@ export default async function RootLayout({
       lang="tr"
       data-scroll-behavior="smooth"
       data-cursor={activeCursor(settings)}
-      className={`${barlow.variable} ${barlowCondensed.variable} ${barlowSemiCondensed.variable}`}
+      className={`${barlow.variable} ${barlowCondensed.variable} ${barlowSemiCondensed.variable} ${bebasNeue.variable}`}
     >
       <body>{children}</body>
     </html>

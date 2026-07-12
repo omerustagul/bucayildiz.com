@@ -51,7 +51,7 @@ function JerseyModal({ jersey, onClose }: { jersey: JerseyRow | null; onClose: (
   const [v, setV] = useState({
     name: jersey?.name ?? "",
     kind: jersey?.kind ?? "home",
-    primary: jersey?.primary ?? "#15295A",
+    primary: jersey?.primary ?? "#26215F",
     accent: jersey?.accent ?? "#C9A227",
     description: jersey?.description ?? "",
     imageUrl: jersey?.imageUrl ?? "",

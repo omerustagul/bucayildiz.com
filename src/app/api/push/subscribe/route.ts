@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 import { getAdminSession, getPanelSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rate-limit";
 
 /** Web Push aboneliği kaydı — oturumlu kullanıcı (sporcu/veli veya admin). */
 export async function POST(req: Request) {
   // İki portal oturumu da geçerli (admin medya yükler, sporcu avatar/push)
   const session = (await getAdminSession()) ?? (await getPanelSession());
   if (!session) return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
+
+  const rl = rateLimit(`push-sub:${session.sub}`, 20, 5 * 60 * 1000);
+  if (!rl.ok) return NextResponse.json({ error: "Çok fazla istek." }, { status: 429 });
 
   let body: { endpoint?: string; keys?: { p256dh?: string; auth?: string } };
   try {

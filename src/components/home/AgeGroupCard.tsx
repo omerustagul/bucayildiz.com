@@ -53,6 +53,7 @@ export function AgeGroupCard({
   return (
     <Link
       href={href}
+      className={`by-age-card${wide ? " by-age-card--wide" : ""}`}
       style={{
         position: "relative",
         display: "block",
@@ -66,8 +67,10 @@ export function AgeGroupCard({
         transition: "transform .5s var(--ease-out), box-shadow .5s var(--ease-out)",
         willChange: "transform",
         zIndex: hover ? 5 : 0,
+        // Ana takım 2 sütun kaplar; yüksekliği satırdaki 2:3 kartlardan STRETCH
+        // ile alır (minHeight ile zorlamaz — daraltınca yükseklik farkı doğuyordu).
         ...(wide
-          ? { gridColumn: "span 2", height: "100%", minHeight: 300 }
+          ? { gridColumn: "span 2", alignSelf: "stretch" }
           : { aspectRatio: "2 / 3" }),
         ...style,
       }}

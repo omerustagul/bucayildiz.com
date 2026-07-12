@@ -44,7 +44,27 @@ export async function verifyCredentials(identifier: string, password: string): P
     role: user.role,
     name: user.name,
     athleteId: user.athleteId ?? undefined,
+    tv: user.tokenVersion,
   };
+}
+
+/**
+ * Token geçerli imzalı olsa da hâlâ GÜNCEL mi? DB'deki kullanıcıyı okur:
+ * - kullanıcı silinmişse geçersiz (erişim anında biter),
+ * - tokenVersion uyuşmuyorsa geçersiz (şifre değişimi / her yerden çıkış),
+ * - admin portalı için rol hâlâ admin, panel için athleteId hâlâ dolu olmalı.
+ * Bu, JWT'nin 7 gün "bayat" kalmasını (silinen/rol-düşürülen kullanıcı) kapatır.
+ */
+async function isSessionCurrent(s: SessionPayload, portal: "admin" | "panel"): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { id: s.sub },
+    select: { tokenVersion: true, role: true, athleteId: true },
+  });
+  if (!user) return false;
+  if ((s.tv ?? 0) !== user.tokenVersion) return false;
+  if (portal === "admin" && user.role !== "admin") return false;
+  if (portal === "panel" && !user.athleteId) return false;
+  return true;
 }
 
 async function setSessionCookie(cookieName: string, payload: SessionPayload): Promise<void> {
@@ -73,12 +93,16 @@ export async function createPanelSession(payload: SessionPayload): Promise<void>
 
 export async function getAdminSession(): Promise<SessionPayload | null> {
   const store = await cookies();
-  return verifyAdminToken(store.get(ADMIN_COOKIE)?.value);
+  const s = await verifyAdminToken(store.get(ADMIN_COOKIE)?.value);
+  if (!s) return null;
+  return (await isSessionCurrent(s, "admin")) ? s : null;
 }
 
 export async function getPanelSession(): Promise<SessionPayload | null> {
   const store = await cookies();
-  return verifyPanelToken(store.get(PANEL_COOKIE)?.value);
+  const s = await verifyPanelToken(store.get(PANEL_COOKIE)?.value);
+  if (!s) return null;
+  return (await isSessionCurrent(s, "panel")) ? s : null;
 }
 
 export async function destroyAdminSession(): Promise<void> {

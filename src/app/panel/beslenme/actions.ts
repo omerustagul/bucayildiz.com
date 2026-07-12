@@ -3,8 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { requireAthlete } from "@/lib/auth";
 import { hasHealthConsent } from "@/lib/consent.server";
-import { mealLogSchema } from "@/lib/validation";
+import { mealLogSchema, idSchema } from "@/lib/validation";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { isOwnStorageUrl } from "@/lib/storage";
 
 function revalidate() {
   revalidatePath("/panel/beslenme");
@@ -38,6 +40,8 @@ export async function saveMealLog(input: unknown): Promise<{ error?: string } | 
   const parsed = mealLogSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
+  // Fotoğraf yalnız kendi depolama alanımızdan olabilir (harici pixel deliği kapalı).
+  if (d.photoUrl && !isOwnStorageUrl(d.photoUrl)) return { error: "Geçersiz fotoğraf adresi." };
 
   const meal = await prisma.nutritionMeal.findUnique({
     where: { id: d.mealId },
@@ -85,8 +89,18 @@ export async function saveMealLog(input: unknown): Promise<{ error?: string } | 
   revalidate();
 }
 
-export async function deleteMealLog(mealId: string, date: string): Promise<void> {
+const deleteMealLogSchema = z.object({
+  mealId: idSchema,
+  date: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçersiz tarih."),
+});
+
+export async function deleteMealLog(mealId: unknown, date: unknown): Promise<void> {
   const s = await requireAthlete();
-  await prisma.mealLog.deleteMany({ where: { mealId, date, athleteId: s.athleteId! } }).catch(() => {});
+  const parsed = deleteMealLogSchema.safeParse({ mealId, date });
+  if (!parsed.success) return;
+  // Sahiplik: athleteId session'dan — başkasının kaydına dokunulamaz.
+  await prisma.mealLog
+    .deleteMany({ where: { mealId: parsed.data.mealId, date: parsed.data.date, athleteId: s.athleteId! } })
+    .catch(() => {});
   revalidate();
 }

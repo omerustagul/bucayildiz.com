@@ -1,10 +1,9 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getAdminSession } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 
 const schema = z.object({
   competition: z.string().trim().min(1, "Lig/turnuva zorunlu.").max(80),
@@ -22,10 +21,6 @@ const schema = z.object({
 
 export type FixtureResult = { error: string };
 
-async function requireAuth() {
-  const s = await getAdminSession();
-  if (!s) redirect("/admin/giris");
-}
 
 function toData(d: z.infer<typeof schema>) {
   const finished = d.status === "finished";
@@ -45,10 +40,14 @@ function toData(d: z.infer<typeof schema>) {
 }
 
 export async function createFixture(input: unknown): Promise<FixtureResult | void> {
-  await requireAuth();
+  await requireAdmin();
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
-  await prisma.fixture.create({ data: toData(parsed.data) });
+  try {
+    await prisma.fixture.create({ data: toData(parsed.data) });
+  } catch {
+    return { error: "Maç kaydedilemedi." };
+  }
   revalidatePath("/admin/fikstur");
   revalidatePath("/fikstur");
   revalidatePath("/fikstur/sonuclar");
@@ -56,10 +55,14 @@ export async function createFixture(input: unknown): Promise<FixtureResult | voi
 }
 
 export async function updateFixture(id: string, input: unknown): Promise<FixtureResult | void> {
-  await requireAuth();
+  await requireAdmin();
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
-  await prisma.fixture.update({ where: { id }, data: toData(parsed.data) });
+  try {
+    await prisma.fixture.update({ where: { id }, data: toData(parsed.data) });
+  } catch {
+    return { error: "Maç güncellenemedi." };
+  }
   revalidatePath("/admin/fikstur");
   revalidatePath("/fikstur");
   revalidatePath("/fikstur/sonuclar");
@@ -67,7 +70,7 @@ export async function updateFixture(id: string, input: unknown): Promise<Fixture
 }
 
 export async function deleteFixture(id: string): Promise<void> {
-  await requireAuth();
+  await requireAdmin();
   await prisma.fixture.delete({ where: { id } }).catch(() => {});
   revalidatePath("/admin/fikstur");
   revalidatePath("/fikstur");

@@ -41,7 +41,7 @@ export function SiteFooter({ socials = [], logoUrl }: { socials?: SocialLink[]; 
       <div
         style={{
           position: "absolute",
-          top: 0,
+          top: 5,
           left: "50%",
           transform: "translate(-50%,-50%)",
           width: 88,
@@ -49,12 +49,9 @@ export function SiteFooter({ socials = [], logoUrl }: { socials?: SocialLink[]; 
           borderRadius: "50%",
           display: "grid",
           placeItems: "center",
-          background: "var(--navy-950)",
-          border: "2px solid rgba(201, 162, 39, 0.65)",
-          boxShadow: "0 8px 28px rgba(0, 0, 0, 0.45)",
         }}
       >
-        <Image src={logoSrc(logoUrl)} alt="Buca Yıldız" width={74} height={74} style={{ objectFit: "contain" }} />
+        <Image src={logoSrc(logoUrl)} alt="Buca Yıldız" width={72} height={72} style={{ objectFit: "contain" }} />
       </div>
 
       <div style={{ maxWidth: 1540, margin: "0 auto", padding: "70px 32px 20px" }}>
@@ -63,7 +60,7 @@ export function SiteFooter({ socials = [], logoUrl }: { socials?: SocialLink[]; 
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 23, textTransform: "uppercase", color: "#fff", letterSpacing: "0.02em", lineHeight: 1 }}>
               Buca Yıldız
-              <span style={{ display: "block", fontSize: 10.5, letterSpacing: "0.26em", color: "var(--gold-400)", marginTop: 6 }}>
+              <span style={{ display: "block", fontSize: 10.5, letterSpacing: "0.1em", color: "var(--gold-400)", marginTop: 6 }}>
                 Futbol Akademisi
               </span>
             </div>

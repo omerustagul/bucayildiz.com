@@ -12,7 +12,7 @@ function PhotoTile({ card }: { card: Card }) {
   return (
     <Link
       href={card.categoryId ? `/medya/kategori/${card.categoryId}` : "/medya/fotograflar"}
-      style={{ position: "relative", display: "block", aspectRatio: "4 / 3", borderRadius: "var(--radius-md)", overflow: "hidden", background: "var(--grad-navy)", border: "1px solid var(--navy-700)", textDecoration: "none" }}
+      style={{ position: "relative", display: "block", aspectRatio: "4 / 3", borderRadius: "var(--radius-md)", overflow: "hidden", background: "var(--grad-navy)", textDecoration: "none" }}
     >
       {card.coverUrl ? (
         <Image src={card.coverUrl} alt={card.title} fill style={{ objectFit: "cover" }} sizes="(max-width: 900px) 50vw, 240px" />
@@ -47,7 +47,7 @@ export async function MediaSection() {
           {/* Featured */}
           <Link
             href={featured.categoryId ? `/medya/kategori/${featured.categoryId}` : "/medya/videolar"}
-            style={{ position: "relative", display: "block", borderRadius: "var(--radius-lg)", overflow: "hidden", minHeight: 360, background: "var(--grad-navy)", border: "1px solid var(--navy-700)", textDecoration: "none" }}
+            style={{ position: "relative", display: "block", borderRadius: "var(--radius-lg)", overflow: "hidden", minHeight: 360, background: "var(--grad-navy)", textDecoration: "none" }}
           >
             {featured.coverUrl && <Image src={featured.coverUrl} alt={featured.title} fill style={{ objectFit: "cover" }} sizes="(max-width: 900px) 100vw, 760px" />}
             <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>

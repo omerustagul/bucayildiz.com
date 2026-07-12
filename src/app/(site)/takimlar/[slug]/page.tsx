@@ -30,7 +30,16 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
     where: { slug },
     include: {
       _count: { select: { athletes: true } },
-      athletes: { where: { status: "active" }, orderBy: [{ number: "asc" }, { name: "asc" }] },
+      // Veri minimizasyonu: yalnız public kadroda gösterilen alanlar — parentPhone,
+      // licenseNo gibi kişisel alanlar yetkisiz route'un sorgusuna DAHİL EDİLMEZ.
+      athletes: {
+        where: { status: "active" },
+        orderBy: [{ number: "asc" }, { name: "asc" }],
+        select: {
+          id: true, name: true, position: true, birthDate: true,
+          height: true, weight: true, number: true, foot: true, photoUrl: true,
+        },
+      },
     },
   });
   if (!team) notFound();
@@ -48,7 +57,7 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
             borderBottom: "3px solid var(--gold-500)",
           }}
         >
-          <div style={{ maxWidth: 1160, margin: "0 auto", padding: "clamp(72px, 15vw, 150px) clamp(16px, 5vw, 32px) 30px", color: "#fff" }}>
+          <div style={{ maxWidth: 1680, margin: "0 auto", padding: "clamp(72px, 15vw, 150px) clamp(16px, 5vw, 32px) 30px", color: "#fff" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12.5, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--gold-400)" }}>
               <span style={{ width: 22, height: 2, background: "var(--gold-500)" }} /> Akademi · Kadro
             </span>

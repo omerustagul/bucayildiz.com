@@ -3,10 +3,40 @@ import { REQUIRED_CONSENT_KEYS } from "@/lib/consent";
 
 export const AGE_GROUPS = ["U-15", "U-16", "U-17", "U-18", "A Takım"] as const;
 
+/** Genel kayıt id doğrulaması (cuid). Boş/aşırı uzun değeri reddeder. */
+export const idSchema = z.string().trim().min(1, "Geçersiz kayıt.").max(60);
+
+/** Site içi (same-origin) yol — bildirim tıklama hedefi vb. `//evil.com`,
+ *  `https://...`, `javascript:` gibi harici/phishing hedeflerini reddeder;
+ *  tek `/` ile başlayan göreli yolu kabul eder. */
+export const internalPath = z
+  .string()
+  .trim()
+  .regex(/^\/(?!\/)/, "Bağlantı yalnız site içi bir yol olabilir (/ ile başlamalı).")
+  .max(512);
+
+/** "YYYY-MM-DD" gerçek bir takvim tarihi mi (2026-02-31 reddedilir), gelecekte
+ *  değil ve makul aralıkta mı (>=1940). birthDate gibi tarih alanlarında kullanılır. */
+export function isValidIsoDate(s: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (!m) return false;
+  const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+  const dt = new Date(Date.UTC(y, mo - 1, d));
+  // Ay/gün taşması (ör. 02-31) round-trip'te değişir → reddet.
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return false;
+  if (y < 1940) return false;
+  if (dt.getTime() > Date.now()) return false; // doğum tarihi gelecekte olamaz
+  return true;
+}
+
 /** Başvuru formu doğrulama şeması (istemci + sunucu ortak). */
 export const applicationSchema = z.object({
   athleteName: z.string().trim().min(2, "Sporcu adını giriniz.").max(120),
-  birthDate: z.string().trim().min(1, "Doğum tarihini giriniz."),
+  birthDate: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Doğum tarihini giriniz.")
+    .refine(isValidIsoDate, "Geçerli bir doğum tarihi giriniz."),
   ageGroup: z.enum(AGE_GROUPS, { message: "Yaş grubu seçiniz." }),
   position: z.string().trim().max(60).optional().or(z.literal("")),
   parentName: z.string().trim().min(2, "Veli adını giriniz.").max(120),
@@ -29,6 +59,20 @@ export const applicationSchema = z.object({
 
 export type ApplicationInput = z.input<typeof applicationSchema>;
 export type ApplicationData = z.output<typeof applicationSchema>;
+
+/** İletişim formu doğrulama şeması (istemci + sunucu ortak). */
+export const contactSchema = z.object({
+  name: z.string().trim().min(2, "Adınızı giriniz.").max(120),
+  email: z.string().trim().email("Geçerli bir e-posta giriniz.").max(160),
+  phone: z
+    .string()
+    .trim()
+    .max(20)
+    .regex(/^[0-9+\s()-]*$/, "Telefon yalnızca rakam ve +()- içerebilir.")
+    .optional()
+    .or(z.literal("")),
+  message: z.string().trim().min(5, "Mesajınızı yazınız.").max(2000),
+});
 
 // --- Takvim Programı / Antrenman ---
 export const TRAINING_SCOPES = ["team", "individual"] as const;

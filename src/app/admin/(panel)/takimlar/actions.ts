@@ -1,10 +1,9 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getAdminSession } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Takım adı zorunlu.").max(60),
@@ -23,10 +22,6 @@ const schema = z.object({
 
 export type TeamResult = { error: string };
 
-async function requireAuth() {
-  const s = await getAdminSession();
-  if (!s) redirect("/admin/giris");
-}
 
 /** Ana takım tekildir: bir takım ana yapılırken diğerlerinin işareti kaldırılır. */
 async function clearOtherMains(exceptId?: string) {
@@ -43,7 +38,7 @@ function revalidateTeamPages() {
 }
 
 export async function createTeam(input: unknown): Promise<TeamResult | void> {
-  await requireAuth();
+  await requireAdmin();
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
@@ -58,7 +53,7 @@ export async function createTeam(input: unknown): Promise<TeamResult | void> {
 }
 
 export async function updateTeam(id: string, input: unknown): Promise<TeamResult | void> {
-  await requireAuth();
+  await requireAdmin();
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
@@ -71,7 +66,7 @@ export async function updateTeam(id: string, input: unknown): Promise<TeamResult
 }
 
 export async function deleteTeam(id: string): Promise<{ ok: boolean; error?: string }> {
-  await requireAuth();
+  await requireAdmin();
   const count = await prisma.athlete.count({ where: { teamId: id } });
   if (count > 0) return { ok: false, error: `Bu takımda ${count} sporcu var. Önce sporcuları başka takıma taşıyın.` };
   await prisma.team.delete({ where: { id } }).catch(() => {});
@@ -80,9 +75,13 @@ export async function deleteTeam(id: string): Promise<{ ok: boolean; error?: str
 }
 
 export async function assignAthletesToTeam(teamId: string, athleteIds: string[]): Promise<{ ok: boolean }> {
-  await requireAuth();
-  if (athleteIds.length > 0) {
-    await prisma.athlete.updateMany({ where: { id: { in: athleteIds } }, data: { teamId } });
+  await requireAdmin();
+  try {
+    if (athleteIds.length > 0) {
+      await prisma.athlete.updateMany({ where: { id: { in: athleteIds } }, data: { teamId } });
+    }
+  } catch {
+    return { ok: false };
   }
   revalidatePath("/admin/takimlar");
   revalidatePath("/admin/sporcular");

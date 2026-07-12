@@ -79,14 +79,14 @@ function TeamStripe() {
       aria-hidden
       style={{
         height: 6,
-        background: "linear-gradient(90deg, var(--navy-500) 0%, var(--navy-500) 50%, var(--gold-500) 50%, var(--gold-500) 100%)",
+        background: "linear-gradient(90deg, var(--navy-700) 0%, var(--navy-600) 50%, var(--gold-400) 50%, var(--gold-800) 100%)",
       }}
     />
   );
 }
 
 
-const navIcon = (name: IconName, size = 17) => <Icon name={name} size={size} />;
+const navIcon = (name: IconName, size = 14) => <Icon name={name} size={size} />;
 
 export function SiteHeader({ active: activeOverride, socials = [], logoUrl }: { active?: string; socials?: SocialLink[]; logoUrl?: string | null }) {
   const [open, setOpen] = useState<string | null>(null);
@@ -125,7 +125,7 @@ export function SiteHeader({ active: activeOverride, socials = [], logoUrl }: { 
           position: "sticky",
           top: 0,
           zIndex: 50,
-          background: "var(--navy-800)",
+          background: "var(--navy-900)",
           borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
@@ -248,7 +248,7 @@ export function SiteHeader({ active: activeOverride, socials = [], logoUrl }: { 
           position: "sticky",
           top: 0,
           zIndex: 50,
-          background: "var(--navy-800)",
+          background: "var(--navy-900)",
         }}
       >
         <div style={{ maxWidth: 1680, margin: "0 auto", position: "relative" }}>
@@ -256,13 +256,13 @@ export function SiteHeader({ active: activeOverride, socials = [], logoUrl }: { 
           <Link
             href="/"
             aria-label="Buca Yıldız — Anasayfa"
-            style={{ position: "absolute", left: 32, top: 50, zIndex: 55, display: "block", filter: "drop-shadow(0 10px 22px rgba(0,0,0,.45))" }}
+            style={{ position: "absolute", left: 32, top: 54, zIndex: 55, display: "block", filter: "drop-shadow(0 10px 22px rgba(0,0,0,.45))" }}
           >
-            <Image src={logoSrc(logoUrl)} alt="Buca Yıldız" width={76} height={76} priority style={{ objectFit: "contain", display: "block" }} />
+            <Image src={logoSrc(logoUrl)} alt="Buca Yıldız" width={79} height={79} priority style={{ objectFit: "contain", display: "block" }} />
           </Link>
 
           {/* Üst bant: sosyal content alanının EN SOLUNDA + sağda panel/başvuru — 64px */}
-          <div style={{ height: 48, padding: "26px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
+          <div style={{ height: 58, padding: "32px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 18, minWidth: 0 }}>
               {/* Camsı motto kartı — dar ekranda CSS ile gizlenir */}
               <Link href="/kurumsal/vizyon-misyon" className="by-motto-card">
@@ -289,26 +289,26 @@ export function SiteHeader({ active: activeOverride, socials = [], logoUrl }: { 
         </div>
 
         {/* Alt bant: mega menü — üst bantla TAM EŞİT 64px */}
-        <nav style={{ background: "var(--navy-900)", borderTop: "1px solid rgba(255,255,255,0.06)" }} onMouseLeave={() => setOpen(null)}>
-          <div style={{ maxWidth: 1680, margin: "0 auto", minHeight: 64, padding: "0 24px 0 148px", display: "flex", alignItems: "stretch", gap: "clamp(14px, 1.8vw, 30px)", flexWrap: "wrap" }}>
+        <nav style={{ background: "var(--paper)", borderTop: "1px solid rgba(255,255,255,0.06)" }} onMouseLeave={() => setOpen(null)}>
+          <div style={{ maxWidth: 1680, margin: "0 auto", minHeight: 60, padding: "0 24px 0 148px", display: "flex", alignItems: "stretch", gap: "clamp(14px, 1.4vw, 30px)", flexWrap: "wrap" }}>
             {MENU.map((m) => {
               const isActive = m.label === active;
               const isOpen = open === m.label;
               return (
-                <div key={m.label} style={{ position: "relative", display: "flex", height: 64 }} onMouseEnter={() => setOpen(m.items.length ? m.label : null)}>
+                <div key={m.label} style={{ position: "relative", display: "flex", height: 60 }} onMouseEnter={() => setOpen(m.items.length ? m.label : null)}>
                   <Link
                     href={m.href}
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 6,
+                      gap: 3,
                       padding: "0 4px",
                       fontFamily: "var(--font-heading)",
-                      fontWeight: 700,
-                      fontSize: 16,
-                      letterSpacing: "0.015em",
+                      fontWeight: "900",
+                      fontSize: 19.5,
+                      letterSpacing: "-0.02em",
                       textTransform: "uppercase",
-                      color: isActive ? "#fff" : "var(--navy-200)",
+                      color: isActive ? "var(--navy-900)" : "var(--navy-900)",
                       borderBottom: `3px solid ${isActive || isOpen ? "var(--gold-500)" : "transparent"}`,
                       transition: "color .15s, border-color .15s",
                       textDecoration: "none",

@@ -1,7 +1,12 @@
 // Sunucuya özel: node:crypto + prisma kullanır. Yalnızca server action /
 // server component'lerden import edilmeli (istemciye sızmamalı).
 import { createHash } from "node:crypto";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+
+/** recordConsents bir prisma.$transaction içinde çağrılabilsin diye: normal
+ *  client VEYA transaction client kabul eder (atomiklik için — bkz. basvuru). */
+type DbClient = Prisma.TransactionClient;
 
 /** Metnin değişmediğinin ispatı için SHA-256 (hex). */
 export function consentTextHash(body: string): string {
@@ -36,8 +41,20 @@ export async function recordConsents(
   granted: Record<string, boolean>,
   target: { applicationId?: string; athleteId?: string },
   meta: AuditMeta,
+  db: DbClient = prisma,
 ) {
-  const docs = await getActiveConsentDocuments();
+  // db üzerinden sorgula (transaction client geçilebilir) — böylece çağıran
+  // Application create'i ile aynı transaction'da atomik yazabilir.
+  const docs = await db.consentDocument.findMany({
+    where: { active: true },
+    orderBy: { ordering: "asc" },
+  });
+  // KVKK: denetim izi olmadan onay kaydı OLMAZ. Aktif belge yoksa createMany([])
+  // sessizce 0 satır yazıyordu; bunun yerine hata fırlat ki çağıran transaction
+  // geri alsın ve audit izsiz (yetim) Application kalmasın.
+  if (docs.length === 0) {
+    throw new Error("Aktif KVKK onay belgesi bulunamadı; başvuru denetim izi olmadan kaydedilemez.");
+  }
   const rows = docs.map((d) => ({
     documentKey: d.key,
     documentVersion: d.version,
@@ -52,7 +69,7 @@ export async function recordConsents(
     applicationId: target.applicationId ?? null,
     athleteId: target.athleteId ?? null,
   }));
-  await prisma.consentRecord.createMany({ data: rows });
+  await db.consentRecord.createMany({ data: rows });
   return rows.length;
 }
 

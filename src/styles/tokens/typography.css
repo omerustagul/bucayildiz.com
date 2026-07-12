@@ -10,8 +10,8 @@
 :root {
   /* Families — bound to next/font self-hosted variables (see layout.tsx).
      Fallbacks kept for SSR / font-loading. */
-  --font-display: var(--font-barlow-condensed), 'Arial Narrow', 'Oswald', sans-serif;
-  --font-heading: var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
+  --font-display: var(--font-bebas), var(--font-barlow-condensed), 'Arial Narrow', 'Oswald', sans-serif;
+  --font-heading: var(--font-bebas), var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
   --font-body:    var(--font-barlow), system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-stat:    var(--font-barlow-semicondensed), var(--font-barlow), sans-serif;
 

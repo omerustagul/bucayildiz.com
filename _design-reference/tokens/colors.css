@@ -5,17 +5,18 @@
    ============================================================ */
 :root {
   /* ---- Navy / Lacivert scale (brand core) ---- */
-  --navy-950: #060E20;
-  --navy-900: #0A1733;
-  --navy-800: #0E2148;   /* crest interior */
-  --navy-700: #15295A;   /* PRIMARY brand navy */
-  --navy-600: #1D3568;
-  --navy-500: #2A4378;
-  --navy-400: #3D5790;
-  --navy-300: #6379A8;
-  --navy-200: #9FACC6;
-  --navy-100: #D5DCE7;
-  --navy-50:  #EEF1F6;
+  /* Indigo lacivert — en derin uç #0A0927 (rgb 10,9,39) marka çıpası */
+  --navy-950: #0A0927;   /* deep anchor */
+  --navy-900: #100E34;
+  --navy-800: #181547;   /* crest interior */
+  --navy-700: #26215F;   /* PRIMARY brand navy */
+  --navy-600: #302B73;
+  --navy-500: #3F3B8C;
+  --navy-400: #5250AF;
+  --navy-300: #8284BF;
+  --navy-200: #B3B7D5;
+  --navy-100: #DADDEC;
+  --navy-50:  #EEF0F6;
 
   /* ---- Gold scale (precious accent) ---- */
   --gold-800: #6F540F;

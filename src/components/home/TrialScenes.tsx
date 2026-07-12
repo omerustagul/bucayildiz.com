@@ -854,7 +854,9 @@ export function SceneStar() {
       {/* dönen ışınlar */}
       <SpinG cx={260} cy={118} period={26} paused={reduce}>
         {[0, 30, 60, 90, 120, 150].map((a) => (
-          <line key={a} x1="260" y1="118" x2={260 + 190 * Math.cos((a * Math.PI) / 180)} y2={118 + 190 * Math.sin((a * Math.PI) / 180)} stroke="rgba(233,200,96,0.08)" strokeWidth="26" />
+          // Koordinatları sabit hassasiyete yuvarla: ham kayan-nokta (ör. cos120°)
+          // server/client'ta son ULP'de farklı çıkıp hydration uyuşmazlığı doğuruyordu.
+          <line key={a} x1="260" y1="118" x2={(260 + 190 * Math.cos((a * Math.PI) / 180)).toFixed(3)} y2={(118 + 190 * Math.sin((a * Math.PI) / 180)).toFixed(3)} stroke="rgba(233,200,96,0.08)" strokeWidth="26" />
         ))}
       </SpinG>
 

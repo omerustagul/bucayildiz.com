@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
+import { submitContactMessage } from "@/app/(site)/iletisim/actions";
 
 const fieldStyle: React.CSSProperties = {
   fontFamily: "var(--font-body)",
@@ -23,9 +24,31 @@ const labelStyle: React.CSSProperties = {
   display: "block",
 };
 
-/** İletişim formu — Faz 2'de gerçek gönderim (e-posta) bağlanacak. */
+/** İletişim formu — mesajı server action ile yöneticiye e-postalar. */
 export function ContactForm() {
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  const honeypotRef = useRef<HTMLInputElement>(null);
+
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (pending) return;
+    setError(null);
+    const fd = new FormData(e.currentTarget);
+    const payload = {
+      name: String(fd.get("name") ?? ""),
+      email: String(fd.get("email") ?? ""),
+      phone: String(fd.get("phone") ?? ""),
+      message: String(fd.get("message") ?? ""),
+      website: honeypotRef.current?.value ?? "",
+    };
+    startTransition(async () => {
+      const res = await submitContactMessage(payload);
+      if (res.ok) setSent(true);
+      else setError(res.error);
+    });
+  };
 
   if (sent) {
     return (
@@ -43,41 +66,46 @@ export function ContactForm() {
   }
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        setSent(true);
-      }}
-      style={{ display: "flex", flexDirection: "column", gap: 16 }}
-    >
+    <form onSubmit={onSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Honeypot — ekran dışı, yalnız botlar doldurur. */}
+      <input
+        ref={honeypotRef}
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+      />
       <div>
         <label style={labelStyle} htmlFor="cf-name">
           Ad Soyad
         </label>
-        <input id="cf-name" required style={fieldStyle} placeholder="Adınız" />
+        <input id="cf-name" name="name" required style={fieldStyle} placeholder="Adınız" />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <div>
           <label style={labelStyle} htmlFor="cf-email">
             E-posta
           </label>
-          <input id="cf-email" type="email" required style={fieldStyle} placeholder="ornek@eposta.com" />
+          <input id="cf-email" name="email" type="email" required style={fieldStyle} placeholder="ornek@eposta.com" />
         </div>
         <div>
           <label style={labelStyle} htmlFor="cf-phone">
             Telefon
           </label>
-          <input id="cf-phone" style={fieldStyle} placeholder="05xx xxx xx xx" />
+          <input id="cf-phone" name="phone" style={fieldStyle} placeholder="05xx xxx xx xx" />
         </div>
       </div>
       <div>
         <label style={labelStyle} htmlFor="cf-msg">
           Mesajınız
         </label>
-        <textarea id="cf-msg" required rows={5} style={{ ...fieldStyle, resize: "vertical" }} placeholder="Bize iletmek istediğiniz mesaj..." />
+        <textarea id="cf-msg" name="message" required rows={5} style={{ ...fieldStyle, resize: "vertical" }} placeholder="Bize iletmek istediğiniz mesaj..." />
       </div>
-      <Button type="submit" variant="accent" size="lg" fullWidth rightIcon={<Icon name="arrow-right" size={18} />}>
-        Gönder
+      {error && <p style={{ color: "var(--red-600)", fontSize: 13.5, margin: 0 }}>{error}</p>}
+      <Button type="submit" variant="accent" size="lg" fullWidth disabled={pending} rightIcon={<Icon name="arrow-right" size={18} />}>
+        {pending ? "Gönderiliyor…" : "Gönder"}
       </Button>
     </form>
   );
