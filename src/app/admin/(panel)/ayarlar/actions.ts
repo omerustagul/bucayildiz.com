@@ -4,8 +4,35 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isOwnStorageUrl } from "@/lib/storage";
 
 export type SettingsResult = { ok: true } | { ok: false; error: string };
+
+const featuredSchema = z.string().trim().max(500).nullable().optional();
+
+/**
+ * "Akademiden Kareler" öne çıkan görselini kaydeder (medya seçici popup'ından).
+ * URL varsa yalnız kendi depolamamızdan olabilir (isOwnStorageUrl). null/boş =
+ * seçimi kaldır. saveSettings bu alana dokunmaz — bağımsız kaydedilir.
+ */
+export async function setHomeGalleryFeatured(input: unknown): Promise<SettingsResult> {
+  await requireAdmin();
+  const parsed = featuredSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Geçersiz veri." };
+  const raw = parsed.data?.trim() || null;
+  if (raw && !isOwnStorageUrl(raw)) return { ok: false, error: "Geçersiz görsel adresi." };
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: "site" },
+      update: { homeGalleryFeaturedUrl: raw },
+      create: { id: "site", homeGalleryFeaturedUrl: raw },
+    });
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Kaydedilemedi." };
+  }
+}
 
 const str = z.string().trim().max(300).optional().or(z.literal(""));
 const url = z.string().trim().max(500).refine((v) => !v || /^(https?:\/\/|\/)/.test(v), "Geçersiz URL.").optional().or(z.literal(""));

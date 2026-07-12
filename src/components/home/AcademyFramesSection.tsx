@@ -10,15 +10,19 @@ import { fmtTrDateShort } from "@/lib/format";
  *  boşsa kütüphanedeki son fotoğraflar gösterilir. */
 export async function AcademyFramesSection() {
   const settings = await getSettings();
-  const photos = await prisma.mediaAsset.findMany({
-    where: {
-      kind: "photo",
-      ...(settings.homeGalleryCategoryId ? { categoryId: settings.homeGalleryCategoryId } : {}),
-    },
+  const featuredUrl = settings.homeGalleryFeaturedUrl;
+  const catFilter = settings.homeGalleryCategoryId ? { categoryId: settings.homeGalleryCategoryId } : {};
+  const select = { id: true, url: true, createdAt: true, category: { select: { name: true } } };
+  // Seçilen öne çıkan görsel HER ZAMAN ilk sırada gösterilir (varsa); gerisi
+  // kategorinin son fotoğrafları — öne çıkan tekilleştirilir (dup yok).
+  const featured = featuredUrl ? await prisma.mediaAsset.findFirst({ where: { url: featuredUrl }, select }) : null;
+  const rest = await prisma.mediaAsset.findMany({
+    where: { kind: "photo", ...catFilter, ...(featured ? { url: { not: featuredUrl! } } : {}) },
     orderBy: { createdAt: "desc" },
-    take: 6,
-    select: { id: true, url: true, createdAt: true, category: { select: { name: true } } },
+    take: featured ? 5 : 6,
+    select,
   });
+  const photos = featured ? [featured, ...rest] : rest;
   if (photos.length === 0) return null;
   // "Tüm Galeri" seçili kategorinin sayfasına gider; kategori yoksa fotoğraflara
   const galleryHref = settings.homeGalleryCategoryId

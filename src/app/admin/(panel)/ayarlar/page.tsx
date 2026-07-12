@@ -8,9 +8,11 @@ import { SettingsForm, type SettingsFormValues } from "@/components/admin/Settin
 export const metadata: Metadata = { title: "Ayarlar" };
 
 export default async function AyarlarPage() {
-  const [s, categories] = await Promise.all([
+  const [s, categories, assets] = await Promise.all([
     getSettings(),
     prisma.mediaCategory.findMany({ orderBy: { sort: "asc" }, select: { id: true, name: true } }),
+    // Öne çıkan görsel seçici için fotoğraflar (kategoriye göre client'ta süzülür).
+    prisma.mediaAsset.findMany({ where: { kind: "photo" }, orderBy: { createdAt: "desc" }, select: { id: true, url: true, title: true, categoryId: true } }),
   ]);
   const str = (x: string | null) => x ?? "";
   const numStr = (x: number | null) => (x == null ? "" : String(x));
@@ -44,7 +46,13 @@ export default async function AyarlarPage() {
   return (
     <>
       <ViewHeader title="Ayarlar" subtitle="Kulüp, SEO, e-posta ve görünüm ayarlarını buradan yönetin" />
-      <SettingsForm initial={initial} smtpPassSet={!!s.smtpPass} mediaCategories={categories} />
+      <SettingsForm
+        initial={initial}
+        smtpPassSet={!!s.smtpPass}
+        mediaCategories={categories}
+        mediaAssets={assets}
+        homeGalleryFeaturedUrl={str(s.homeGalleryFeaturedUrl)}
+      />
     </>
   );
 }

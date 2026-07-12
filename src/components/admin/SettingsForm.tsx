@@ -1,14 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { TextInput, TextArea, FileDrop } from "@/components/admin/controls";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { TextInput, TextArea, FileDrop, Modal } from "@/components/admin/controls";
 import { Field } from "@/components/admin/kit";
 import { Switch } from "@/components/ui/Switch";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { Icon, BrandGlyph, type IconName, type BrandName } from "@/lib/icons";
 import { SOCIAL_PLATFORMS, parseSocialLinks, type SocialLink } from "@/lib/social";
-import { saveSettings } from "@/app/admin/(panel)/ayarlar/actions";
+import { saveSettings, setHomeGalleryFeatured } from "@/app/admin/(panel)/ayarlar/actions";
 
 export type SettingsFormValues = {
   clubName: string; clubShortName: string; logoUrl: string; foundedYear: string;
@@ -22,6 +24,43 @@ export type SettingsFormValues = {
 };
 
 export type MediaCategoryOption = { id: string; name: string };
+export type MediaAssetOption = { id: string; url: string; title: string; categoryId: string | null };
+
+/** Medya kütüphanesi seçici popup — seçili kategorinin görsellerinden birini
+ *  öne çıkan olarak seçer. Madde 3'teki Modal + grid altyapısını yeniden kullanır. */
+function MediaPickerModal({ assets, current, onPick, onClose, pending }: { assets: MediaAssetOption[]; current: string | null; onPick: (url: string) => void; onClose: () => void; pending: boolean }) {
+  return (
+    <Modal open onClose={onClose} title="Öne Çıkan Görsel Seç" width={760}>
+      {assets.length === 0 ? (
+        <div style={{ padding: "30px 8px", textAlign: "center", color: "var(--text-muted)", fontSize: 14 }}>
+          Bu kategoride görsel yok. Medya kütüphanesinden bu kategoriye görsel ekleyin.
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 10, maxHeight: 440, overflowY: "auto" }}>
+          {assets.map((a) => {
+            const active = current === a.url;
+            return (
+              <button
+                key={a.id}
+                type="button"
+                disabled={pending}
+                onClick={() => onPick(a.url)}
+                style={{ position: "relative", aspectRatio: "4 / 3", borderRadius: "var(--radius-md)", overflow: "hidden", border: active ? "2px solid var(--gold-500)" : "1px solid var(--border-subtle)", padding: 0, cursor: pending ? "wait" : "pointer", background: "var(--surface-subtle)" }}
+              >
+                <Image src={a.url} alt={a.title} fill style={{ objectFit: "cover" }} sizes="120px" />
+                {active && (
+                  <span style={{ position: "absolute", top: 6, right: 6, width: 22, height: 22, borderRadius: "50%", background: "var(--gold-500)", color: "var(--navy-900)", display: "grid", placeItems: "center" }}>
+                    <Icon name="check" size={13} />
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </Modal>
+  );
+}
 
 const TABS: { id: string; label: string; icon: IconName }[] = [
   { id: "kulup", label: "Kulüp", icon: "shield" },
@@ -96,12 +135,25 @@ function SocialLinksEditor({ value, onChange }: { value: SocialLink[]; onChange:
   );
 }
 
-export function SettingsForm({ initial, smtpPassSet, mediaCategories = [] }: { initial: SettingsFormValues; smtpPassSet: boolean; mediaCategories?: MediaCategoryOption[] }) {
+export function SettingsForm({ initial, smtpPassSet, mediaCategories = [], mediaAssets = [], homeGalleryFeaturedUrl = "" }: { initial: SettingsFormValues; smtpPassSet: boolean; mediaCategories?: MediaCategoryOption[]; mediaAssets?: MediaAssetOption[]; homeGalleryFeaturedUrl?: string }) {
+  const router = useRouter();
   const [tab, setTab] = useState("kulup");
   const [v, setV] = useState<SettingsFormValues>(initial);
   const [smtpPass, setSmtpPass] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [featuredUrl, setFeaturedUrl] = useState(homeGalleryFeaturedUrl);
+  // Öne çıkan görseli anında kaydeder (dedicated action; form save'den bağımsız).
+  const chooseFeatured = (url: string | null) =>
+    start(async () => {
+      const res = await setHomeGalleryFeatured(url);
+      if (res.ok) {
+        setFeaturedUrl(url ?? "");
+        setPickerOpen(false);
+        router.refresh();
+      } else setMsg({ ok: false, text: res.error });
+    });
   const set = <K extends keyof SettingsFormValues>(k: K, val: SettingsFormValues[K]) => { setV((s) => ({ ...s, [k]: val })); setMsg(null); };
 
   const save = () => {
@@ -206,14 +258,29 @@ export function SettingsForm({ initial, smtpPassSet, mediaCategories = [] }: { i
             <div>
               <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 15, color: "var(--text-strong)" }}>Akademiden Kareler Kategorisi</div>
               <div style={{ fontSize: 13, color: "var(--text-muted)", margin: "3px 0 10px" }}>Ana sayfadaki galeri şeridi bu kategorideki medyayı gösterir. &quot;Tümü&quot; seçiliyken kütüphanedeki son medya dosyaları gelir.</div>
-              <Select
-                value={v.homeGalleryCategoryId}
-                onChange={(e) => set("homeGalleryCategoryId", e.target.value)}
-                placeholder="Tümü (kategori filtresi yok)"
-                options={mediaCategories.map((c) => ({ value: c.id, label: c.name }))}
-                containerStyle={{ display: "inline-flex" }}
-                style={{ fontFamily: "var(--font-body)", fontSize: 14.5, padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", background: "var(--surface-card)", color: "var(--text-body)", minWidth: 260 }}
-              />
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <Select
+                  value={v.homeGalleryCategoryId}
+                  onChange={(e) => set("homeGalleryCategoryId", e.target.value)}
+                  placeholder="Tümü (kategori filtresi yok)"
+                  options={mediaCategories.map((c) => ({ value: c.id, label: c.name }))}
+                  containerStyle={{ display: "inline-flex" }}
+                  style={{ fontFamily: "var(--font-body)", fontSize: 14.5, padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", background: "var(--surface-card)", color: "var(--text-body)", minWidth: 260 }}
+                />
+                <Button variant="secondary" size="sm" onClick={() => setPickerOpen(true)}>Öne Çıkan Görsel Seç</Button>
+              </div>
+              {featuredUrl && (
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12 }}>
+                  <div style={{ position: "relative", width: 104, height: 78, borderRadius: "var(--radius-sm)", overflow: "hidden", border: "2px solid var(--gold-500)", flex: "none" }}>
+                    <Image src={featuredUrl} alt="" fill style={{ objectFit: "cover" }} sizes="104px" />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-strong)" }}>Öne çıkan görsel seçili</span>
+                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Ana sayfadaki &quot;Akademiden Kareler&quot; bu görseli ilk sırada gösterir.</span>
+                    <button type="button" onClick={() => chooseFeatured(null)} disabled={pending} style={{ alignSelf: "flex-start", marginTop: 2, background: "none", border: "none", padding: 0, color: "var(--red-600)", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>Kaldır</button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={{ height: 1, background: "var(--border-subtle)" }} />
@@ -283,6 +350,16 @@ export function SettingsForm({ initial, smtpPassSet, mediaCategories = [] }: { i
         </div>
       )}
       <div><Button variant="primary" onClick={save} disabled={pending}>{pending ? "Kaydediliyor…" : "Ayarları Kaydet"}</Button></div>
+
+      {pickerOpen && (
+        <MediaPickerModal
+          assets={v.homeGalleryCategoryId ? mediaAssets.filter((a) => a.categoryId === v.homeGalleryCategoryId) : mediaAssets}
+          current={featuredUrl || null}
+          onPick={(url) => chooseFeatured(url)}
+          onClose={() => setPickerOpen(false)}
+          pending={pending}
+        />
+      )}
     </div>
   );
 }
