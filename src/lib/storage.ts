@@ -14,7 +14,7 @@ import crypto from "node:crypto";
 const ALLOWED_IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const ALLOWED_VIDEO = ["video/mp4", "video/webm"];
 const ALLOWED_DOCUMENT = ["application/pdf"];
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB girdi (sharp ile WebP'ye sıkıştırılıp küçülür)
 const MAX_VIDEO_BYTES = 30 * 1024 * 1024; // 30 MB (kısa kapak videosu)
 const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024; // 10 MB (CV / PDF)
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
@@ -141,7 +141,7 @@ export async function saveUpload(file: File, opts: { kind?: "image" | "video" | 
     throw new Error(
       kind === "video" ? "Video boyutu 30 MB'ı aşamaz."
         : kind === "document" ? "Belge boyutu 10 MB'ı aşamaz."
-          : "Dosya boyutu 5 MB'ı aşamaz.",
+          : "Görsel boyutu 10 MB'ı aşamaz.",
     );
   }
 
@@ -155,13 +155,36 @@ export async function saveUpload(file: File, opts: { kind?: "image" | "video" | 
           : "Geçersiz veya bozuk görsel dosyası (yalnızca gerçek JPG/PNG/WEBP/GIF).",
     );
   }
-  const filename = `${Date.now()}-${crypto.randomUUID()}.${sniffed.ext}`;
+  // Görsel sıkıştırma (SSD verimi): GIF HARİÇ (animasyon korunur) tüm görseller
+  // sharp ile EXIF-döndürülür, en fazla 2000px'e sığdırılır (oran korunur,
+  // büyütülmez) ve WebP q80'e çevrilir → depolanan dosya çok küçülür. Video/belge
+  // dokunulmaz (kullanıcı kararı: video sıkıştırılmaz, 30MB sınır + uyarı). Sharp
+  // herhangi bir sebeple başarısız olursa ORİJİNAL kaydedilir — yükleme bozulmaz.
+  let out = buffer;
+  let outExt = sniffed.ext;
+  let outType = sniffed.type;
+  if (kind === "image" && sniffed.ext !== "gif") {
+    try {
+      const sharp = (await import("sharp")).default;
+      out = await sharp(buffer)
+        .rotate() // EXIF oryantasyonunu piksele uygula (telefon fotoğrafları)
+        .resize({ width: 2000, height: 2000, fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toBuffer();
+      outExt = "webp";
+      outType = "image/webp";
+    } catch (e) {
+      console.error("[storage] görsel sıkıştırma başarısız, orijinal kaydediliyor:", e);
+    }
+  }
+
+  const filename = `${Date.now()}-${crypto.randomUUID()}.${outExt}`;
 
   const cfg = s3Config();
-  if (cfg) return saveToS3(buffer, filename, sniffed.type, cfg);
+  if (cfg) return saveToS3(out, filename, outType, cfg);
 
   // Yerel disk (DEV)
   await mkdir(UPLOAD_DIR, { recursive: true });
-  await writeFile(path.join(UPLOAD_DIR, filename), buffer);
+  await writeFile(path.join(UPLOAD_DIR, filename), out);
   return { url: `/uploads/${filename}` };
 }

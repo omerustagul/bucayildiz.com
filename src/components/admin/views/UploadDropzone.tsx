@@ -69,7 +69,7 @@ export function UploadDropzone({
           <Icon name="image" size={18} />
         </span>
         <span style={{ fontSize: 12.5, fontWeight: 600 }}>{busy ? "Yükleniyor…" : "Sürükle bırak / seç"}</span>
-        <span style={{ fontSize: 11, color: "var(--ink-400)" }}>JPG, PNG, MP4, WEBM · çoklu</span>
+        <span style={{ fontSize: 11, color: "var(--ink-400)", textAlign: "center", lineHeight: 1.5 }}>JPG, PNG · otomatik sıkıştırılır · Video (MP4/WEBM) en fazla 30 MB</span>
       </span>
     </label>
   );
