@@ -55,7 +55,7 @@ export function UploadDropzone({
     >
       <input
         type="file"
-        accept="image/*"
+        accept="image/*,video/mp4,video/webm"
         multiple
         disabled={busy || disabled}
         style={{ display: "none" }}
@@ -69,7 +69,7 @@ export function UploadDropzone({
           <Icon name="image" size={18} />
         </span>
         <span style={{ fontSize: 12.5, fontWeight: 600 }}>{busy ? "Yükleniyor…" : "Sürükle bırak / seç"}</span>
-        <span style={{ fontSize: 11, color: "var(--ink-400)" }}>JPG, PNG · çoklu</span>
+        <span style={{ fontSize: 11, color: "var(--ink-400)" }}>JPG, PNG, MP4, WEBM · çoklu</span>
       </span>
     </label>
   );

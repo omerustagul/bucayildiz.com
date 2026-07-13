@@ -6,6 +6,12 @@ import { UploadDropzone } from "./UploadDropzone";
 const png = (name: string) => new File(["x"], name, { type: "image/png" });
 
 describe("UploadDropzone", () => {
+  it("dosya seçici görsel VE video kabul eder (MP4/WebM de kütüphaneye yüklenebilsin)", () => {
+    render(<UploadDropzone onFiles={vi.fn()} />);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(input.accept).toBe("image/*,video/mp4,video/webm");
+  });
+
   it("çoklu seçim açık (multiple) ve onChange TÜM dosyaları geçirir", () => {
     const onFiles = vi.fn();
     render(<UploadDropzone onFiles={onFiles} />);

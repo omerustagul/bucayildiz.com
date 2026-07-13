@@ -21,6 +21,9 @@ export type AssetItem = { id: string; url: string; title: string; kind: string; 
 export type CategoryItem = { id: string; name: string; color: string; count: number };
 export type HomeCardItem = { id: string; title: string; categoryId: string | null; kind: string; featured: boolean; coverUrl: string | null; coverVideoUrl: string | null; count: number };
 
+/** Seçilen dosya video mu? (MIME türünden — sunucu magic-byte ile doğrular). */
+const isVideoFile = (file: File) => file.type.startsWith("video/");
+
 /* ---------- Folder tree ---------- */
 function FolderTree({ folders, counts, active, categories, onPick, onEdit }: { folders: FolderNode[]; counts: Record<string, number>; active: string; categories: CategoryItem[]; onPick: (id: string) => void; onEdit: (f: FolderNode) => void }) {
   const children = (pid: string | null) => folders.filter((f) => f.parentId === pid);
@@ -111,14 +114,16 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
     setBusy(true);
     setUploadError(null);
     setFailures([]);
-    // Her dosya AYRI /api/upload POST'u — böylece magic-byte + 5MB + rate-limit
+    // Her dosya AYRI /api/upload POST'u — böylece magic-byte + 5MB/30MB + rate-limit
     // HER dosyaya uygulanır (sadece ilkine değil). Kısmi başarı desteklenir.
+    // kind, dosyanın MIME türünden belirlenir (video/* → "video", aksi "photo").
     const outcome = await uploadFiles(
       files,
       async (file) => {
         try {
           const fd = new FormData();
           fd.append("file", file);
+          if (isVideoFile(file)) fd.append("kind", "video");
           const res = await fetch("/api/upload", { method: "POST", body: fd });
           const data = await res.json().catch(() => ({}));
           if (!res.ok) return { ok: false as const, reason: data?.error || `Yükleme başarısız (${res.status}).` };
@@ -128,7 +133,8 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
         }
       },
       async (url, file) => {
-        const created = await createMediaAsset({ url, title: file.name, folderId: isRoot ? "" : folder, categoryId: effectiveCategoryId, kind: "photo" });
+        const kind = isVideoFile(file) ? "video" : "photo";
+        const created = await createMediaAsset({ url, title: file.name, folderId: isRoot ? "" : folder, categoryId: effectiveCategoryId, kind });
         return created.ok ? { ok: true as const } : { ok: false as const, reason: created.error || "Kaydedilemedi." };
       },
     );
@@ -193,7 +199,29 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
           {shown.map((a) => (
             <div key={a.id} style={{ position: "relative", aspectRatio: "1 / 1", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--border-subtle)", background: "var(--surface-subtle)" }}>
               {!loaded.has(a.id) && <div className="by-shimmer" style={{ position: "absolute", inset: 0 }} />}
-              <Image src={a.url} alt={a.title} fill style={{ objectFit: "cover" }} sizes="132px" onLoad={() => markLoaded(a.id)} />
+              {a.kind === "video" ? (
+                <>
+                  <video
+                    ref={(el) => {
+                      // React 'muted' prop'u client'ta güvenilmez → DOM property'sini zorla.
+                      if (el) el.muted = true;
+                    }}
+                    src={a.url}
+                    preload="metadata"
+                    muted
+                    playsInline
+                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                    onLoadedData={() => markLoaded(a.id)}
+                  />
+                  <span style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", background: "rgba(8, 15, 33, 0.18)", pointerEvents: "none" }}>
+                    <span style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(255, 255, 255, 0.92)", display: "grid", placeItems: "center", boxShadow: "var(--shadow-md)" }}>
+                      <Icon name="play" size={13} style={{ color: "var(--navy-800)", fill: "var(--navy-800)", marginLeft: 1 }} />
+                    </span>
+                  </span>
+                </>
+              ) : (
+                <Image src={a.url} alt={a.title} fill style={{ objectFit: "cover" }} sizes="132px" onLoad={() => markLoaded(a.id)} />
+              )}
               <button type="button" onClick={() => removeAsset(a.id)} style={{ position: "absolute", top: 6, right: 6, display: "grid", placeItems: "center", width: 24, height: 24, borderRadius: "var(--radius-sm)", border: "none", background: "rgba(0,0,0,0.55)", color: "#fff", cursor: "pointer" }}>
                 <Icon name="trash-2" size={13} />
               </button>
