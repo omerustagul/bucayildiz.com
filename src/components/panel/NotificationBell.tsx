@@ -33,6 +33,19 @@ function relTime(iso: string): string {
   return new Date(iso).toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit" });
 }
 
+/** Kapanışta unmount'u kısa süre geciktirir; .is-closing ile çıkış animasyonu
+ *  oynar (proje overlay standardı — bkz. admin controls.tsx Drawer). */
+function useDelayedUnmount(open: boolean, ms = 200) {
+  const [render, setRender] = useState(open);
+  if (open && !render) setRender(true); // açılış: render anı senkron
+  useEffect(() => {
+    if (open) return;
+    const t = setTimeout(() => setRender(false), ms);
+    return () => clearTimeout(t);
+  }, [open, ms]);
+  return { render, closing: render && !open };
+}
+
 export function NotificationBell({ initialUnread }: { initialUnread: number }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -42,6 +55,8 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
   const [, startAction] = useTransition();
   // unread: ilk değer sunucudan; açılışta feed'den yeniden hesaplanır, okununca
   // lokal azalır. (Prop→state sync effect'i gereksiz — açılış zaten düzeltir.)
+  // Açılış: by-anim-fade/drawer; kapanış: is-closing çıkış animasyonu oynar.
+  const { render, closing } = useDelayedUnmount(open, 200);
 
   const openSheet = () => {
     setOpen(true);
@@ -88,10 +103,10 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
         )}
       </div>
 
-      {open && typeof document !== "undefined" && createPortal(
+      {render && typeof document !== "undefined" && createPortal(
         <div
           onClick={() => setOpen(false)}
-          className="by-anim-fade"
+          className={`by-anim-fade${closing ? " is-closing" : ""}`}
           style={{ position: "fixed", inset: 0, height: "100dvh", background: "rgba(8,18,38,.5)", zIndex: 1000, display: "flex", justifyContent: "flex-end" }}
         >
           <aside
@@ -99,7 +114,7 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
             role="dialog"
             aria-modal="true"
             aria-label="Bildirimler"
-            className="by-anim-drawer"
+            className={`by-anim-drawer${closing ? " is-closing" : ""}`}
             style={{ width: "min(420px, 100%)", height: "100dvh", background: "var(--surface-card)", boxShadow: "var(--shadow-xl)", display: "flex", flexDirection: "column" }}
           >
             {/* Başlık */}
