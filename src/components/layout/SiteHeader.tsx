@@ -95,6 +95,18 @@ export function SiteHeader({ active: activeOverride, socials = [], logoUrl }: { 
   const pathname = usePathname();
   const deskRef = useRef<HTMLElement>(null);
 
+  // Rota değişince (mobil menüden herhangi bir linke tıklanıp başka sayfaya
+  // gidince) menü + akordeon KAPANSIN. Render sırasında prop-türevi reset deseni
+  // — effect gerektirmez (react-hooks/set-state-in-effect lint'ine takılmaz;
+  // panel MobileTabBar ile aynı yol). Genişleyebilir öğeler preventDefault ile
+  // akordeon açtığından rota değişmez → menü açık kalır (doğru davranış).
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
+    if (mobileOpen) setMobileOpen(false);
+    if (acc) setAcc(null);
+  }
+
   // Header yüksekliğini CSS değişkenine yaz — .trial-hero gibi tam ekran
   // hesaplar sabit sayı yerine bunu kullanır (bant yüksekliği değişince kaymaz).
   useEffect(() => {
