@@ -25,6 +25,8 @@ export default async function AyarlarPage() {
     phone: str(s.phone),
     email: str(s.email),
     address: str(s.address),
+    latitude: s.latitude,
+    longitude: s.longitude,
     socialLinks: JSON.stringify(resolveSocialLinks(s)),
     metaTitle: str(s.metaTitle),
     metaDescription: str(s.metaDescription),

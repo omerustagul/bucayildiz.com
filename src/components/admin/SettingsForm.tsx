@@ -8,6 +8,7 @@ import { Field } from "@/components/admin/kit";
 import { Switch } from "@/components/ui/Switch";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
+import { MapPicker } from "@/components/ui/LeafletMap";
 import { Icon, BrandGlyph, type IconName, type BrandName } from "@/lib/icons";
 import { SOCIAL_PLATFORMS, parseSocialLinks, type SocialLink } from "@/lib/social";
 import { saveSettings, setHomeGalleryFeatured, setHeroMobileImage } from "@/app/admin/(panel)/ayarlar/actions";
@@ -15,6 +16,7 @@ import { saveSettings, setHomeGalleryFeatured, setHeroMobileImage } from "@/app/
 export type SettingsFormValues = {
   clubName: string; clubShortName: string; logoUrl: string; foundedYear: string;
   phone: string; email: string; address: string;
+  latitude: number | null; longitude: number | null;
   socialLinks: string; // JSON: [{ platform, url }]
   metaTitle: string; metaDescription: string; ogImageUrl: string; keywords: string;
   smtpHost: string; smtpPort: string; smtpUser: string; mailFrom: string; mailToAdmin: string;
@@ -163,6 +165,8 @@ export function SettingsForm({ initial, smtpPassSet, mediaCategories = [], media
       else setMsg({ ok: false, text: res.error });
     });
   const set = <K extends keyof SettingsFormValues>(k: K, val: SettingsFormValues[K]) => { setV((s) => ({ ...s, [k]: val })); setMsg(null); };
+  // Harita seçici: tek tıklamada lat+lng birlikte güncellenir (null = temizle).
+  const setLocation = (lat: number | null, lng: number | null) => { setV((s) => ({ ...s, latitude: lat, longitude: lng })); setMsg(null); };
 
   const save = () => {
     if (pending) return;
@@ -215,6 +219,25 @@ export function SettingsForm({ initial, smtpPassSet, mediaCategories = [], media
             </div>
             <Field label="E-posta"><TextInput value={v.email} onChange={(e) => set("email", e.target.value)} placeholder="bilgi@bucayildiz.com" /></Field>
             <Field label="Adres"><TextArea rows={2} value={v.address} onChange={(e) => set("address", e.target.value)} /></Field>
+            <Field label="Kulüp Konumu">
+              <MapPicker lat={v.latitude} lng={v.longitude} onChange={setLocation} height={280} />
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12.5, color: "var(--text-muted)" }}>
+                  {v.latitude != null && v.longitude != null
+                    ? `Seçili konum: ${v.latitude.toFixed(4)}, ${v.longitude.toFixed(4)}`
+                    : "Haritaya tıklayarak kulüp konumunu seçin"}
+                </span>
+                {v.latitude != null && v.longitude != null && (
+                  <button
+                    type="button"
+                    onClick={() => setLocation(null, null)}
+                    style={{ flex: "none", background: "none", border: "none", padding: 0, color: "var(--red-600)", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}
+                  >
+                    Konumu temizle
+                  </button>
+                )}
+              </div>
+            </Field>
             <SocialLinksEditor value={parseSocialLinks(v.socialLinks)} onChange={(links) => set("socialLinks", JSON.stringify(links))} />
           </div>
         )}

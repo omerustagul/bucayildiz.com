@@ -54,6 +54,8 @@ const schema = z.object({
   phone: str,
   email: z.string().trim().email("Geçerli e-posta giriniz.").optional().or(z.literal("")),
   address: z.string().trim().max(400).optional().or(z.literal("")),
+  latitude: z.number().min(-90, "Enlem -90 ile 90 arasında olmalı.").max(90, "Enlem -90 ile 90 arasında olmalı.").nullable().optional(),
+  longitude: z.number().min(-180, "Boylam -180 ile 180 arasında olmalı.").max(180, "Boylam -180 ile 180 arasında olmalı.").nullable().optional(),
   socialLinks: z.string().max(4000).default("[]"),
   // SEO
   metaTitle: str,
@@ -102,6 +104,8 @@ export async function saveSettings(input: unknown): Promise<SettingsResult> {
     phone: orNull(d.phone),
     email: orNull(d.email),
     address: orNull(d.address),
+    latitude: d.latitude ?? null,
+    longitude: d.longitude ?? null,
     socialLinks: sanitizeSocialLinks(d.socialLinks),
     metaTitle: orNull(d.metaTitle),
     metaDescription: orNull(d.metaDescription),

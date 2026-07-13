@@ -21,7 +21,7 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-import { setHomeGalleryFeatured, setHeroMobileImage } from "./actions";
+import { setHomeGalleryFeatured, setHeroMobileImage, saveSettings } from "./actions";
 
 beforeEach(() => {
   H.saved = null;
@@ -63,5 +63,45 @@ describe("setHeroMobileImage — yetki + URL allowlist", () => {
     const r = await setHeroMobileImage("");
     expect(r).toEqual({ ok: true });
     expect(H.saved?.heroMobileImageUrl).toBeNull();
+  });
+});
+
+describe("saveSettings — kulüp konumu (latitude/longitude)", () => {
+  const base = { clubName: "Buca Yıldız Futbol Akademisi", clubShortName: "Buca Yıldız" };
+
+  it("geçerli koordinatlar kaydedilir + requireAdmin'den geçer", async () => {
+    const r = await saveSettings({ ...base, latitude: 38.3894, longitude: 27.1786 });
+    expect(r).toEqual({ ok: true });
+    expect(H.saved?.latitude).toBe(38.3894);
+    expect(H.saved?.longitude).toBe(27.1786);
+    expect(H.requireAdmin).toHaveBeenCalled();
+  });
+
+  it("null koordinat (konum temizlendi) null olarak kaydedilir", async () => {
+    const r = await saveSettings({ ...base, latitude: null, longitude: null });
+    expect(r).toEqual({ ok: true });
+    expect(H.saved?.latitude).toBeNull();
+    expect(H.saved?.longitude).toBeNull();
+  });
+
+  it("koordinat alanları hiç gönderilmezse null olarak kaydedilir", async () => {
+    const r = await saveSettings({ ...base });
+    expect(r).toEqual({ ok: true });
+    expect(H.saved?.latitude).toBeNull();
+    expect(H.saved?.longitude).toBeNull();
+  });
+
+  it("sınır dışı enlem REDDEDİLİR (Türkçe hata), kaydedilmez", async () => {
+    const r = await saveSettings({ ...base, latitude: 95, longitude: 27.1786 });
+    expect(r).toMatchObject({ ok: false });
+    if (!r.ok) expect(r.error).toMatch(/Enlem/);
+    expect(H.saved).toBeNull();
+  });
+
+  it("sınır dışı boylam REDDEDİLİR (Türkçe hata), kaydedilmez", async () => {
+    const r = await saveSettings({ ...base, latitude: 38.3894, longitude: 200 });
+    expect(r).toMatchObject({ ok: false });
+    if (!r.ok) expect(r.error).toMatch(/Boylam/);
+    expect(H.saved).toBeNull();
   });
 });

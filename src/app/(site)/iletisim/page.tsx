@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section } from "@/components/content/blocks";
 import { ContactForm } from "@/components/forms/ContactForm";
+import { LocationMap } from "@/components/ui/LeafletMap";
 import { Icon, type IconName } from "@/lib/icons";
 import { getSettings } from "@/lib/settings";
 
@@ -41,22 +42,28 @@ export default async function IletisimPage() {
                 </div>
               </div>
             ))}
-            <div
-              style={{
-                marginTop: 8,
-                position: "relative",
-                minHeight: 220,
-                borderRadius: "var(--radius-lg)",
-                overflow: "hidden",
-                background: "var(--grad-navy)",
-                border: "1px solid var(--navy-700)",
-                display: "grid",
-                placeItems: "center",
-              }}
-            >
-              <Icon name="map-pin" size={40} style={{ color: "rgba(255,255,255,0.16)" }} />
-              <span style={{ position: "absolute", bottom: 14, left: 16, fontSize: 13, color: "var(--navy-100)" }}>Harita yakında eklenecek</span>
-            </div>
+            {s.latitude != null && s.longitude != null ? (
+              <div style={{ marginTop: 8 }}>
+                <LocationMap lat={s.latitude} lng={s.longitude} height={220} />
+              </div>
+            ) : (
+              <div
+                style={{
+                  marginTop: 8,
+                  position: "relative",
+                  minHeight: 220,
+                  borderRadius: "var(--radius-lg)",
+                  overflow: "hidden",
+                  background: "var(--grad-navy)",
+                  border: "1px solid var(--navy-700)",
+                  display: "grid",
+                  placeItems: "center",
+                }}
+              >
+                <Icon name="map-pin" size={40} style={{ color: "rgba(255,255,255,0.16)" }} />
+                <span style={{ position: "absolute", bottom: 14, left: 16, fontSize: 13, color: "var(--navy-100)" }}>Harita yakında eklenecek</span>
+              </div>
+            )}
           </div>
           {/* Form */}
           <div style={{ background: "var(--surface-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-xl)", padding: "clamp(24px,3vw,36px)", boxShadow: "var(--shadow-md)" }}>
