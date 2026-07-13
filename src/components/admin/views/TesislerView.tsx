@@ -3,7 +3,8 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ViewHeader, Toolbar, Field } from "@/components/admin/kit";
-import { TextInput, TextArea, SearchBox, Drawer, FileDrop } from "@/components/admin/controls";
+import { TextInput, TextArea, SearchBox, Drawer } from "@/components/admin/controls";
+import { MediaLibraryPicker } from "@/components/admin/MediaLibraryPicker";
 import { Table, type Column } from "@/components/ui/Table";
 import { CardList, CardEmpty, DataCard, CardHeader, CardFields } from "@/components/admin/MobileCardList";
 import { Badge } from "@/components/ui/Badge";
@@ -118,7 +119,7 @@ function FacilityDrawer({ facility, onClose }: { facility: FacilityRow | null; o
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <Field label="Kapak Görseli">
-          <FileDrop value={v.photoUrl || null} onChange={(url) => set("photoUrl", url ?? "")} label="Tesis görseli yükle" hint="16:10 önerilir" aspect="16 / 10" />
+          <MediaLibraryPicker value={v.photoUrl || null} onChange={(url) => set("photoUrl", url ?? "")} label="Tesis görseli seç" hint="16:10 önerilir" aspect="16 / 10" />
         </Field>
 
         <Field label="Tesis Adı" required>

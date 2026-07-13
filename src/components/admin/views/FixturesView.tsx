@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ViewHeader, Toolbar, Field } from "@/components/admin/kit";
-import { TextInput, SearchBox, Drawer, FileDrop } from "@/components/admin/controls";
+import { TextInput, SearchBox, Drawer } from "@/components/admin/controls";
+import { MediaLibraryPicker } from "@/components/admin/MediaLibraryPicker";
 import { Table, type Column } from "@/components/ui/Table";
 import { Tabs } from "@/components/ui/Tabs";
 import { Select } from "@/components/ui/Select";
@@ -146,7 +147,7 @@ function FixtureDrawer({ fx, teams, crest, onClose }: { fx: FixtureRow | null; t
           <div style={{ alignSelf: "center", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 22, color: "var(--ink-400)" }}>VS</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ width: 72, alignSelf: "center" }}>
-              <FileDrop value={v.opponentLogo || null} onChange={(url) => set("opponentLogo", url ?? "")} label="Rakip logosu" icon="image" aspect="1 / 1" />
+              <MediaLibraryPicker value={v.opponentLogo || null} onChange={(url) => set("opponentLogo", url ?? "")} label="Rakip logosu" icon="image" aspect="1 / 1" />
             </div>
             <Field label="Rakip Takım" required>
               <TextInput value={v.opponent} onChange={(e) => set("opponent", e.target.value)} placeholder="Rakip takım adı" />

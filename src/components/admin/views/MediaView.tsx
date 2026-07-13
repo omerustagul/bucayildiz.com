@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ViewHeader, Panel, Toolbar, Field, cardStyle } from "@/components/admin/kit";
-import { TextInput, Modal, Drawer, FileDrop } from "@/components/admin/controls";
+import { TextInput, Modal, Drawer } from "@/components/admin/controls";
+import { MediaLibraryPicker } from "@/components/admin/MediaLibraryPicker";
 import { Tabs } from "@/components/ui/Tabs";
 import { Select } from "@/components/ui/Select";
 import { Switch } from "@/components/ui/Switch";
@@ -460,9 +461,9 @@ function CardDrawer({ card, categories, onClose }: { card: HomeCardItem | null; 
         <Field label="Kart Adı" required><TextInput value={v.title} onChange={(e) => set("title", e.target.value)} /></Field>
         <Select label="Tür" options={[{ value: "photo", label: "Fotoğraf" }, { value: "video", label: "Video" }]} value={v.kind} onChange={(e) => set("kind", e.target.value)} />
         <Select label="Kategori" hint="Bu kategorideki medya karta otomatik dolar" placeholder="Seç" options={categories.map((c) => ({ value: c.id, label: c.name }))} value={v.categoryId} onChange={(e) => set("categoryId", e.target.value)} />
-        <Field label={v.kind === "video" ? "Kapak Görseli (poster)" : "Kapak Görseli"}><FileDrop value={v.coverUrl || null} onChange={(url) => set("coverUrl", url ?? "")} label="Kapak seç" aspect="16 / 10" /></Field>
+        <Field label={v.kind === "video" ? "Kapak Görseli (poster)" : "Kapak Görseli"}><MediaLibraryPicker value={v.coverUrl || null} onChange={(url) => set("coverUrl", url ?? "")} label="Kapak seç" aspect="16 / 10" /></Field>
         {v.kind === "video" && (
-          <Field label="Kapak Videosu"><FileDrop kind="video" icon="play" value={v.coverVideoUrl || null} onChange={(url) => set("coverVideoUrl", url ?? "")} label="Video seç (MP4/WebM · 30MB)" aspect="16 / 9" /></Field>
+          <Field label="Kapak Videosu"><MediaLibraryPicker kind="video" icon="play" value={v.coverVideoUrl || null} onChange={(url) => set("coverVideoUrl", url ?? "")} label="Video seç" aspect="16 / 9" /></Field>
         )}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ fontSize: 13.5, color: "var(--ink-600)" }}>Öne çıkan kart (büyük gösterim)</span>

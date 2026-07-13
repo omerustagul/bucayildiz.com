@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ViewHeader, Field, cardStyle } from "@/components/admin/kit";
-import { TextInput, Modal, FileDrop } from "@/components/admin/controls";
+import { TextInput, Modal } from "@/components/admin/controls";
+import { MediaLibraryPicker } from "@/components/admin/MediaLibraryPicker";
 import { Switch } from "@/components/ui/Switch";
 import { Badge } from "@/components/ui/Badge";
 import { IconButton } from "@/components/ui/IconButton";
@@ -109,7 +110,7 @@ function JerseyModal({ jersey, onClose }: { jersey: JerseyRow | null; onClose: (
         <div className="jersey-form-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0, 0.9fr) minmax(0, 1.1fr)", gap: 22, alignItems: "start" }}>
           {/* Sol: forma görseli */}
           <Field label="Forma Görseli" hint="Şeffaf PNG önerilir (ana sayfada kayan vitrin)">
-            <FileDrop value={v.imageUrl || null} onChange={(url) => set("imageUrl", url ?? "")} label="Forma görseli yükle" aspect="4 / 3" icon="shirt" />
+            <MediaLibraryPicker value={v.imageUrl || null} onChange={(url) => set("imageUrl", url ?? "")} label="Forma görseli seç" aspect="4 / 3" icon="shirt" />
           </Field>
 
           {/* Sağ: bilgi alanları */}

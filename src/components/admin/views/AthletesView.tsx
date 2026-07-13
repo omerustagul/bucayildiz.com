@@ -3,7 +3,8 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ViewHeader, Toolbar, Field } from "@/components/admin/kit";
-import { TextInput, SearchBox, Drawer, FileDrop } from "@/components/admin/controls";
+import { TextInput, SearchBox, Drawer } from "@/components/admin/controls";
+import { MediaLibraryPicker } from "@/components/admin/MediaLibraryPicker";
 import { Table, type Column } from "@/components/ui/Table";
 import { CardList, CardEmpty, DataCard, CardHeader, CardFields } from "@/components/admin/MobileCardList";
 import { Tabs } from "@/components/ui/Tabs";
@@ -157,7 +158,7 @@ function AthleteDrawer({ athlete, teams, onClose }: { athlete: AthleteRow | null
       <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
           <div style={{ width: 96, flex: "none" }}>
-            <FileDrop value={v.photoUrl || null} onChange={(url) => set("photoUrl", url ?? "")} label="Fotoğraf" compact icon="user-round" aspect="1 / 1" />
+            <MediaLibraryPicker value={v.photoUrl || null} onChange={(url) => set("photoUrl", url ?? "")} label="Fotoğraf" compact icon="user-round" aspect="1 / 1" />
           </div>
           <div style={{ flex: 1 }}>
             <Field label="Ad Soyad" required>

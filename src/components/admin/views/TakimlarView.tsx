@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ViewHeader, Field } from "@/components/admin/kit";
-import { TextInput, Drawer, Modal, FileDrop } from "@/components/admin/controls";
+import { TextInput, Drawer, Modal } from "@/components/admin/controls";
+import { MediaLibraryPicker } from "@/components/admin/MediaLibraryPicker";
 import { Select } from "@/components/ui/Select";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
@@ -98,7 +99,7 @@ function NewTeamModal({ onClose }: { onClose: () => void }) {
           <Select label="Yaş Kategorisi" placeholder="Seç" options={BORN_OPTIONS} value={v.born} onChange={(e) => set("born", e.target.value)} />
         </div>
         <Field label="Kapak Görseli">
-          <FileDrop value={cover} onChange={setCover} label="Kapak görseli yükle" hint="Ana sayfa kartında görünür · 2:3 dikey önerilir" aspect="2 / 3" style={{ maxWidth: 200 }} />
+          <MediaLibraryPicker value={cover} onChange={setCover} label="Kapak görseli seç" hint="Ana sayfa kartında görünür · 2:3 dikey önerilir" aspect="2 / 3" style={{ maxWidth: 200 }} />
         </Field>
         <MainTeamToggle value={isMain} onChange={setIsMain} />
         {error && <div style={{ padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>{error}</div>}
@@ -171,7 +172,7 @@ function TeamDrawer({ team, athletes, onClose }: { team: TeamRow; athletes: Athl
         </div>
 
         <Field label="Kapak Görseli">
-          <FileDrop value={cover} onChange={setCover} label="Kapak görseli yükle" hint="Ana sayfa ve takımlar kartında görünür · 2:3 dikey önerilir" aspect="2 / 3" style={{ maxWidth: 220 }} />
+          <MediaLibraryPicker value={cover} onChange={setCover} label="Kapak görseli seç" hint="Ana sayfa ve takımlar kartında görünür · 2:3 dikey önerilir" aspect="2 / 3" style={{ maxWidth: 220 }} />
         </Field>
 
         <MainTeamToggle value={isMain} onChange={setIsMain} />

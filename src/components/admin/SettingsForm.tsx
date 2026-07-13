@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { TextInput, TextArea, FileDrop, Modal } from "@/components/admin/controls";
+import { TextInput, TextArea, Modal } from "@/components/admin/controls";
+import { MediaLibraryPicker } from "@/components/admin/MediaLibraryPicker";
 import { Field } from "@/components/admin/kit";
 import { Switch } from "@/components/ui/Switch";
 import { Button } from "@/components/ui/Button";
@@ -206,7 +207,7 @@ export function SettingsForm({ initial, smtpPassSet, mediaCategories = [], media
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ display: "grid", gridTemplateColumns: "210px minmax(0,1fr)", gap: 22, alignItems: "start" }} className="jersey-form-grid">
               <Field label="Logo" hint="Şeffaf PNG önerilir">
-                <FileDrop value={v.logoUrl || null} onChange={(url) => set("logoUrl", url ?? "")} label="Logo yükle" aspect="1 / 1" icon="shield" />
+                <MediaLibraryPicker value={v.logoUrl || null} onChange={(url) => set("logoUrl", url ?? "")} label="Logo seç / yükle" aspect="1 / 1" icon="shield" />
               </Field>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <Field label="Kulüp Adı" required><TextInput value={v.clubName} onChange={(e) => set("clubName", e.target.value)} /></Field>
@@ -248,7 +249,7 @@ export function SettingsForm({ initial, smtpPassSet, mediaCategories = [], media
             <Field label="Meta Açıklama" hint="Arama sonuçlarında görünür (~160 karakter)"><TextArea rows={3} value={v.metaDescription} onChange={(e) => set("metaDescription", e.target.value)} /></Field>
             <Field label="Anahtar Kelimeler" hint="virgülle ayır"><TextInput value={v.keywords} onChange={(e) => set("keywords", e.target.value)} placeholder="futbol akademisi, izmir, buca, altyapı" /></Field>
             <Field label="Paylaşım Görseli (OG)" hint="Sosyal medyada paylaşımda görünür (1200×630)">
-              <FileDrop value={v.ogImageUrl || null} onChange={(url) => set("ogImageUrl", url ?? "")} label="OG görseli yükle" aspect="1200 / 630" icon="image" />
+              <MediaLibraryPicker value={v.ogImageUrl || null} onChange={(url) => set("ogImageUrl", url ?? "")} label="OG görseli seç / yükle" aspect="1200 / 630" icon="image" />
             </Field>
           </div>
         )}
@@ -284,11 +285,11 @@ export function SettingsForm({ initial, smtpPassSet, mediaCategories = [], media
               <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "flex-start" }}>
                 <div style={{ width: 360, maxWidth: "100%" }}>
                   <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink-600)", marginBottom: 6 }}>Masaüstü (16:9)</div>
-                  <FileDrop value={v.heroImageUrl || null} onChange={(url) => set("heroImageUrl", url ?? "")} label="Hero görseli yükle" aspect="16 / 9" />
+                  <MediaLibraryPicker value={v.heroImageUrl || null} onChange={(url) => set("heroImageUrl", url ?? "")} label="Hero görseli seç / yükle" aspect="16 / 9" />
                 </div>
                 <div style={{ width: 190, maxWidth: "100%" }}>
                   <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink-600)", marginBottom: 6 }}>Mobil (1:1)</div>
-                  <FileDrop value={heroMobileUrl || null} onChange={(url) => saveHeroMobile(url)} label="Mobil görsel" aspect="1 / 1" />
+                  <MediaLibraryPicker value={heroMobileUrl || null} onChange={(url) => saveHeroMobile(url)} label="Mobil görsel" aspect="1 / 1" />
                 </div>
               </div>
             </div>

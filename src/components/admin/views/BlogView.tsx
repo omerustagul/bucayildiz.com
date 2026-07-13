@@ -3,7 +3,8 @@
 import { useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import { ViewHeader, Toolbar, Panel, Field, Stepper, cardStyle } from "@/components/admin/kit";
-import { TextInput, TextArea, SearchBox, FileDrop } from "@/components/admin/controls";
+import { TextInput, TextArea, SearchBox } from "@/components/admin/controls";
+import { MediaLibraryPicker } from "@/components/admin/MediaLibraryPicker";
 import { Table, type Column } from "@/components/ui/Table";
 import { CardList, CardEmpty, DataCard, CardHeader, CardFields } from "@/components/admin/MobileCardList";
 import { Tabs } from "@/components/ui/Tabs";
@@ -134,10 +135,10 @@ function MacraporuFields({ data, onChange }: { data: MacraporuData; onChange: (d
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
           {data.gallery.map((url, i) => (
             <div key={i} className="by-row-in">
-              <FileDrop value={url} onChange={(u) => (u ? setPhoto(i, u) : removePhoto(i))} compact aspect="4 / 3" label="" />
+              <MediaLibraryPicker value={url} onChange={(u) => (u ? setPhoto(i, u) : removePhoto(i))} compact aspect="4 / 3" label="" />
             </div>
           ))}
-          <FileDrop value={null} onChange={(u) => u && addPhoto(u)} compact aspect="4 / 3" label="Kare Ekle" icon="camera" />
+          <MediaLibraryPicker value={null} onChange={(u) => u && addPhoto(u)} compact aspect="4 / 3" label="Kare Ekle" icon="camera" />
         </div>
       </div>
     </div>
@@ -155,11 +156,11 @@ function GaleriFields({ data, onChange }: { data: GaleriData; onChange: (d: Gale
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
         {data.photos.map((p, i) => (
           <div key={i} className="by-row-in" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <FileDrop value={p.url} onChange={(u) => (u ? setPhoto(i, { url: u }) : removePhoto(i))} compact aspect="4 / 3" label="" />
+            <MediaLibraryPicker value={p.url} onChange={(u) => (u ? setPhoto(i, { url: u }) : removePhoto(i))} compact aspect="4 / 3" label="" />
             <TextInput value={p.caption} onChange={(e) => setPhoto(i, { caption: e.target.value })} placeholder="Kısa açıklama (opsiyonel)" style={{ fontSize: 12.5, padding: "8px 10px" }} />
           </div>
         ))}
-        <FileDrop value={null} onChange={(u) => u && addPhoto(u)} compact aspect="4 / 3" label="Fotoğraf Ekle" icon="images" />
+        <MediaLibraryPicker value={null} onChange={(u) => u && addPhoto(u)} compact aspect="4 / 3" label="Fotoğraf Ekle" icon="images" />
       </div>
     </div>
   );
@@ -173,7 +174,7 @@ function RoportajFields({ data, onChange }: { data: RoportajData; onChange: (d: 
   const removeQa = (i: number) => set("qa", data.qa.filter((_, j) => j !== i));
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <Field label="Portre Görseli"><FileDrop value={data.portraitUrl || null} onChange={(url) => set("portraitUrl", url ?? "")} label="Portre yükle" hint="3:4 önerilir" aspect="3 / 4" /></Field>
+      <Field label="Portre Görseli"><MediaLibraryPicker value={data.portraitUrl || null} onChange={(url) => set("portraitUrl", url ?? "")} label="Portre yükle" hint="3:4 önerilir" aspect="3 / 4" /></Field>
       <Field label="Öne Çıkan Alıntı"><TextInput value={data.quote} onChange={(e) => set("quote", e.target.value)} placeholder="Röportajdan öne çıkan tek cümle" /></Field>
       <div>
         <div style={subLabelStyle}>Soru – Cevap</div>
@@ -323,7 +324,7 @@ function Wizard({ post, onExit }: { post: PostRow | null; onExit: () => void }) 
                 required={f.template !== "sondakika"}
                 hint={f.template === "sondakika" ? "Son dakika haberlerinde kapak görseli şiddetle önerilir." : undefined}
               >
-                <FileDrop value={f.coverUrl || null} onChange={(url) => set("coverUrl", url ?? "")} label="Kapak görseli yükle" hint="1600×900 önerilir" aspect="16 / 9" />
+                <MediaLibraryPicker value={f.coverUrl || null} onChange={(url) => set("coverUrl", url ?? "")} label="Kapak görseli yükle" hint="1600×900 önerilir" aspect="16 / 9" />
               </Field>
               <Field label="Başlık" required>
                 <TextInput value={f.title} onChange={(e) => { set("title", e.target.value); if (!slugTouched) set("slug", slugify(e.target.value)); }} placeholder="Haber başlığı" />
