@@ -11,6 +11,20 @@ const hex = /^#[0-9a-fA-F]{6}$/;
 
 export type MediaResult = { ok: boolean; error?: string };
 
+// --- Ortak Medya Seçici (MediaLibraryPicker) için veri ---
+export type PickerAsset = { id: string; url: string; title: string; kind: string; categoryId: string | null };
+export type PickerCategory = { id: string; name: string };
+
+/** Reusable MediaLibraryPicker'ın kütüphaneyi göstermek için çektiği veri (admin). */
+export async function getMediaLibrary(): Promise<{ assets: PickerAsset[]; categories: PickerCategory[] }> {
+  await requireAdmin();
+  const [assets, categories] = await Promise.all([
+    prisma.mediaAsset.findMany({ orderBy: { createdAt: "desc" }, take: 500, select: { id: true, url: true, title: true, kind: true, categoryId: true } }),
+    prisma.mediaCategory.findMany({ orderBy: { sort: "asc" }, select: { id: true, name: true } }),
+  ]);
+  return { assets, categories };
+}
+
 
 // --- Categories ---
 const catSchema = z.object({
