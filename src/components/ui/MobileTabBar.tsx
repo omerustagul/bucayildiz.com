@@ -73,6 +73,13 @@ function isGroupActive(g: TabBarGroup, pathname: string) {
 
 const itemKey = (it: TabBarItem) => (it.kind === "link" ? it.href : it.id);
 
+/** Dramatik dock giriş koreografisi (blur/perspektif/stagger) tam-sayfa yükleme
+ *  başına YALNIZ bir kez oynasın. Modül düzeyi bayrak SPA gezinmelerinde korunur
+ *  (sidebar/hamburger dock'u yeniden mount etse de tekrar oynamaz), tam yeniden
+ *  yüklemede sıfırlanır → giriş yalnız panelin ilk açılışında. React state DEĞİL
+ *  (set-state-in-effect lint'ine takılmamak için modül değişkeni). */
+let dockHasEntered = false;
+
 export function MobileTabBar({
   items,
   homeHref,
@@ -99,6 +106,12 @@ export function MobileTabBar({
   const reduce = !!useReducedMotion();
   const navVariants = reduce ? dockVariantsReduced : dockVariants;
   const itemVariants = reduce ? dockItemVariantsReduced : dockItemVariants;
+
+  // Dramatik giriş koreografisi YALNIZ panelin ilk açılışında oynar. Sidebar/
+  // hamburger her açılıp kapandığında dock yeniden mount olur (hidden→false);
+  // giriş her gezinmede tekrar oynamasın diye ilk mount'tan sonra bayrağı kaldır
+  // → sonraki mount'larda initial=false → dock anında "show" konumunda belirir.
+  useEffect(() => { dockHasEntered = true; }, []);
 
   // Dock gerçek yüksekliğini CSS değişkenine yazar — .by-tabbar-pad sabit
   // 104px varsayımı yerine bunu okur (header'daki --by-header-h deseni)
@@ -254,7 +267,7 @@ export function MobileTabBar({
             className="by-tabbar"
             aria-label="Alt gezinme"
             variants={navVariants}
-            initial="hide"
+            initial={dockHasEntered ? false : "hide"}
             animate={openItem ? "showFlat" : "show"}
             exit="hide"
             style={{
