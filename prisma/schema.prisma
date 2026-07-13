@@ -385,6 +385,10 @@ model SiteSetting {
   phone         String?
   email         String?
   address       String?
+  // Konum (harita) — Ayarlar'da Leaflet/OSM haritasında tıkla-seç; boşsa
+  // /iletisim'de harita gizli kalır. Tıklayınca Google Maps'te açılır.
+  latitude      Float?
+  longitude     Float?
   // Dinamik sosyal medya listesi — JSON: [{ platform, url }]. Aşağıdaki dört
   // eski alan geriye dönük okuma içindir; UI artık yalnız socialLinks yazar.
   socialLinks   String  @default("[]")
