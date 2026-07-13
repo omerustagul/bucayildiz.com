@@ -3,11 +3,10 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ViewHeader, Panel, Field } from "@/components/admin/kit";
-import { TextInput, TextArea, FileDrop } from "@/components/admin/controls";
+import { TextInput, TextArea, FileDrop, Drawer } from "@/components/admin/controls";
 import { AthletePickerModal } from "@/components/admin/AthletePickerModal";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { IconButton } from "@/components/ui/IconButton";
 import { Icon } from "@/lib/icons";
 import { createAssignments, deleteAssignment } from "@/app/admin/(panel)/mesajlar/actions";
 
@@ -229,11 +228,13 @@ function SendPanel({ teams, athletes }: { teams: MTeam[]; athletes: MAthlete[] }
 function ListPanel({ assignments }: { assignments: MAssignment[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [drawer, setDrawer] = useState<MAssignment | null>(null);
 
   const remove = (id: string) => {
     if (!window.confirm("Bu gönderimi silmek istediğinize emin misiniz?")) return;
     startTransition(async () => {
       await deleteAssignment(id);
+      setDrawer(null);
       router.refresh();
     });
   };
@@ -243,15 +244,22 @@ function ListPanel({ assignments }: { assignments: MAssignment[] }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {assignments.length === 0 && <span style={{ fontSize: 13, color: "var(--ink-400)" }}>Henüz gönderim yok.</span>}
         {assignments.map((a) => (
-          <div
+          <button
             key={a.id}
+            type="button"
+            onClick={() => setDrawer(a)}
             style={{
               display: "flex",
               alignItems: "center",
               gap: 12,
+              width: "100%",
               padding: "10px 12px",
               borderRadius: "var(--radius-sm)",
               border: "1px solid var(--border-subtle)",
+              background: "#fff",
+              font: "inherit",
+              textAlign: "left",
+              cursor: "pointer",
             }}
           >
             <Badge tone={a.kind === "document" ? "gold" : "navy"} style={{ flex: "none" }}>
@@ -268,12 +276,95 @@ function ListPanel({ assignments }: { assignments: MAssignment[] }) {
             <Badge tone={a.readAt ? "success" : "neutral"} style={{ flex: "none" }}>
               {a.readAt ? "Okundu" : "Okunmadı"}
             </Badge>
-            <IconButton label="Gönderimi sil" variant="ghost" size="sm" disabled={pending} onClick={() => remove(a.id)}>
-              <Icon name="trash-2" size={14} />
-            </IconButton>
-          </div>
+          </button>
         ))}
       </div>
+
+      {drawer && (
+        <AssignmentDrawer
+          assignment={drawer}
+          onClose={() => setDrawer(null)}
+          onDelete={() => remove(drawer.id)}
+          deleting={pending}
+        />
+      )}
     </Panel>
+  );
+}
+
+function AssignmentDrawer({
+  assignment: a,
+  onClose,
+  onDelete,
+  deleting,
+}: {
+  assignment: MAssignment;
+  onClose: () => void;
+  onDelete: () => void;
+  deleting: boolean;
+}) {
+  const sectionTitle: React.CSSProperties = {
+    fontFamily: "var(--font-heading)",
+    fontWeight: 600,
+    fontSize: 13,
+    letterSpacing: ".08em",
+    textTransform: "uppercase",
+    color: "var(--gold-700)",
+  };
+
+  return (
+    <Drawer
+      open
+      onClose={onClose}
+      title={a.title}
+      subtitle={`${a.athleteName} · ${fmtDate(a.createdAt)}`}
+      width={520}
+      footer={
+        <>
+          <Button variant="ghost" size="sm" style={{ color: "var(--red-600)", marginRight: "auto" }} leftIcon={<Icon name="trash-2" size={15} />} onClick={onDelete} disabled={deleting}>
+            Sil
+          </Button>
+          <Button variant="secondary" size="sm" onClick={onClose}>
+            Kapat
+          </Button>
+        </>
+      }
+    >
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <Badge tone={a.kind === "document" ? "gold" : "navy"}>{a.kind === "document" ? "Doküman" : "Mesaj"}</Badge>
+          <Badge tone={a.readAt ? "success" : "neutral"}>{a.readAt ? `Okundu · ${fmtDate(a.readAt)}` : "Okunmadı"}</Badge>
+        </div>
+
+        <div style={{ minWidth: 0 }}>
+          <div style={sectionTitle}>Mesaj Metni</div>
+          <p style={{ margin: "10px 0 0", fontSize: 14.5, color: "var(--ink-700)", lineHeight: 1.7, whiteSpace: "pre-wrap", overflowWrap: "break-word", minWidth: 0 }}>
+            {a.body || "İçerik girilmemiş."}
+          </p>
+        </div>
+
+        {a.fileUrl && (
+          <div style={{ minWidth: 0 }}>
+            <div style={sectionTitle}>Dosya</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10, minWidth: 0 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={a.fileUrl}
+                alt={a.title}
+                style={{ display: "block", width: "100%", maxWidth: "100%", height: "auto", borderRadius: "var(--radius-md)", border: "1px solid var(--border-subtle)" }}
+              />
+              <a
+                href={a.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "var(--text-link)", textDecoration: "underline" }}
+              >
+                <Icon name="external-link" size={14} /> Yeni sekmede aç / indir
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
+    </Drawer>
   );
 }
