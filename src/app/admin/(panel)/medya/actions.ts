@@ -37,7 +37,11 @@ export async function createMediaCategory(input: unknown): Promise<MediaResult> 
   const parsed = catSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const count = await prisma.mediaCategory.count();
-  await prisma.mediaCategory.create({ data: { ...parsed.data, sort: count } });
+  try {
+    await prisma.mediaCategory.create({ data: { ...parsed.data, sort: count } });
+  } catch {
+    return { ok: false, error: "Kategori oluşturulamadı." };
+  }
   revalidatePath("/admin/medya");
   revalidatePath("/medya");
   revalidatePath("/");
@@ -78,9 +82,13 @@ export async function createMediaAsset(input: unknown): Promise<MediaResult> {
   }
   if (!categoryId) return { ok: false, error: "Kategori seçiniz." };
 
-  await prisma.mediaAsset.create({
-    data: { url: d.url, title: d.title || "", kind: d.kind, categoryId, folderId: d.folderId ? d.folderId : null },
-  });
+  try {
+    await prisma.mediaAsset.create({
+      data: { url: d.url, title: d.title || "", kind: d.kind, categoryId, folderId: d.folderId ? d.folderId : null },
+    });
+  } catch {
+    return { ok: false, error: "Medya kaydedilemedi." };
+  }
   revalidatePath("/admin/medya");
   revalidatePath("/medya");
   revalidatePath("/");
@@ -99,9 +107,13 @@ export async function createFolder(input: unknown): Promise<MediaResult> {
   const parsed = folderSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
-  await prisma.folder.create({
-    data: { name: d.name, parentId: d.parentId ? d.parentId : null, categoryId: d.categoryId ? d.categoryId : null },
-  });
+  try {
+    await prisma.folder.create({
+      data: { name: d.name, parentId: d.parentId ? d.parentId : null, categoryId: d.categoryId ? d.categoryId : null },
+    });
+  } catch {
+    return { ok: false, error: "Klasör oluşturulamadı." };
+  }
   revalidatePath("/admin/medya");
   revalidatePath("/medya");
   revalidatePath("/");
@@ -115,10 +127,16 @@ export async function updateFolder(id: string, input: unknown): Promise<MediaRes
   const parsed = folderUpdateSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
-  await prisma.folder.update({
-    where: { id },
-    data: { name: d.name, categoryId: d.categoryId ? d.categoryId : null },
-  });
+  // Prisma update kayıt bulunamazsa THROW eder — bayat/silinmiş klasör id'sinde
+  // (hızlı nav / çift işlem) boundary tetiklenmesin diye yakala.
+  try {
+    await prisma.folder.update({
+      where: { id },
+      data: { name: d.name, categoryId: d.categoryId ? d.categoryId : null },
+    });
+  } catch {
+    return { ok: false, error: "Klasör güncellenemedi." };
+  }
   revalidatePath("/admin/medya");
   revalidatePath("/medya");
   revalidatePath("/");

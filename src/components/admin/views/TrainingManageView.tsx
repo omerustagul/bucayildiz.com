@@ -147,9 +147,13 @@ function TrainingDrawer({ training: t, teams, athletes, pitches, onClose }: { tr
   const run = (fn: () => Promise<{ error?: string } | void>) => {
     setError(null);
     startTransition(async () => {
-      const res = await fn();
-      if (res?.error) setError(res.error);
-      router.refresh();
+      try {
+        const res = await fn();
+        if (res?.error) setError(res.error);
+        router.refresh();
+      } catch {
+        toast.error("İşlem başarısız. Lütfen tekrar deneyin.");
+      }
     });
   };
 
@@ -273,7 +277,7 @@ function TrainingDrawer({ training: t, teams, athletes, pitches, onClose }: { tr
               <div key={d.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", background: d.done ? "var(--green-100)" : "var(--surface-card)" }}>
                 <input type="checkbox" checked={d.done} disabled={pending} onChange={(e) => run(async () => { await toggleDrill(d.id, e.target.checked); })} />
                 <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, color: d.done ? "var(--ink-400)" : "var(--ink-700)", textDecoration: d.done ? "line-through" : "none" }}>{d.text}</span>
-                <IconButton label="Maddeyi sil" variant="outline" size="sm" onClick={() => run(async () => { await removeDrill(d.id); })}><Icon name="trash-2" size={13} /></IconButton>
+                <IconButton label="Maddeyi sil" variant="outline" size="sm" disabled={pending} onClick={() => run(async () => { await removeDrill(d.id); })}><Icon name="trash-2" size={13} /></IconButton>
               </div>
             ))}
             <div style={{ display: "flex", gap: 8 }}>

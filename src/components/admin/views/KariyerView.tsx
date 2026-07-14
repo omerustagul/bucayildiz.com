@@ -127,7 +127,7 @@ export function KariyerView({ postings, applications }: { postings: PostingRow[]
   const [q, setQ] = useState("");
   const [drawer, setDrawer] = useState<{ posting: PostingRow | null } | null>(null);
   const router = useRouter();
-  const [, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
 
   const postingRows = useMemo(() => postings.filter((p) => p.title.toLocaleLowerCase("tr").includes(q.toLocaleLowerCase("tr"))), [postings, q]);
   const appRows = useMemo(() => applications.filter((a) => (a.name + a.email + (a.postingTitle ?? "")).toLocaleLowerCase("tr").includes(q.toLocaleLowerCase("tr"))), [applications, q]);
@@ -147,7 +147,15 @@ export function KariyerView({ postings, applications }: { postings: PostingRow[]
 
   const removeApp = (a: ApplicationRow) => {
     if (!window.confirm(`${a.name} adlı başvuruyu silmek istediğinize emin misiniz?`)) return;
-    startTransition(async () => { await deleteJobApplication(a.id); toast.success("Başvuru silindi."); router.refresh(); });
+    startTransition(async () => {
+      try {
+        await deleteJobApplication(a.id);
+        toast.success("Başvuru silindi.");
+        router.refresh();
+      } catch {
+        toast.error("İşlem başarısız. Lütfen tekrar deneyin.");
+      }
+    });
   };
 
   const appCols: Column<ApplicationRow>[] = [
@@ -161,7 +169,7 @@ export function KariyerView({ postings, applications }: { postings: PostingRow[]
     { key: "cvUrl", label: "CV", render: (r) => r.cvUrl ? <a href={r.cvUrl} target="_blank" rel="noreferrer" style={{ color: "var(--navy-700)", fontWeight: 600, fontSize: 13, textDecoration: "underline" }}>PDF</a> : <span style={{ color: "var(--ink-400)" }}>—</span> },
     { key: "createdAt", label: "Tarih", render: (r) => <span style={{ fontFamily: "var(--font-stat)", fontSize: 13 }}>{fmtDate(r.createdAt)}</span> },
     { key: "status", label: "Durum", render: (r) => <JobStatusSelect id={r.id} status={r.status} /> },
-    { key: "del", label: "", width: 44, align: "right", render: (r) => <IconButton label="Başvuruyu sil" variant="outline" size="sm" onClick={() => removeApp(r)}><Icon name="trash-2" size={14} /></IconButton> },
+    { key: "del", label: "", width: 44, align: "right", render: (r) => <IconButton label="Başvuruyu sil" variant="outline" size="sm" disabled={pending} onClick={() => removeApp(r)}><Icon name="trash-2" size={14} /></IconButton> },
   ];
 
   const newCount = applications.filter((a) => a.status === "new").length;

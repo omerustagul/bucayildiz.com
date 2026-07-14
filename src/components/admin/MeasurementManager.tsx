@@ -259,7 +259,14 @@ export function MeasurementHistory({ measurements }: { measurements: Measurement
   const remove = (id: string) => {
     if (!confirm("Bu ölçüm kaydı silinsin mi?")) return;
     setBusyId(id);
-    start(async () => { await deleteMeasurement(id); setBusyId(null); router.refresh(); });
+    start(async () => {
+      try {
+        await deleteMeasurement(id);
+        router.refresh();
+      } finally {
+        setBusyId(null);
+      }
+    });
   };
   const changePer = (val: string) => { setPerPage(val === "all" ? "all" : Number(val)); setPage(1); };
 

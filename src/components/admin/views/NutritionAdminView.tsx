@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { Icon } from "@/lib/icons";
+import { toast } from "@/components/ui/Toast";
 import {
   createNutritionPlan,
   updatePlanBasics,
@@ -293,9 +294,13 @@ function PlanCard({ plan: p, mealLogs, todayYmd }: { plan: NPlan; mealLogs: NMea
   const run = (fn: () => Promise<{ error?: string } | void>) => {
     setError(null);
     startTransition(async () => {
-      const res = await fn();
-      if (res?.error) setError(res.error);
-      router.refresh();
+      try {
+        const res = await fn();
+        if (res?.error) setError(res.error);
+        router.refresh();
+      } catch {
+        toast.error("İşlem başarısız. Lütfen tekrar deneyin.");
+      }
     });
   };
 
@@ -608,13 +613,17 @@ function PlanDrawer(props: DrawerProps) {
   const run = (fn: () => Promise<{ error?: string } | void>, onSuccess?: () => void) => {
     setError(null);
     startTransition(async () => {
-      const res = await fn();
-      if (res?.error) {
-        setError(res.error);
-        return;
+      try {
+        const res = await fn();
+        if (res?.error) {
+          setError(res.error);
+          return;
+        }
+        router.refresh();
+        onSuccess?.();
+      } catch {
+        toast.error("İşlem başarısız. Lütfen tekrar deneyin.");
       }
-      router.refresh();
-      onSuccess?.();
     });
   };
 

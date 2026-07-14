@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/Badge";
 import { IconButton } from "@/components/ui/IconButton";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
+import { toast } from "@/components/ui/Toast";
 import { createMediaCategory, deleteMediaCategory, createMediaAsset, deleteMediaAsset, createFolder, updateFolder, deleteFolder, createHomeCard, updateHomeCard, deleteHomeCard } from "@/app/admin/(panel)/medya/actions";
 import { uploadFiles } from "@/lib/mediaUpload";
 import { UploadDropzone } from "./UploadDropzone";
@@ -79,7 +80,7 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [failures, setFailures] = useState<{ name: string; reason: string }[]>([]);
   const [uploadCategoryId, setUploadCategoryId] = useState("");
-  const [, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
 
   const counts: Record<string, number> = {};
   for (const a of assets) if (a.folderId) counts[a.folderId] = (counts[a.folderId] ?? 0) + 1;
@@ -115,38 +116,47 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
     setBusy(true);
     setUploadError(null);
     setFailures([]);
-    // Her dosya AYRI /api/upload POST'u — böylece magic-byte + 5MB/30MB + rate-limit
-    // HER dosyaya uygulanır (sadece ilkine değil). Kısmi başarı desteklenir.
-    // kind, dosyanın MIME türünden belirlenir (video/* → "video", aksi "photo").
-    const outcome = await uploadFiles(
-      files,
-      async (file) => {
-        try {
-          const fd = new FormData();
-          fd.append("file", file);
-          if (isVideoFile(file)) fd.append("kind", "video");
-          const res = await fetch("/api/upload", { method: "POST", body: fd });
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) return { ok: false as const, reason: data?.error || `Yükleme başarısız (${res.status}).` };
-          return { ok: true as const, url: data.url as string };
-        } catch {
-          return { ok: false as const, reason: "Ağ hatası." };
-        }
-      },
-      async (url, file) => {
-        const kind = isVideoFile(file) ? "video" : "photo";
-        const created = await createMediaAsset({ url, title: file.name, folderId: isRoot ? "" : folder, categoryId: effectiveCategoryId, kind });
-        return created.ok ? { ok: true as const } : { ok: false as const, reason: created.error || "Kaydedilemedi." };
-      },
-    );
-    setFailures(outcome.failed);
-    setBusy(false);
-    if (outcome.okCount > 0) startTransition(() => router.refresh());
+    try {
+      // Her dosya AYRI /api/upload POST'u — böylece magic-byte + 5MB/30MB + rate-limit
+      // HER dosyaya uygulanır (sadece ilkine değil). Kısmi başarı desteklenir.
+      // kind, dosyanın MIME türünden belirlenir (video/* → "video", aksi "photo").
+      const outcome = await uploadFiles(
+        files,
+        async (file) => {
+          try {
+            const fd = new FormData();
+            fd.append("file", file);
+            if (isVideoFile(file)) fd.append("kind", "video");
+            const res = await fetch("/api/upload", { method: "POST", body: fd });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) return { ok: false as const, reason: data?.error || `Yükleme başarısız (${res.status}).` };
+            return { ok: true as const, url: data.url as string };
+          } catch {
+            return { ok: false as const, reason: "Ağ hatası." };
+          }
+        },
+        async (url, file) => {
+          const kind = isVideoFile(file) ? "video" : "photo";
+          const created = await createMediaAsset({ url, title: file.name, folderId: isRoot ? "" : folder, categoryId: effectiveCategoryId, kind });
+          return created.ok ? { ok: true as const } : { ok: false as const, reason: created.error || "Kaydedilemedi." };
+        },
+      );
+      setFailures(outcome.failed);
+      if (outcome.okCount > 0) startTransition(() => router.refresh());
+    } catch {
+      toast.error("İşlem başarısız. Lütfen tekrar deneyin.");
+    } finally {
+      setBusy(false);
+    }
   }
   const removeAsset = (id: string) =>
     startTransition(async () => {
-      await deleteMediaAsset(id);
-      router.refresh();
+      try {
+        await deleteMediaAsset(id);
+        router.refresh();
+      } catch {
+        toast.error("İşlem başarısız. Lütfen tekrar deneyin.");
+      }
     });
 
   return (
@@ -223,7 +233,7 @@ function LibraryTab({ folders, assets, categories }: { folders: FolderNode[]; as
               ) : (
                 <Image src={a.url} alt={a.title} fill style={{ objectFit: "cover" }} sizes="132px" onLoad={() => markLoaded(a.id)} />
               )}
-              <button type="button" onClick={() => removeAsset(a.id)} style={{ position: "absolute", top: 6, right: 6, display: "grid", placeItems: "center", width: 24, height: 24, borderRadius: "var(--radius-sm)", border: "none", background: "rgba(0,0,0,0.55)", color: "#fff", cursor: "pointer" }}>
+              <button type="button" onClick={() => removeAsset(a.id)} disabled={pending} style={{ position: "absolute", top: 6, right: 6, display: "grid", placeItems: "center", width: 24, height: 24, borderRadius: "var(--radius-sm)", border: "none", background: "rgba(0,0,0,0.55)", color: "#fff", cursor: "pointer" }}>
                 <Icon name="trash-2" size={13} />
               </button>
             </div>
@@ -291,9 +301,17 @@ function FolderModal({ folders, categories, defaultParent, folder, onClose }: { 
 function CategoriesTab({ categories }: { categories: CategoryItem[] }) {
   const router = useRouter();
   const [newCat, setNewCat] = useState(false);
+  const [pending, startTransition] = useTransition();
   const remove = (id: string, name: string) => {
     if (!window.confirm(`"${name}" kategorisini silmek istiyor musunuz?`)) return;
-    void deleteMediaCategory(id).then(() => router.refresh());
+    startTransition(async () => {
+      try {
+        await deleteMediaCategory(id);
+        router.refresh();
+      } catch {
+        toast.error("İşlem başarısız. Lütfen tekrar deneyin.");
+      }
+    });
   };
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -309,7 +327,7 @@ function CategoriesTab({ categories }: { categories: CategoryItem[] }) {
               <div style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 17, color: "var(--text-strong)" }}>{c.name}</div>
               <div style={{ fontSize: 12.5, color: "var(--ink-400)" }}>{c.count} medya</div>
             </div>
-            <IconButton label="Sil" variant="ghost" size="sm" onClick={() => remove(c.id, c.name)}><Icon name="trash-2" size={15} /></IconButton>
+            <IconButton label="Sil" variant="ghost" size="sm" disabled={pending} onClick={() => remove(c.id, c.name)}><Icon name="trash-2" size={15} /></IconButton>
           </div>
         ))}
       </div>
@@ -353,7 +371,7 @@ function CardsTab({ cards, categories }: { cards: HomeCardItem[]; categories: Ca
   const router = useRouter();
   const [edit, setEdit] = useState<HomeCardItem | null>(null);
   const [creating, setCreating] = useState(false);
-  const [, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
   const remove = (c: HomeCardItem) => {
     if (!window.confirm(`"${c.title}" kartını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) return;
     startTransition(async () => {
@@ -381,7 +399,7 @@ function CardsTab({ cards, categories }: { cards: HomeCardItem[]; categories: Ca
                 <div style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 17, color: "var(--text-strong)", lineHeight: 1.1 }}>{c.title}</div>
                 <div style={{ display: "flex", gap: 2, flex: "none" }}>
                   <IconButton label="Düzenle" variant="ghost" size="sm" onClick={() => setEdit(c)}><Icon name="pencil" size={15} /></IconButton>
-                  <IconButton label="Sil" variant="ghost" size="sm" onClick={() => remove(c)}><Icon name="trash-2" size={15} /></IconButton>
+                  <IconButton label="Sil" variant="ghost" size="sm" disabled={pending} onClick={() => remove(c)}><Icon name="trash-2" size={15} /></IconButton>
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

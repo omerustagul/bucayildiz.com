@@ -46,10 +46,14 @@ export async function markNotificationRead(id: unknown): Promise<{ ok: boolean }
   if (!athleteId) return { ok: false };
   const parsed = idSchema.safeParse(id);
   if (!parsed.success) return { ok: false };
-  await prisma.notification.updateMany({
-    where: { id: parsed.data, athleteId, readAt: null },
-    data: { readAt: new Date() },
-  });
+  try {
+    await prisma.notification.updateMany({
+      where: { id: parsed.data, athleteId, readAt: null },
+      data: { readAt: new Date() },
+    });
+  } catch {
+    return { ok: false };
+  }
   revalidatePath("/panel", "layout"); // header rozeti tazelensin
   return { ok: true };
 }
@@ -59,10 +63,14 @@ export async function markAllNotificationsRead(): Promise<{ ok: boolean }> {
   const s = await requireAthlete();
   const athleteId = s.athleteId;
   if (!athleteId) return { ok: false };
-  await prisma.notification.updateMany({
-    where: { athleteId, readAt: null },
-    data: { readAt: new Date() },
-  });
+  try {
+    await prisma.notification.updateMany({
+      where: { athleteId, readAt: null },
+      data: { readAt: new Date() },
+    });
+  } catch {
+    return { ok: false };
+  }
   revalidatePath("/panel", "layout");
   return { ok: true };
 }

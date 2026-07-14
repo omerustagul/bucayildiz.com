@@ -59,13 +59,27 @@ export function PaymentsManager({ athletes, payments }: { athletes: AthleteOpt[]
 
   const changeStatus = (id: string, s: string) => {
     setBusyId(id);
-    start(async () => { await setPaymentStatus(id, s); setBusyId(null); router.refresh(); });
+    start(async () => {
+      try {
+        await setPaymentStatus(id, s);
+        router.refresh();
+      } finally {
+        setBusyId(null);
+      }
+    });
   };
 
   const remove = (id: string) => {
     if (!confirm("Bu ödeme kaydı silinsin mi?")) return;
     setBusyId(id);
-    start(async () => { await deletePayment(id); setBusyId(null); router.refresh(); });
+    start(async () => {
+      try {
+        await deletePayment(id);
+        router.refresh();
+      } finally {
+        setBusyId(null);
+      }
+    });
   };
 
   return (

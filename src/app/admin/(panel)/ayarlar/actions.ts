@@ -173,14 +173,18 @@ export async function savePageSeo(input: unknown): Promise<SettingsResult> {
   const description = d.description?.trim() || null;
   const ogImageUrl = og || null;
 
-  if (!title && !description && !ogImageUrl) {
-    await prisma.pageSeo.deleteMany({ where: { path: d.path } });
-  } else {
-    await prisma.pageSeo.upsert({
-      where: { path: d.path },
-      update: { title, description, ogImageUrl },
-      create: { path: d.path, title, description, ogImageUrl },
-    });
+  try {
+    if (!title && !description && !ogImageUrl) {
+      await prisma.pageSeo.deleteMany({ where: { path: d.path } });
+    } else {
+      await prisma.pageSeo.upsert({
+        where: { path: d.path },
+        update: { title, description, ogImageUrl },
+        create: { path: d.path, title, description, ogImageUrl },
+      });
+    }
+  } catch {
+    return { ok: false, error: "SEO ayarı kaydedilemedi." };
   }
   revalidatePath(d.path);
   return { ok: true };
