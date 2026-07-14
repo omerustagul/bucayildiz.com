@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { TextInput, TextArea, Modal } from "@/components/admin/controls";
 import { MediaLibraryPicker } from "@/components/admin/MediaLibraryPicker";
+import { PageSeoManager } from "@/components/admin/PageSeoManager";
 import { Field } from "@/components/admin/kit";
 import { Switch } from "@/components/ui/Switch";
 import { Button } from "@/components/ui/Button";
@@ -251,6 +252,12 @@ export function SettingsForm({ initial, smtpPassSet, mediaCategories = [], media
             <Field label="Paylaşım Görseli (OG)" hint="Sosyal medyada paylaşımda görünür (1200×630)">
               <MediaLibraryPicker value={v.ogImageUrl || null} onChange={(url) => set("ogImageUrl", url ?? "")} label="OG görseli seç / yükle" aspect="1200 / 630" icon="image" />
             </Field>
+
+            {/* Sayfa-bazlı SEO (Madde 6) — yukarıdakiler site-geneli varsayılan; aşağıda her sayfaya özel */}
+            <div style={{ borderTop: "1px solid var(--border-subtle)", marginTop: 6, paddingTop: 18 }}>
+              <h3 style={{ fontFamily: "var(--font-heading)", fontSize: 16.5, textTransform: "uppercase", color: "var(--text-strong)", margin: "0 0 14px", letterSpacing: "0.01em" }}>Sayfa Bazlı SEO</h3>
+              <PageSeoManager />
+            </div>
           </div>
         )}
 
