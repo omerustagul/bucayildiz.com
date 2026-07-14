@@ -182,7 +182,7 @@ export function Modal({ open, onClose, title, children, footer, width = 460 }: {
   if (!render || typeof document === "undefined") return null;
   return createPortal(
     <div ref={rootRef} className={`by-anim-fade${closing ? " is-closing" : ""}`} onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(8,18,38,.5)", display: "grid", placeItems: "center", zIndex: 210, padding: 20 }}>
-      <div className={`by-anim-pop${closing ? " is-closing" : ""}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={title} style={{ width: `min(${width}px, 96vw)`, background: "var(--surface-page)", borderRadius: "var(--radius-xl)", boxShadow: "var(--shadow-xl)", overflow: "hidden" }}>
+      <div className={`by-anim-pop${closing ? " is-closing" : ""}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={title} style={{ width: `min(${width}px, calc(100vw - 40px))`, background: "var(--surface-page)", borderRadius: "var(--radius-xl)", boxShadow: "var(--shadow-xl)", overflow: "hidden" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 20, textTransform: "uppercase", color: "var(--text-strong)", margin: 0 }}>{title}</h2>
           <IconButton label="Kapat" variant="ghost" onClick={onClose}>
