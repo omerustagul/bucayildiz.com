@@ -41,7 +41,7 @@ export async function NewsSection() {
             style={{ position: "relative", display: "block", borderRadius: "var(--radius-lg)", overflow: "hidden", minHeight: 420, background: "var(--grad-navy)", border: "1px solid var(--navy-700)", textDecoration: "none" }}
           >
             {featured.coverUrl ? (
-              <Image src={featured.coverUrl} alt="" fill style={{ objectFit: "cover" }} sizes="(max-width: 900px) 100vw, 760px" />
+              <Image src={featured.coverUrl} alt="" fill style={{ objectFit: "cover" }} sizes="(max-width: 900px) 100vw, 760px" priority />
             ) : (
               <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", color: "rgba(201,162,39,0.08)", fontFamily: "var(--font-heading)", fontSize: 200 }}>★</div>
             )}

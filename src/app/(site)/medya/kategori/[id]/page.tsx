@@ -6,6 +6,13 @@ import { Section } from "@/components/content/blocks";
 import { MediaGallery, type GalleryAsset } from "@/components/content/MediaGallery";
 import { fmtTrDateShort } from "@/lib/format";
 
+// Build sırasında tüm medya kategorileri statik üretilir; sonradan eklenenler
+// on-demand render edilir (dynamicParams varsayılan true).
+export async function generateStaticParams() {
+  const categories = await prisma.mediaCategory.findMany({ select: { id: true } });
+  return categories.map((c) => ({ id: c.id }));
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const category = await prisma.mediaCategory.findUnique({ where: { id } });

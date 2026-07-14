@@ -14,6 +14,16 @@ import { FixtureCard } from "@/components/home/FixtureCard";
 import { MediaGallery, type GalleryAsset } from "@/components/content/MediaGallery";
 import { parseTemplateData, type MacraporuData, type GaleriData, type RoportajData, type DuyuruData } from "@/lib/postTemplates";
 
+// Build sırasında yayınlanmış tüm haberler statik üretilir; sonradan eklenenler
+// on-demand render edilir (dynamicParams varsayılan true).
+export async function generateStaticParams() {
+  const posts = await prisma.post.findMany({
+    where: { status: "published" },
+    select: { slug: true },
+  });
+  return posts.map((p) => ({ slug: p.slug }));
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const post = await prisma.post.findFirst({ where: { slug, status: "published" } });

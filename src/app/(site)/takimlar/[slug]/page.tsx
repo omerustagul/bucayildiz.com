@@ -5,6 +5,13 @@ import { prisma } from "@/lib/prisma";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section, Prose } from "@/components/content/blocks";
 
+// Build sırasında tüm takımlar statik üretilir; sonradan eklenenler on-demand
+// render edilir (dynamicParams varsayılan true).
+export async function generateStaticParams() {
+  const teams = await prisma.team.findMany({ select: { slug: true } });
+  return teams.map((t) => ({ slug: t.slug }));
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const team = await prisma.team.findUnique({ where: { slug } });

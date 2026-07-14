@@ -3,6 +3,12 @@ import { notFound } from "next/navigation";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section } from "@/components/content/blocks";
 import { getConsentDocumentByKey } from "@/lib/consent.server";
+import { CONSENT_DOCS } from "@/lib/consent";
+
+// Sabit KVKK belge anahtarları — DB sorgusu gerekmez, hepsi build'de üretilir.
+export function generateStaticParams() {
+  return CONSENT_DOCS.map((d) => ({ key: d.key }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ key: string }> }): Promise<Metadata> {
   const { key } = await params;
