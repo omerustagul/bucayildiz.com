@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section } from "@/components/content/blocks";
 import { AgeGroupCard } from "@/components/home/AgeGroupCard";
 
-export const metadata: Metadata = { title: "Takımlar" };
+export const generateMetadata = () => getPageMetadata("/takimlar");
 
 export default async function TakimlarPage() {
   const teams = await prisma.team.findMany({ orderBy: { sort: "asc" }, include: { _count: { select: { athletes: true } } } });

@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section } from "@/components/content/blocks";
 import { Icon } from "@/lib/icons";
 
-export const metadata: Metadata = { title: "Basında Biz" };
+export const generateMetadata = () => getPageMetadata("/medya/basinda-biz");
 
 const PRESS = [
   { source: "İzmir Spor Gazetesi", date: "12 Haziran 2026", title: "Buca Yıldız altyapıda fark yaratıyor" },

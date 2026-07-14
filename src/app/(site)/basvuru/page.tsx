@@ -1,13 +1,10 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import { ApplicationForm } from "@/components/forms/ApplicationForm";
 import { Badge } from "@/components/ui/Badge";
 import { Icon, type IconName } from "@/lib/icons";
 import { getActiveConsentDocuments } from "@/lib/consent.server";
 
-export const metadata: Metadata = {
-  title: "Başvuru Formu",
-  description: "Buca Yıldız Futbol Akademisi ücretsiz deneme antrenması başvuru formu.",
-};
+export const generateMetadata = () => getPageMetadata("/basvuru");
 
 const BENEFITS: { icon: IconName; text: string }[] = [
   { icon: "shield-check", text: "UEFA lisanslı antrenörler eşliğinde profesyonel gelişim" },

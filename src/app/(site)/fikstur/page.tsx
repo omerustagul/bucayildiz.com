@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { mapFixture } from "@/lib/publicData";
 import { PageHero } from "@/components/layout/PageHero";
@@ -6,7 +6,7 @@ import { Section } from "@/components/content/blocks";
 import { FixtureTabs } from "@/components/content/FixtureTabs";
 import { MatchList } from "@/components/content/MatchList";
 
-export const metadata: Metadata = { title: "Fikstür" };
+export const generateMetadata = () => getPageMetadata("/fikstur");
 
 export default async function FiksturPage() {
   const fixtures = await prisma.fixture.findMany({ where: { status: "upcoming" }, orderBy: { date: "asc" } });

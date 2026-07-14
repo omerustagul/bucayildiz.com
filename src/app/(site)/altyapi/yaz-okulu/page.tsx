@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section, Prose, FeatureGrid } from "@/components/content/blocks";
 import { TrialBanner } from "@/components/home/TrialBanner";
 
-export const metadata: Metadata = { title: "Yaz Okulu" };
+export const generateMetadata = () => getPageMetadata("/altyapi/yaz-okulu");
 
 export default function YazOkuluPage() {
   return (

@@ -7,6 +7,9 @@ import { AgeGroupsSection } from "@/components/home/AgeGroupsSection";
 import { JerseySection } from "@/components/home/JerseySection";
 import { AcademyFramesSection } from "@/components/home/AcademyFramesSection";
 import { getSettings } from "@/lib/settings";
+import { getPageMetadata } from "@/lib/seo";
+
+export const generateMetadata = () => getPageMetadata("/");
 
 export default async function HomePage() {
   const settings = await getSettings();

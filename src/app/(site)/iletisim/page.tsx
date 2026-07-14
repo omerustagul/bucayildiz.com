@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section } from "@/components/content/blocks";
 import { ContactForm } from "@/components/forms/ContactForm";
@@ -6,7 +6,7 @@ import { LocationMap } from "@/components/ui/LeafletMap";
 import { Icon, type IconName } from "@/lib/icons";
 import { getSettings } from "@/lib/settings";
 
-export const metadata: Metadata = { title: "İletişim" };
+export const generateMetadata = () => getPageMetadata("/iletisim");
 
 export default async function IletisimPage() {
   // İletişim bilgisi admin > Ayarlar'dan (SiteSetting) — sabit placeholder değil.

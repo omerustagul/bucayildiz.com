@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section } from "@/components/content/blocks";
 import { Badge } from "@/components/ui/Badge";
 
-export const metadata: Metadata = { title: "Antrenörler" };
+export const generateMetadata = () => getPageMetadata("/altyapi/antrenorler");
 
 function initials(name: string) {
   return name

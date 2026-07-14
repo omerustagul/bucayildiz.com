@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section, Prose, FeatureGrid, NavyPanel } from "@/components/content/blocks";
 
-export const metadata: Metadata = { title: "Gelişim Programı" };
+export const generateMetadata = () => getPageMetadata("/altyapi/gelisim-programi");
 
 export default function GelisimProgramiPage() {
   return (

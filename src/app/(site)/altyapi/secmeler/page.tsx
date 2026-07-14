@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section, Prose } from "@/components/content/blocks";
 import { TrialBanner } from "@/components/home/TrialBanner";
 
-export const metadata: Metadata = { title: "Seçmeler" };
+export const generateMetadata = () => getPageMetadata("/altyapi/secmeler");
 
 const STEPS = [
   { n: "1", title: "Başvuru", text: "Online başvuru formunu doldurun; ekibimiz sizinle iletişime geçsin." },

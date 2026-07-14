@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section } from "@/components/content/blocks";
 import { FixtureTabs } from "@/components/content/FixtureTabs";
 import { StandingsTable, type PublicStandingRow } from "@/components/content/StandingsTable";
 
-export const metadata: Metadata = { title: "Puan Durumu" };
+export const generateMetadata = () => getPageMetadata("/fikstur/puan-durumu");
 
 export default async function PuanDurumuPage() {
   const rows = await prisma.standingRow.findMany({ orderBy: { sort: "asc" } });

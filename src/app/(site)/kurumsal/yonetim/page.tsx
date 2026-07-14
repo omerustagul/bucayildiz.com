@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section } from "@/components/content/blocks";
 
-export const metadata: Metadata = { title: "Yönetim" };
+export const generateMetadata = () => getPageMetadata("/kurumsal/yonetim");
 
 function initials(name: string) {
   return name

@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section, Prose, StatStrip, FeatureGrid, NavyPanel } from "@/components/content/blocks";
 
-export const metadata: Metadata = { title: "Hakkımızda" };
+export const generateMetadata = () => getPageMetadata("/kurumsal/hakkimizda");
 
 export default async function HakkimizdaPage() {
   const [athleteCount, ageGroupCount, coachCount, settings] = await Promise.all([

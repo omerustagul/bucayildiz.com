@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section } from "@/components/content/blocks";
 import { prisma } from "@/lib/prisma";
 import { JobApplicationForm } from "@/components/forms/JobApplicationForm";
 
-export const metadata: Metadata = { title: "Kariyer" };
+export const generateMetadata = () => getPageMetadata("/kurumsal/kariyer");
 export const revalidate = 60;
 
 const EMPLOYMENT_LABEL: Record<string, string> = {

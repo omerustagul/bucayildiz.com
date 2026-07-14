@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
@@ -6,7 +6,7 @@ import { fmtTrDate } from "@/lib/publicData";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section } from "@/components/content/blocks";
 
-export const metadata: Metadata = { title: "Haberler" };
+export const generateMetadata = () => getPageMetadata("/haberler");
 
 export default async function HaberlerPage() {
   // Listede gövde (body) kullanılmıyor — sadece gerekli alanları çek (perf).

@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section } from "@/components/content/blocks";
 import { MediaGallery, type GalleryAsset } from "@/components/content/MediaGallery";
 import { fmtTrDateShort } from "@/lib/format";
 
-export const metadata: Metadata = { title: "Videolar" };
+export const generateMetadata = () => getPageMetadata("/medya/videolar");
 
 /** Medya kütüphanesindeki TÜM videolar — tıklanınca tam ekranda oynatılır. */
 export default async function VideolarPage() {

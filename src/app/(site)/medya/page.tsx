@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section, LinkCardGrid } from "@/components/content/blocks";
 
-export const metadata: Metadata = { title: "Medya" };
+export const generateMetadata = () => getPageMetadata("/medya");
 
 export default function MedyaPage() {
   return (

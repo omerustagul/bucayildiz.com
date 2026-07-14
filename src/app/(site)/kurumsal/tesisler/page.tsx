@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section, Prose } from "@/components/content/blocks";
 import { Badge } from "@/components/ui/Badge";
 
-export const metadata: Metadata = { title: "Tesisler" };
+export const generateMetadata = () => getPageMetadata("/kurumsal/tesisler");
 
 export default async function TesislerPage() {
   const facilities = await prisma.facility.findMany({ orderBy: [{ sort: "asc" }, { name: "asc" }] });

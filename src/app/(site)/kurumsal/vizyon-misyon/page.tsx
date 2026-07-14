@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
+import { getPageMetadata } from "@/lib/seo";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section, Prose, FeatureGrid } from "@/components/content/blocks";
 
-export const metadata: Metadata = { title: "Vizyon & Misyon" };
+export const generateMetadata = () => getPageMetadata("/kurumsal/vizyon-misyon");
 
 export default function VizyonMisyonPage() {
   return (
