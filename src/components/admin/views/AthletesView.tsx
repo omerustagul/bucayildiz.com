@@ -180,7 +180,7 @@ function AthleteDrawer({ athlete, teams, onClose }: { athlete: AthleteRow | null
 
         <div style={{ height: 1, background: "var(--border-subtle)" }} />
         <div style={sectionTitle}>Fiziksel & İletişim</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 14 }}>
           <Field label="Boy" hint="cm">
             <TextInput type="number" value={v.height} onChange={(e) => set("height", e.target.value)} placeholder="178" />
           </Field>

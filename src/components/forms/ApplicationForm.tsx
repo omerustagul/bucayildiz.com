@@ -85,7 +85,7 @@ function Field({
   htmlFor?: string;
 }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6, gridColumn: full ? "1 / -1" : undefined }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0, gridColumn: full ? "1 / -1" : undefined }}>
       <label htmlFor={htmlFor} style={{ fontSize: 13, fontWeight: 600, color: "var(--text-strong)" }}>
         {label} {required && <span style={{ color: "var(--red-600)" }}>*</span>}
         {hint && <span style={{ fontWeight: 400, color: "var(--text-muted)" }}> · {hint}</span>}

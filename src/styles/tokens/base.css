@@ -8,6 +8,17 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Form alanları grid/flex hücresinde min-content genişliğine kilitlenmesin.
+   Grid/flex öğelerinin varsayılanı min-width:auto — native <input type=date>
+   iOS'ta geniş bir intrinsic min-width taşıdığından hücreyi konteyner DIŞINA
+   itip yatay taşma/kaydırma yaratıyordu (drawer'larda "sağa sola kayma",
+   doğum tarihi input'unun patlaması). width:100% ancak min-width:0 ile kazanır. */
+input,
+select,
+textarea {
+  min-width: 0;
+}
+
 /* iOS Safari'nin dar kolonlardaki metni otomatik büyütmesini (ve layout'u
    patlatmasını) engelle — "Chrome'da iyi, iPhone'da bozuk" sorununun ana
    nedeni. Ayrıca yatay taşmaya karşı emniyet kemeri (clip; sticky'yi bozmaz). */

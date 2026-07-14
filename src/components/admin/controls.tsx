@@ -166,7 +166,7 @@ export function Drawer({ open, onClose, title, subtitle, children, footer, width
             <Icon name="x" size={18} />
           </IconButton>
         </div>
-        <div className="by-overlay-scroll" style={{ flex: 1, overflowY: "auto", padding: 24 }}>{children}</div>
+        <div className="by-overlay-scroll" style={{ flex: 1, minWidth: 0, overflowY: "auto", overflowX: "hidden", padding: 24 }}>{children}</div>
         {footer && <div style={{ padding: "16px 24px", borderTop: "1px solid var(--border-subtle)", display: "flex", gap: 10, justifyContent: "flex-end", background: "var(--surface-subtle)" }}>{footer}</div>}
       </aside>
     </>,
@@ -189,7 +189,7 @@ export function Modal({ open, onClose, title, children, footer, width = 460 }: {
             <Icon name="x" size={18} />
           </IconButton>
         </div>
-        <div className="by-overlay-scroll" style={{ padding: 24, maxHeight: "calc(90vh - 132px)", overflowY: "auto" }}>{children}</div>
+        <div className="by-overlay-scroll" style={{ padding: 24, minWidth: 0, maxHeight: "calc(90vh - 132px)", overflowY: "auto", overflowX: "hidden" }}>{children}</div>
         {footer && <div style={{ padding: "16px 24px", borderTop: "1px solid var(--border-subtle)", display: "flex", gap: 10, justifyContent: "flex-end", background: "var(--surface-subtle)" }}>{footer}</div>}
       </div>
     </div>,

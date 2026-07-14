@@ -44,7 +44,7 @@ export function Toolbar({ children, style = {} }: { children: React.ReactNode; s
 
 export function Field({ label, required, hint, children, style = {} }: { label?: string; required?: boolean; hint?: string; children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6, ...style }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0, ...style }}>
       {label && (
         <label style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12.5, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--ink-600)" }}>
           {label}
