@@ -83,8 +83,8 @@ export function SiteFooter({ socials = [], logoUrl }: { socials?: SocialLink[]; 
             title="Akademi"
             links={[
               { label: "A Takım", href: "/takimlar/a-takim" },
-              { label: "U-18", href: "/takimlar/u18" },
-              { label: "U-17", href: "/takimlar/u17" },
+              { label: "U-18", href: "/takimlar/u-18" },
+              { label: "U-17", href: "/takimlar/u-17" },
               { label: "Seçmeler", href: "/altyapi/secmeler" },
             ]}
           />

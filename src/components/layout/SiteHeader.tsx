@@ -18,7 +18,10 @@ import type { SocialLink } from "@/lib/social";
 
 type MenuEntry = { label: string; href: string; items: { label: string; href: string }[] };
 
-const MENU: MenuEntry[] = [
+/** Menü ağacı. "Takımlar" alt-menüsü DB'den beslenir (teams) — slug'lar elle
+ *  yazılınca (u18) gerçek slug'dan (u-18) kaydığı için tek kaynak Team.slug. */
+function buildMenu(teams: { slug: string; name: string }[]): MenuEntry[] {
+  return [
   {
     label: "Kurumsal",
     href: "/kurumsal",
@@ -32,13 +35,7 @@ const MENU: MenuEntry[] = [
   {
     label: "Takımlar",
     href: "/takimlar",
-    items: [
-      { label: "A Takım", href: "/takimlar/a-takim" },
-      { label: "U-18", href: "/takimlar/u18" },
-      { label: "U-17", href: "/takimlar/u17" },
-      { label: "U-16", href: "/takimlar/u16" },
-      { label: "U-15", href: "/takimlar/u15" },
-    ],
+    items: teams.map((t) => ({ label: t.name, href: `/takimlar/${t.slug}` })),
   },
   {
     label: "Altyapı",
@@ -70,7 +67,8 @@ const MENU: MenuEntry[] = [
     ],
   },
   { label: "İletişim", href: "/iletisim", items: [] },
-];
+  ];
+}
 
 /** Takım renkleri şeridi — FCB'deki gibi ortadan bölünmüş: lacivert | altın. */
 function TeamStripe() {
@@ -88,7 +86,8 @@ function TeamStripe() {
 
 const navIcon = (name: IconName, size = 14) => <Icon name={name} size={size} />;
 
-export function SiteHeader({ active: activeOverride, socials = [], logoUrl }: { active?: string; socials?: SocialLink[]; logoUrl?: string | null }) {
+export function SiteHeader({ active: activeOverride, socials = [], logoUrl, teams = [] }: { active?: string; socials?: SocialLink[]; logoUrl?: string | null; teams?: { slug: string; name: string }[] }) {
+  const MENU = buildMenu(teams);
   const [open, setOpen] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [acc, setAcc] = useState<string | null>(null);
@@ -293,7 +292,7 @@ export function SiteHeader({ active: activeOverride, socials = [], logoUrl }: { 
               <Button style={{ height: "24px", padding: "0 12px", textTransform: "uppercase", fontWeight: "900", letterSpacing: "0.015em" }} as="a" href="/giris" variant="on-navy" size="sm" leftIcon={navIcon("lock")}>
                 Sporcu Girişi
               </Button>
-              <Button style={{ height: "24px", padding: "0 12px", textTransform: "uppercase", fontWeight: "900", letterSpacing: "0.015em" }} as="a" href="/basvuru" variant="accent" size="sm" leftIcon={navIcon("clipboard-list")}>
+              <Button style={{ height: "24px", padding: "0 12px", textTransform: "uppercase", fontWeight: "900", letterSpacing: "0.015em" }} as="a" href="/ucretsiz-deneme" variant="accent" size="sm" leftIcon={navIcon("clipboard-list")}>
                 Ücretsiz Analiz ve Başvuru
               </Button>
             </div>
