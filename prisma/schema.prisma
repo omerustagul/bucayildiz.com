@@ -424,6 +424,19 @@ model SiteSetting {
   updatedAt DateTime @updatedAt
 }
 
+/// Sayfa-bazlı SEO override'ı (Madde 6). Her indexlenen ana statik sayfa için
+/// path'e bağlı başlık/açıklama/OG görseli. Boş alanlar SiteSetting'teki site-geneli
+/// varsayılana düşer. Kayıt yoksa da varsayılan kullanılır. Sayfa listesi kodda
+/// (src/lib/page-seo.ts) sabittir; bu tablo yalnız override'ları tutar.
+model PageSeo {
+  id          String   @id @default(cuid())
+  path        String   @unique
+  title       String?
+  description String?
+  ogImageUrl  String?
+  updatedAt   DateTime @updatedAt
+}
+
 /// Aidat / ödeme kaydı. Tutar TL cinsinden tam sayı (kuruş yok — basitlik).
 model Payment {
   id        String   @id @default(cuid())

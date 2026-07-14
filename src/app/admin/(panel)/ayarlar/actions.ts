@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isOwnStorageUrl } from "@/lib/storage";
+import { SEO_PAGE_PATHS } from "@/lib/page-seo";
 
 export type SettingsResult = { ok: true } | { ok: false; error: string };
 
@@ -134,4 +135,53 @@ export async function saveSettings(input: unknown): Promise<SettingsResult> {
   } catch {
     return { ok: false, error: "Ayarlar kaydedilemedi." };
   }
+}
+
+// --- Sayfa-bazlı SEO (Madde 6) ---
+
+export type PageSeoOverride = { title: string; description: string; ogImageUrl: string };
+
+/** Tüm sayfa SEO override'ları — path → alanlar. Admin PageSeoManager çeker. */
+export async function getPageSeoOverrides(): Promise<Record<string, PageSeoOverride>> {
+  await requireAdmin();
+  const rows = await prisma.pageSeo.findMany();
+  const map: Record<string, PageSeoOverride> = {};
+  for (const r of rows) map[r.path] = { title: r.title ?? "", description: r.description ?? "", ogImageUrl: r.ogImageUrl ?? "" };
+  return map;
+}
+
+const pageSeoSchema = z.object({
+  path: z.string().trim().min(1),
+  title: z.string().trim().max(120, "Başlık en fazla 120 karakter.").optional().or(z.literal("")),
+  description: z.string().trim().max(300, "Açıklama en fazla 300 karakter.").optional().or(z.literal("")),
+  ogImageUrl: z.string().trim().max(500).optional().or(z.literal("")),
+});
+
+/** Bir sayfanın SEO override'ını kaydeder. Tüm alanlar boşsa override silinir
+ *  (site-geneli varsayılana döner). Path allowlist'te (SEO_PAGES) olmalı. */
+export async function savePageSeo(input: unknown): Promise<SettingsResult> {
+  await requireAdmin();
+  const parsed = pageSeoSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
+  const d = parsed.data;
+  if (!SEO_PAGE_PATHS.has(d.path)) return { ok: false, error: "Geçersiz sayfa." };
+
+  const og = d.ogImageUrl?.trim() || "";
+  if (og && !isOwnStorageUrl(og)) return { ok: false, error: "Görsel yalnız medya kütüphanesinden olabilir." };
+
+  const title = d.title?.trim() || null;
+  const description = d.description?.trim() || null;
+  const ogImageUrl = og || null;
+
+  if (!title && !description && !ogImageUrl) {
+    await prisma.pageSeo.deleteMany({ where: { path: d.path } });
+  } else {
+    await prisma.pageSeo.upsert({
+      where: { path: d.path },
+      update: { title, description, ogImageUrl },
+      create: { path: d.path, title, description, ogImageUrl },
+    });
+  }
+  revalidatePath(d.path);
+  return { ok: true };
 }
