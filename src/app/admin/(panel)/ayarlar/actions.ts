@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isOwnStorageUrl } from "@/lib/storage";
 import { SEO_PAGE_PATHS } from "@/lib/page-seo";
@@ -18,7 +18,7 @@ const imageUrlSchema = z.string().trim().max(500).nullable().optional();
  * FileDrop anında kaydeder).
  */
 async function saveImageSetting(field: "homeGalleryFeaturedUrl" | "heroMobileImageUrl", input: unknown): Promise<SettingsResult> {
-  await requireAdmin();
+  await requirePermission("ayarlar.manage");
   const parsed = imageUrlSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Geçersiz veri." };
   const raw = parsed.data?.trim() || null;
@@ -92,7 +92,7 @@ function sanitizeSocialLinks(json: string): string {
 const orNull = (v: string | undefined | null) => (v && v.trim() !== "" ? v.trim() : null);
 
 export async function saveSettings(input: unknown): Promise<SettingsResult> {
-  await requireAdmin();
+  await requirePermission("ayarlar.manage");
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
@@ -143,7 +143,7 @@ export type PageSeoOverride = { title: string; description: string; ogImageUrl: 
 
 /** Tüm sayfa SEO override'ları — path → alanlar. Admin PageSeoManager çeker. */
 export async function getPageSeoOverrides(): Promise<Record<string, PageSeoOverride>> {
-  await requireAdmin();
+  await requirePermission("ayarlar.view");
   const rows = await prisma.pageSeo.findMany();
   const map: Record<string, PageSeoOverride> = {};
   for (const r of rows) map[r.path] = { title: r.title ?? "", description: r.description ?? "", ogImageUrl: r.ogImageUrl ?? "" };
@@ -160,7 +160,7 @@ const pageSeoSchema = z.object({
 /** Bir sayfanın SEO override'ını kaydeder. Tüm alanlar boşsa override silinir
  *  (site-geneli varsayılana döner). Path allowlist'te (SEO_PAGES) olmalı. */
 export async function savePageSeo(input: unknown): Promise<SettingsResult> {
-  await requireAdmin();
+  await requirePermission("ayarlar.manage");
   const parsed = pageSeoSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;

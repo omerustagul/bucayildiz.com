@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, requirePermission } from "@/lib/auth";
 import { isOwnStorageUrl } from "@/lib/storage";
 import { idSchema } from "@/lib/validation";
 
@@ -33,7 +33,7 @@ const catSchema = z.object({
 });
 
 export async function createMediaCategory(input: unknown): Promise<MediaResult> {
-  await requireAdmin();
+  await requirePermission("medya.manage");
   const parsed = catSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const count = await prisma.mediaCategory.count();
@@ -49,7 +49,7 @@ export async function createMediaCategory(input: unknown): Promise<MediaResult> 
 }
 
 export async function deleteMediaCategory(id: string): Promise<void> {
-  await requireAdmin();
+  await requirePermission("medya.manage");
   await prisma.mediaAsset.updateMany({ where: { categoryId: id }, data: { categoryId: null } });
   await prisma.mediaCategory.delete({ where: { id } }).catch(() => {});
   revalidatePath("/admin/medya");
@@ -67,7 +67,7 @@ const assetSchema = z.object({
 });
 
 export async function createMediaAsset(input: unknown): Promise<MediaResult> {
-  await requireAdmin();
+  await requirePermission("medya.manage");
   const parsed = assetSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
@@ -103,7 +103,7 @@ const folderSchema = z.object({
 });
 
 export async function createFolder(input: unknown): Promise<MediaResult> {
-  await requireAdmin();
+  await requirePermission("medya.manage");
   const parsed = folderSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
@@ -123,7 +123,7 @@ export async function createFolder(input: unknown): Promise<MediaResult> {
 const folderUpdateSchema = folderSchema.omit({ parentId: true });
 
 export async function updateFolder(id: string, input: unknown): Promise<MediaResult> {
-  await requireAdmin();
+  await requirePermission("medya.manage");
   const parsed = folderUpdateSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
@@ -144,7 +144,7 @@ export async function updateFolder(id: string, input: unknown): Promise<MediaRes
 }
 
 export async function deleteFolder(id: string): Promise<void> {
-  await requireAdmin();
+  await requirePermission("medya.manage");
   const folder = await prisma.folder.findUnique({ where: { id } });
   await prisma.folder.updateMany({ where: { parentId: id }, data: { parentId: folder?.parentId ?? null } });
   await prisma.mediaAsset.updateMany({ where: { folderId: id }, data: { folderId: null } });
@@ -180,7 +180,7 @@ function cardData(d: z.infer<typeof cardSchema>) {
 }
 
 export async function createHomeCard(input: unknown): Promise<MediaResult> {
-  await requireAdmin();
+  await requirePermission("medya.manage");
   const parsed = cardSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
@@ -200,7 +200,7 @@ export async function createHomeCard(input: unknown): Promise<MediaResult> {
 }
 
 export async function updateHomeCard(id: string, input: unknown): Promise<MediaResult> {
-  await requireAdmin();
+  await requirePermission("medya.manage");
   const parsed = cardSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
@@ -218,7 +218,7 @@ export async function updateHomeCard(id: string, input: unknown): Promise<MediaR
 }
 
 export async function deleteHomeCard(id: unknown): Promise<MediaResult> {
-  await requireAdmin();
+  await requirePermission("medya.manage");
   const parsed = idSchema.safeParse(id);
   if (!parsed.success) return { ok: false, error: "Geçersiz kayıt." };
   await prisma.homeMediaCard.delete({ where: { id: parsed.data } }).catch(() => {});
@@ -229,7 +229,7 @@ export async function deleteHomeCard(id: unknown): Promise<MediaResult> {
 }
 
 export async function deleteMediaAsset(id: string): Promise<void> {
-  await requireAdmin();
+  await requirePermission("medya.manage");
   await prisma.mediaAsset.delete({ where: { id } }).catch(() => {});
   revalidatePath("/admin/medya");
   revalidatePath("/medya");

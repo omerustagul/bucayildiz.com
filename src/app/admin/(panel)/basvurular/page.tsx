@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ViewHeader, Panel } from "@/components/admin/ui";
 import { BasvurularView, type ApplicationRow } from "@/components/admin/BasvurularView";
@@ -17,6 +18,7 @@ function fmtDateTime(d: Date) {
 }
 
 export default async function BasvurularPage() {
+  await requirePermission("basvurular.view");
   const apps = await prisma.application.findMany({
     orderBy: { createdAt: "desc" },
     include: { consents: { orderBy: { documentKey: "asc" } } },

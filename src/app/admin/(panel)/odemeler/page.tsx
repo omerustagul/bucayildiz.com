@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ViewHeader } from "@/components/admin/ui";
 import { PaymentsManager, type PaymentRow } from "@/components/admin/PaymentsManager";
@@ -6,6 +7,7 @@ import { PaymentsManager, type PaymentRow } from "@/components/admin/PaymentsMan
 export const metadata: Metadata = { title: "Ödemeler" };
 
 export default async function OdemelerPage() {
+  await requirePermission("odemeler.view");
   const [athletes, payments] = await Promise.all([
     prisma.athlete.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, team: { select: { name: true } } } }),
     prisma.payment.findMany({ orderBy: { createdAt: "desc" }, take: 300, include: { athlete: { select: { name: true, team: { select: { name: true } } } } } }),

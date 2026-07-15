@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ViewHeader } from "@/components/admin/ui";
 import { Toolbar } from "@/components/admin/kit";
@@ -10,6 +11,7 @@ import { PerformanceOverview } from "@/components/admin/PerformanceOverview";
 export const metadata: Metadata = { title: "Performans Ölçümleri" };
 
 export default async function PerformansPage({ searchParams }: { searchParams: Promise<{ athlete?: string }> }) {
+  await requirePermission("performans.view");
   const { athlete: selectedId } = await searchParams;
 
   const [teams, athletes] = await Promise.all([

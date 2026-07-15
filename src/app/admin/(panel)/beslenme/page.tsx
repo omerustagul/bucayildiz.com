@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NutritionAdminView } from "@/components/admin/views/NutritionAdminView";
 
 export const metadata: Metadata = { title: "Beslenme" };
 
 export default async function BeslenmePage() {
+  await requirePermission("beslenme.view");
   const now = new Date();
   const todayYmd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const windowStart = new Date(now);

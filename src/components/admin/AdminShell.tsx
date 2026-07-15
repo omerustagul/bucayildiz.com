@@ -11,48 +11,50 @@ import { MobileTabBar, type TabBarItem } from "@/components/ui/MobileTabBar";
 import { MobileMenu } from "@/components/ui/MobileMenu";
 import { Toaster } from "@/components/ui/Toast";
 import { logoutAction } from "@/app/admin/actions";
+import { hasPermission } from "@/lib/permissions";
 
-type NavItem = { href: string; label: string; icon: IconName; ready?: boolean };
+// `area`: RBAC izin alanı (ör. "sporcular"). Boşsa herkese açık (Genel Bakış, Profilim).
+type NavItem = { href: string; label: string; icon: IconName; ready?: boolean; area?: string };
 type NavGroup = { group: string; items: NavItem[] };
 
 const NAV: NavGroup[] = [
   { group: "Genel", items: [{ href: "/admin", label: "Genel Bakış", icon: "layout-dashboard", ready: true }] },
-  { group: "Başvurular", items: [{ href: "/admin/basvurular", label: "Başvurular", icon: "inbox", ready: true }] },
+  { group: "Başvurular", items: [{ href: "/admin/basvurular", label: "Başvurular", icon: "inbox", ready: true, area: "basvurular" }] },
   {
     group: "Kulüp",
     items: [
-      { href: "/admin/sporcular", label: "Sporcular", icon: "users", ready: true },
-      { href: "/admin/performans", label: "Performans", icon: "heart-pulse", ready: true },
-      { href: "/admin/beslenme", label: "Beslenme", icon: "clipboard-list", ready: true },
-      { href: "/admin/takimlar", label: "Takımlar", icon: "shield", ready: true },
-      { href: "/admin/takvim-programi", label: "Takvim Programı", icon: "calendar-check", ready: true },
-      { href: "/admin/antrenmanlar", label: "Antrenmanlar", icon: "dumbbell", ready: true },
-      { href: "/admin/fikstur", label: "Fikstür", icon: "calendar-days", ready: true },
-      { href: "/admin/puan-durumu", label: "Puan Durumu", icon: "trophy", ready: true },
-      { href: "/admin/odemeler", label: "Ödemeler", icon: "clipboard-list", ready: true },
+      { href: "/admin/sporcular", label: "Sporcular", icon: "users", ready: true, area: "sporcular" },
+      { href: "/admin/performans", label: "Performans", icon: "heart-pulse", ready: true, area: "performans" },
+      { href: "/admin/beslenme", label: "Beslenme", icon: "clipboard-list", ready: true, area: "beslenme" },
+      { href: "/admin/takimlar", label: "Takımlar", icon: "shield", ready: true, area: "takimlar" },
+      { href: "/admin/takvim-programi", label: "Takvim Programı", icon: "calendar-check", ready: true, area: "takvim" },
+      { href: "/admin/antrenmanlar", label: "Antrenmanlar", icon: "dumbbell", ready: true, area: "antrenmanlar" },
+      { href: "/admin/fikstur", label: "Fikstür", icon: "calendar-days", ready: true, area: "fikstur" },
+      { href: "/admin/puan-durumu", label: "Puan Durumu", icon: "trophy", ready: true, area: "puan" },
+      { href: "/admin/odemeler", label: "Ödemeler", icon: "clipboard-list", ready: true, area: "odemeler" },
     ],
   },
   {
     group: "İçerik & Site",
     items: [
-      { href: "/admin/haberler", label: "Haberler / Blog", icon: "newspaper", ready: true },
-      { href: "/admin/medya", label: "Medya Kütüphanesi", icon: "images", ready: true },
-      { href: "/admin/formalar", label: "Formalar", icon: "shirt", ready: true },
-      { href: "/admin/kadro", label: "Teknik Ekip & Yönetim", icon: "user-round", ready: true },
-      { href: "/admin/tesisler", label: "Tesisler", icon: "shield-check", ready: true },
-      { href: "/admin/kariyer", label: "Kariyer / İş İlanları", icon: "file-text", ready: true },
+      { href: "/admin/haberler", label: "Haberler / Blog", icon: "newspaper", ready: true, area: "haberler" },
+      { href: "/admin/medya", label: "Medya Kütüphanesi", icon: "images", ready: true, area: "medya" },
+      { href: "/admin/formalar", label: "Formalar", icon: "shirt", ready: true, area: "formalar" },
+      { href: "/admin/kadro", label: "Teknik Ekip & Yönetim", icon: "user-round", ready: true, area: "kadro" },
+      { href: "/admin/tesisler", label: "Tesisler", icon: "shield-check", ready: true, area: "tesisler" },
+      { href: "/admin/kariyer", label: "Kariyer / İş İlanları", icon: "file-text", ready: true, area: "kariyer" },
     ],
   },
   {
     group: "İletişim",
     items: [
-      { href: "/admin/mesajlar", label: "Mesaj & Doküman", icon: "send", ready: true },
-      { href: "/admin/bildirimler", label: "Bildirimler", icon: "bell", ready: true },
+      { href: "/admin/mesajlar", label: "Mesaj & Doküman", icon: "send", ready: true, area: "mesajlar" },
+      { href: "/admin/bildirimler", label: "Bildirimler", icon: "bell", ready: true, area: "bildirimler" },
     ],
   },
   {
     group: "Sistem",
-    items: [{ href: "/admin/ayarlar", label: "Ayarlar", icon: "settings", ready: true }],
+    items: [{ href: "/admin/ayarlar", label: "Ayarlar", icon: "settings", ready: true, area: "ayarlar" }],
   },
 ];
 
@@ -61,18 +63,7 @@ const EXTRA_ITEMS: NavItem[] = [{ href: "/admin/profil", label: "Profilim", icon
 
 const ALL_ITEMS = [...NAV.flatMap((g) => g.items), ...EXTRA_ITEMS];
 
-/** Mobil dock grupları NAV'dan türetilir — TEK KAYNAK: kenar çubuğuna
- *  eklenen sayfa dock'a otomatik düşer, elle senkron gerektirmez. */
-const navGroup = (name: string): NavItem[] => NAV.find((g) => g.group === name)?.items ?? [];
 const toTab = ({ href, label, icon }: NavItem) => ({ href, label, icon });
-
-const TABBAR_ITEMS: TabBarItem[] = [
-  { kind: "group", id: "kulup", label: "Kulüp", icon: "shield", items: navGroup("Kulüp").map(toTab) },
-  { kind: "group", id: "site", label: "Site", icon: "newspaper", items: [...navGroup("Başvurular"), ...navGroup("İçerik & Site")].map(toTab) },
-  { kind: "link", href: "/admin", label: "Genel Bakış", icon: "layout-dashboard" },
-  { kind: "group", id: "iletisim", label: "İletişim", icon: "bell", items: navGroup("İletişim").map(toTab) },
-  { kind: "group", id: "sistem", label: "Sistem", icon: "settings", items: [...navGroup("Sistem"), ...EXTRA_ITEMS].map(toTab) },
-];
 
 function isActive(pathname: string, href: string) {
   if (href === "/admin") return pathname === "/admin";
@@ -90,7 +81,7 @@ function initials(name: string) {
   );
 }
 
-export function AdminShell({ user, mobileNav = true, logoUrl, children }: { user: { name: string; role: string }; mobileNav?: boolean; logoUrl?: string | null; children: React.ReactNode }) {
+export function AdminShell({ user, mobileNav = true, logoUrl, children }: { user: { name: string; role: string; permissions: string[] }; mobileNav?: boolean; logoUrl?: string | null; children: React.ReactNode }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -107,9 +98,24 @@ export function AdminShell({ user, mobileNav = true, logoUrl, children }: { user
     return () => mq.removeEventListener("change", on);
   }, []);
 
+  // İzin filtresi — kullanıcının view yetkisi olmayan alanlar nav'dan gizlenir
+  // (asıl kapı server tarafı requirePermission; bu UI hijyeni). owner → hepsi görür.
+  const canView = (area?: string) => !area || hasPermission(user.role, user.permissions, `${area}.view`);
+  const nav = NAV.map((g) => ({ ...g, items: g.items.filter((i) => canView(i.area)) })).filter((g) => g.items.length > 0);
+  const navG = (name: string): NavItem[] => nav.find((g) => g.group === name)?.items ?? [];
+  const tabbarItems: TabBarItem[] = (
+    [
+      { kind: "group", id: "kulup", label: "Kulüp", icon: "shield", items: navG("Kulüp").map(toTab) },
+      { kind: "group", id: "site", label: "Site", icon: "newspaper", items: [...navG("Başvurular"), ...navG("İçerik & Site")].map(toTab) },
+      { kind: "link", href: "/admin", label: "Genel Bakış", icon: "layout-dashboard" },
+      { kind: "group", id: "iletisim", label: "İletişim", icon: "bell", items: navG("İletişim").map(toTab) },
+      { kind: "group", id: "sistem", label: "Sistem", icon: "settings", items: [...navG("Sistem"), ...EXTRA_ITEMS].map(toTab) },
+    ] as TabBarItem[]
+  ).filter((t) => t.kind !== "group" || t.items.length > 0);
+
   const current = ALL_ITEMS.find((i) => isActive(pathname, i.href));
   const breadcrumb = current?.label ?? "Genel Bakış";
-  const roleLabel = user.role === "admin" ? "Yönetici" : "Editör";
+  const roleLabel = user.role === "owner" ? "Sahip" : "Yönetici";
   const showLabels = isMobile || !collapsed;
   const closeMobile = () => isMobile && setMobileOpen(false);
 
@@ -144,7 +150,7 @@ export function AdminShell({ user, mobileNav = true, logoUrl, children }: { user
         </Link>
 
         <nav className="by-scroll-on-dark" style={{ padding: showLabels ? 12 : "10px 10px", display: "flex", flexDirection: "column", gap: 4, flex: 1, overflowY: "auto" }}>
-          {NAV.map((sec) => (
+          {nav.map((sec) => (
             <div key={sec.group} style={{ marginBottom: 6 }}>
               {showLabels && <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--navy-400)", padding: "10px 14px 6px" }}>{sec.group}</div>}
               {sec.items.map((n) => {
@@ -237,14 +243,14 @@ export function AdminShell({ user, mobileNav = true, logoUrl, children }: { user
         </main>
       </div>
 
-      {mobileNav && <MobileTabBar items={TABBAR_ITEMS} homeHref="/admin" hidden={mobileOpen} />}
+      {mobileNav && <MobileTabBar items={tabbarItems} homeHref="/admin" hidden={mobileOpen} />}
 
       {/* Tam ekran mobil menü — soldan drawer'ın yerini aldı */}
       <MobileMenu
         open={isMobile && mobileOpen}
         onClose={() => setMobileOpen(false)}
         header={{ title: user.name, subtitle: roleLabel, initials: initials(user.name) }}
-        groups={[...NAV, { group: "Hesap", items: EXTRA_ITEMS }]}
+        groups={[...nav, { group: "Hesap", items: EXTRA_ITEMS }]}
         footer={
           <form action={logoutAction}>
             <button type="submit" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 9, minHeight: 48, borderRadius: "var(--radius-md)", border: "1px solid var(--border-subtle)", background: "var(--surface-card)", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 14.5, color: "var(--red-600)", cursor: "pointer" }}>

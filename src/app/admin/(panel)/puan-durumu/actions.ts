@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 const schema = z.object({
   teamName: z.string().trim().min(1, "Takım adı zorunlu.").max(80),
@@ -35,7 +35,7 @@ function revalidateStandingsPages() {
 }
 
 export async function createStanding(input: unknown): Promise<StandingResult | void> {
-  await requireAdmin();
+  await requirePermission("puan.manage");
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
@@ -50,7 +50,7 @@ export async function createStanding(input: unknown): Promise<StandingResult | v
 }
 
 export async function updateStanding(id: string, input: unknown): Promise<StandingResult | void> {
-  await requireAdmin();
+  await requirePermission("puan.manage");
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
@@ -63,7 +63,7 @@ export async function updateStanding(id: string, input: unknown): Promise<Standi
 }
 
 export async function deleteStanding(id: string): Promise<void> {
-  await requireAdmin();
+  await requirePermission("puan.manage");
   await prisma.standingRow.delete({ where: { id } }).catch(() => {});
   revalidateStandingsPages();
 }

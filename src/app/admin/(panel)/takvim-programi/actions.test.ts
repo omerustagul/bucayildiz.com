@@ -8,12 +8,12 @@ const H = vi.hoisted(() => ({
   facility: null as { name: string } | null,
   findFirst: vi.fn(),
   create: vi.fn(),
-  requireAdmin: vi.fn(async () => ({ role: "admin", sub: "u1", name: "A", email: "" })),
+  requirePermission: vi.fn(async () => ({ role: "admin", sub: "u1", name: "A", email: "" })),
   notifyTeam: vi.fn(async (_teamId: string, _input: unknown) => ({ feedCount: 0, push: { sent: 0, configured: false } })),
   notifyAthletes: vi.fn(async (_ids: string[], _input: unknown) => ({ feedCount: 0, push: { sent: 0, configured: false } })),
 }));
 
-vi.mock("@/lib/auth", () => ({ requireAdmin: H.requireAdmin }));
+vi.mock("@/lib/auth", () => ({ requirePermission: H.requirePermission }));
 vi.mock("@/lib/notify", () => ({ notifyTeam: H.notifyTeam, notifyAthletes: H.notifyAthletes }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -27,7 +27,7 @@ import { createTraining } from "./actions";
 beforeEach(() => {
   H.created = null;
   H.facility = null;
-  H.requireAdmin.mockClear();
+  H.requirePermission.mockClear();
   H.findFirst.mockReset().mockImplementation(async () => H.facility);
   H.create.mockReset().mockImplementation(async ({ data }: { data: Record<string, unknown> }) => {
     H.created = data;
@@ -53,7 +53,7 @@ describe("createTraining — saha yalnız gerçek isPitch=true Facility'den", ()
     const res = await createTraining({ ...base, pitch: "f1" });
     expect(res).toBeUndefined();
     expect(H.created?.pitch).toBe("Ana Saha");
-    expect(H.requireAdmin).toHaveBeenCalled();
+    expect(H.requirePermission).toHaveBeenCalled();
   });
 
   it("saha seçilmezse (boş) çökmez; pitch boş kaydedilir; facility sorgusu YAPILMAZ", async () => {

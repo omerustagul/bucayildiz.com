@@ -6,10 +6,10 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 const H = vi.hoisted(() => ({
   saved: null as Record<string, unknown> | null,
-  requireAdmin: vi.fn(async () => ({ role: "admin", sub: "u1", name: "A", email: "" })),
+  requirePermission: vi.fn(async () => ({ role: "admin", sub: "u1", name: "A", email: "" })),
 }));
 
-vi.mock("@/lib/auth", () => ({ requireAdmin: H.requireAdmin }));
+vi.mock("@/lib/auth", () => ({ requirePermission: H.requirePermission }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     siteSetting: {
@@ -25,7 +25,7 @@ import { setHomeGalleryFeatured, setHeroMobileImage, saveSettings } from "./acti
 
 beforeEach(() => {
   H.saved = null;
-  H.requireAdmin.mockClear();
+  H.requirePermission.mockClear();
 });
 
 describe("setHomeGalleryFeatured — yetki + URL allowlist", () => {
@@ -33,7 +33,7 @@ describe("setHomeGalleryFeatured — yetki + URL allowlist", () => {
     const r = await setHomeGalleryFeatured("/uploads/kare.webp");
     expect(r).toEqual({ ok: true });
     expect(H.saved?.homeGalleryFeaturedUrl).toBe("/uploads/kare.webp");
-    expect(H.requireAdmin).toHaveBeenCalled();
+    expect(H.requirePermission).toHaveBeenCalled();
   });
   it("keyfi HARİCİ URL REDDEDİLİR, kaydedilmez", async () => {
     const r = await setHomeGalleryFeatured("https://evil.example/pixel.jpg");
@@ -52,7 +52,7 @@ describe("setHeroMobileImage — yetki + URL allowlist", () => {
     const r = await setHeroMobileImage("/uploads/mobil.webp");
     expect(r).toEqual({ ok: true });
     expect(H.saved?.heroMobileImageUrl).toBe("/uploads/mobil.webp");
-    expect(H.requireAdmin).toHaveBeenCalled();
+    expect(H.requirePermission).toHaveBeenCalled();
   });
   it("keyfi HARİCİ URL REDDEDİLİR, kaydedilmez", async () => {
     const r = await setHeroMobileImage("https://evil.example/m.jpg");
@@ -74,7 +74,7 @@ describe("saveSettings — kulüp konumu (latitude/longitude)", () => {
     expect(r).toEqual({ ok: true });
     expect(H.saved?.latitude).toBe(38.3894);
     expect(H.saved?.longitude).toBe(27.1786);
-    expect(H.requireAdmin).toHaveBeenCalled();
+    expect(H.requirePermission).toHaveBeenCalled();
   });
 
   it("null koordinat (konum temizlendi) null olarak kaydedilir", async () => {

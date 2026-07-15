@@ -7,10 +7,10 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 const H = vi.hoisted(() => ({
   created: null as Record<string, unknown> | null,
   updatedApp: null as Record<string, unknown> | null,
-  requireAdmin: vi.fn(async () => ({ role: "admin", sub: "u1", name: "A", email: "" })),
+  requirePermission: vi.fn(async () => ({ role: "admin", sub: "u1", name: "A", email: "" })),
 }));
 
-vi.mock("@/lib/auth", () => ({ requireAdmin: H.requireAdmin }));
+vi.mock("@/lib/auth", () => ({ requirePermission: H.requirePermission }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     jobPosting: {
@@ -27,13 +27,13 @@ vi.mock("@/lib/prisma", () => ({
 
 import { createJobPosting, updateJobApplicationStatus, deleteJobPosting } from "./actions";
 
-beforeEach(() => { H.created = null; H.updatedApp = null; H.requireAdmin.mockClear(); });
+beforeEach(() => { H.created = null; H.updatedApp = null; H.requirePermission.mockClear(); });
 
 describe("kariyer admin actions — requireAdmin + Zod", () => {
   it("createJobPosting requireAdmin çağırır + geçerli veriyi yazar", async () => {
     const res = await createJobPosting({ title: "Altyapı Antrenörü", employment: "full-time" });
     expect(res).toBeUndefined();
-    expect(H.requireAdmin).toHaveBeenCalled();
+    expect(H.requirePermission).toHaveBeenCalled();
     expect(H.created).toMatchObject({ title: "Altyapı Antrenörü", employment: "full-time" });
   });
 
@@ -52,12 +52,12 @@ describe("kariyer admin actions — requireAdmin + Zod", () => {
   it("updateJobApplicationStatus geçerli durum → requireAdmin + yazar", async () => {
     const res = await updateJobApplicationStatus("a1", "reviewing");
     expect(res).toBeUndefined();
-    expect(H.requireAdmin).toHaveBeenCalled();
+    expect(H.requirePermission).toHaveBeenCalled();
     expect(H.updatedApp).toMatchObject({ status: "reviewing" });
   });
 
   it("deleteJobPosting requireAdmin çağırır (yetki kapısı)", async () => {
     await deleteJobPosting("p1");
-    expect(H.requireAdmin).toHaveBeenCalled();
+    expect(H.requirePermission).toHaveBeenCalled();
   });
 });

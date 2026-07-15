@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { resolvePitchName } from "@/lib/facilities";
 import { notifyAthletes, notifyTeam } from "@/lib/notify";
 import { errLabel } from "@/lib/log";
@@ -16,7 +16,7 @@ function revalidate() {
 }
 
 export async function createTraining(input: unknown): Promise<TrainingResult | void> {
-  await requireAdmin();
+  await requirePermission("takvim.manage");
   const parsed = trainingCreateSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
@@ -59,7 +59,7 @@ export async function createTraining(input: unknown): Promise<TrainingResult | v
 }
 
 export async function deleteTraining(id: string): Promise<void> {
-  await requireAdmin();
+  await requirePermission("takvim.manage");
   await prisma.training.delete({ where: { id } }).catch(() => {});
   revalidate();
 }

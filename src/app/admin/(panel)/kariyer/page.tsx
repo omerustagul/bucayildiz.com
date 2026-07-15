@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { KariyerView, type PostingRow, type ApplicationRow } from "@/components/admin/views/KariyerView";
 
 export const metadata: Metadata = { title: "Kariyer" };
 
 export default async function AdminKariyerPage() {
+  await requirePermission("kariyer.view");
   const [postings, applications] = await Promise.all([
     prisma.jobPosting.findMany({
       orderBy: [{ sort: "asc" }, { createdAt: "desc" }],

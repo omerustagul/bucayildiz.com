@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { listPitchFacilities } from "@/lib/facilities";
 import { TrainingManageView } from "@/components/admin/views/TrainingManageView";
@@ -6,6 +7,7 @@ import { TrainingManageView } from "@/components/admin/views/TrainingManageView"
 export const metadata: Metadata = { title: "Antrenmanlar" };
 
 export default async function AntrenmanlarPage() {
+  await requirePermission("antrenmanlar.view");
   const [teams, athletes, trainings, pitches] = await Promise.all([
     prisma.team.findMany({ orderBy: { sort: "asc" }, select: { id: true, name: true } }),
     prisma.athlete.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, teamId: true } }),

@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { notifyAllAthletes, notifyTeam } from "@/lib/notify";
 import { idSchema, internalPath } from "@/lib/validation";
 
@@ -22,7 +22,7 @@ const notificationSchema = z.object({
  * KVKK: gövdeye sağlık/performans verisi yazma — genel tut.
  */
 export async function sendNotification(input: unknown): Promise<SendResult> {
-  await requireAdmin();
+  await requirePermission("bildirimler.manage");
 
   const parsed = notificationSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };

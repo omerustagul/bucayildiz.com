@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { notifyTeam, notifyAllAthletes } from "@/lib/notify";
 import { errLabel } from "@/lib/log";
 
@@ -42,7 +42,7 @@ function toData(d: z.infer<typeof schema>) {
 }
 
 export async function createFixture(input: unknown): Promise<FixtureResult | void> {
-  await requireAdmin();
+  await requirePermission("fikstur.manage");
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const fx = toData(parsed.data);
@@ -67,7 +67,7 @@ export async function createFixture(input: unknown): Promise<FixtureResult | voi
 }
 
 export async function updateFixture(id: string, input: unknown): Promise<FixtureResult | void> {
-  await requireAdmin();
+  await requirePermission("fikstur.manage");
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
@@ -82,7 +82,7 @@ export async function updateFixture(id: string, input: unknown): Promise<Fixture
 }
 
 export async function deleteFixture(id: string): Promise<void> {
-  await requireAdmin();
+  await requirePermission("fikstur.manage");
   await prisma.fixture.delete({ where: { id } }).catch(() => {});
   revalidatePath("/admin/fikstur");
   revalidatePath("/fikstur");

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { TakimlarView, type TeamRow, type AthleteLite } from "@/components/admin/views/TakimlarView";
 
 export const metadata: Metadata = { title: "Takımlar" };
 
 export default async function TakimlarPage() {
+  await requirePermission("takimlar.view");
   const [teams, athletes] = await Promise.all([
     prisma.team.findMany({ orderBy: { sort: "asc" }, include: { _count: { select: { athletes: true } } } }),
     prisma.athlete.findMany({ include: { team: true }, orderBy: { name: "asc" } }),

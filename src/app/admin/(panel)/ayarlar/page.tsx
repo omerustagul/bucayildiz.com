@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requirePermission } from "@/lib/auth";
 import { ViewHeader } from "@/components/admin/ui";
 import { getSettings } from "@/lib/settings";
 import { resolveSocialLinks } from "@/lib/social";
@@ -8,6 +9,7 @@ import { SettingsForm, type SettingsFormValues } from "@/components/admin/Settin
 export const metadata: Metadata = { title: "Ayarlar" };
 
 export default async function AyarlarPage() {
+  await requirePermission("ayarlar.view");
   const [s, categories, assets] = await Promise.all([
     getSettings(),
     prisma.mediaCategory.findMany({ orderBy: { sort: "asc" }, select: { id: true, name: true } }),

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { notifyAthletes } from "@/lib/notify";
 import { errLabel } from "@/lib/log";
 import { assignmentCreateSchema } from "@/lib/validation";
@@ -14,7 +14,7 @@ function revalidate() {
 }
 
 export async function createAssignments(input: unknown): Promise<{ error?: string } | void> {
-  await requireAdmin();
+  await requirePermission("mesajlar.manage");
   const parsed = assignmentCreateSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
@@ -43,7 +43,7 @@ export async function createAssignments(input: unknown): Promise<{ error?: strin
 }
 
 export async function deleteAssignment(id: string): Promise<void> {
-  await requireAdmin();
+  await requirePermission("mesajlar.manage");
   await prisma.athleteAssignment.delete({ where: { id } }).catch(() => {});
   revalidate();
 }

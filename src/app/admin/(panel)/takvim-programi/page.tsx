@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { listPitchFacilities } from "@/lib/facilities";
 import { ScheduleView } from "@/components/admin/views/ScheduleView";
@@ -6,6 +7,7 @@ import { ScheduleView } from "@/components/admin/views/ScheduleView";
 export const metadata: Metadata = { title: "Takvim Programı" };
 
 export default async function TakvimProgramiPage() {
+  await requirePermission("takvim.view");
   const [teams, athletes, trainings, fixtures, pitches] = await Promise.all([
     prisma.team.findMany({ orderBy: { sort: "asc" }, select: { id: true, name: true } }),
     prisma.athlete.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, teamId: true } }),

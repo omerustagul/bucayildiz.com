@@ -8,10 +8,10 @@ const H = vi.hoisted(() => ({
   facility: null as { name: string } | null,
   findFirst: vi.fn(),
   update: vi.fn(),
-  requireAdmin: vi.fn(async () => ({ role: "admin", sub: "u1", name: "A", email: "" })),
+  requirePermission: vi.fn(async () => ({ role: "admin", sub: "u1", name: "A", email: "" })),
 }));
 
-vi.mock("@/lib/auth", () => ({ requireAdmin: H.requireAdmin }));
+vi.mock("@/lib/auth", () => ({ requirePermission: H.requirePermission }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     facility: { findFirst: H.findFirst },
@@ -24,7 +24,7 @@ import { setTrainingPitch, updateTrainingBasics } from "./actions";
 beforeEach(() => {
   H.updated = null;
   H.facility = null;
-  H.requireAdmin.mockClear();
+  H.requirePermission.mockClear();
   H.findFirst.mockReset().mockImplementation(async () => H.facility);
   H.update.mockReset().mockImplementation(async ({ data }: { data: Record<string, unknown> }) => {
     H.updated = data;
@@ -46,7 +46,7 @@ describe("setTrainingPitch — saha ANINDA kaydetme; yalnız gerçek isPitch=tru
     const res = await setTrainingPitch("tr1", "f1");
     expect(res).toBeUndefined();
     expect(H.updated?.pitch).toBe("Ana Saha");
-    expect(H.requireAdmin).toHaveBeenCalled();
+    expect(H.requirePermission).toHaveBeenCalled();
   });
 
   it("boş id → saha temizlenir (pitch=''); facility sorgusu YAPILMAZ", async () => {

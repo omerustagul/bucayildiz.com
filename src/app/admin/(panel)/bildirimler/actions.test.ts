@@ -9,7 +9,7 @@ const H = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/auth", () => ({
-  requireAdmin: async () => ({ role: "admin", sub: "u1", name: "Admin", email: "" }),
+  requirePermission: async () => ({ role: "admin", sub: "u1", name: "Admin", email: "" }),
 }));
 vi.mock("@/lib/notify", () => ({ notifyAllAthletes: H.notifyAll, notifyTeam: H.notifyTeam }));
 

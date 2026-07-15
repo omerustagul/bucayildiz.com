@@ -9,9 +9,10 @@ const H = vi.hoisted(() => ({
   deleted: [] as string[],
   maxSort: 3,
   requireAdmin: vi.fn(async () => ({ role: "admin", sub: "u1", name: "A", email: "" })),
+  requirePermission: vi.fn(async () => ({ role: "admin", sub: "u1", name: "A", email: "" })),
 }));
 
-vi.mock("@/lib/auth", () => ({ requireAdmin: H.requireAdmin }));
+vi.mock("@/lib/auth", () => ({ requireAdmin: H.requireAdmin, requirePermission: H.requirePermission }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     homeMediaCard: {
@@ -34,6 +35,7 @@ beforeEach(() => {
   H.created = [];
   H.deleted = [];
   H.requireAdmin.mockClear();
+  H.requirePermission.mockClear();
 });
 
 describe("createHomeCard — yetki + URL allowlist + boş durum", () => {
@@ -98,9 +100,9 @@ describe("deleteHomeCard", () => {
 });
 
 describe("yetki kapısı", () => {
-  it("her iki action da requireAdmin'den geçer", async () => {
+  it("her iki action da requirePermission'dan geçer", async () => {
     await createHomeCard({ title: "X", coverUrl: "/uploads/a.webp" });
     await deleteHomeCard("id1");
-    expect(H.requireAdmin).toHaveBeenCalledTimes(2);
+    expect(H.requirePermission).toHaveBeenCalledTimes(2);
   });
 });

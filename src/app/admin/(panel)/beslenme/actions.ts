@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { notifyAthletes } from "@/lib/notify";
 import { errLabel } from "@/lib/log";
 import { nutritionPlanSchema, nutritionMealSchema } from "@/lib/validation";
@@ -14,7 +14,7 @@ function revalidate() {
 }
 
 export async function createNutritionPlan(input: unknown): Promise<{ error?: string } | void> {
-  await requireAdmin();
+  await requirePermission("beslenme.manage");
   const parsed = nutritionPlanSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
@@ -61,7 +61,7 @@ const basicsSchema = z.object({
 });
 
 export async function updatePlanBasics(id: string, input: unknown): Promise<{ error?: string } | void> {
-  await requireAdmin();
+  await requirePermission("beslenme.manage");
   const parsed = basicsSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
@@ -72,19 +72,19 @@ export async function updatePlanBasics(id: string, input: unknown): Promise<{ er
 }
 
 export async function setPlanActive(id: string, active: boolean): Promise<void> {
-  await requireAdmin();
+  await requirePermission("beslenme.manage");
   await prisma.nutritionPlan.update({ where: { id }, data: { active } }).catch(() => {});
   revalidate();
 }
 
 export async function deletePlan(id: string): Promise<void> {
-  await requireAdmin();
+  await requirePermission("beslenme.manage");
   await prisma.nutritionPlan.delete({ where: { id } }).catch(() => {});
   revalidate();
 }
 
 export async function addMeal(planId: string, input: unknown): Promise<{ error?: string } | void> {
-  await requireAdmin();
+  await requirePermission("beslenme.manage");
   const parsed = nutritionMealSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
@@ -110,7 +110,7 @@ export async function addMeal(planId: string, input: unknown): Promise<{ error?:
 }
 
 export async function updateMeal(mealId: string, input: unknown): Promise<{ error?: string } | void> {
-  await requireAdmin();
+  await requirePermission("beslenme.manage");
   const parsed = nutritionMealSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
@@ -132,7 +132,7 @@ export async function updateMeal(mealId: string, input: unknown): Promise<{ erro
 }
 
 export async function removeMeal(mealId: string): Promise<void> {
-  await requireAdmin();
+  await requirePermission("beslenme.manage");
   await prisma.nutritionMeal.delete({ where: { id: mealId } }).catch(() => {});
   revalidate();
 }

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Tesis adı zorunlu.").max(120),
@@ -36,7 +36,7 @@ function revalidateFacilityPages() {
 }
 
 export async function createFacility(input: unknown): Promise<FacilityResult | void> {
-  await requireAdmin();
+  await requirePermission("tesisler.manage");
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
@@ -48,7 +48,7 @@ export async function createFacility(input: unknown): Promise<FacilityResult | v
 }
 
 export async function updateFacility(id: string, input: unknown): Promise<FacilityResult | void> {
-  await requireAdmin();
+  await requirePermission("tesisler.manage");
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
@@ -60,7 +60,7 @@ export async function updateFacility(id: string, input: unknown): Promise<Facili
 }
 
 export async function deleteFacility(id: string): Promise<void> {
-  await requireAdmin();
+  await requirePermission("tesisler.manage");
   await prisma.facility.delete({ where: { id } }).catch(() => {});
   revalidateFacilityPages();
 }

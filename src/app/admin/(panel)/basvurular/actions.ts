@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { idSchema } from "@/lib/validation";
 
 const updateStatusSchema = z.object({
@@ -12,7 +12,7 @@ const updateStatusSchema = z.object({
 });
 
 export async function updateApplicationStatus(id: unknown, status: unknown): Promise<{ ok: boolean }> {
-  await requireAdmin();
+  await requirePermission("basvurular.manage");
 
   const parsed = updateStatusSchema.safeParse({ id, status });
   if (!parsed.success) return { ok: false };

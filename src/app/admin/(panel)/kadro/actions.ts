@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 const schema = z.object({
   name: z.string().trim().min(1, "İsim zorunlu.").max(120),
@@ -36,7 +36,7 @@ function revalidateStaffPages() {
 }
 
 export async function createStaff(input: unknown): Promise<StaffResult | void> {
-  await requireAdmin();
+  await requirePermission("kadro.manage");
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
@@ -48,7 +48,7 @@ export async function createStaff(input: unknown): Promise<StaffResult | void> {
 }
 
 export async function updateStaff(id: string, input: unknown): Promise<StaffResult | void> {
-  await requireAdmin();
+  await requirePermission("kadro.manage");
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
@@ -60,7 +60,7 @@ export async function updateStaff(id: string, input: unknown): Promise<StaffResu
 }
 
 export async function deleteStaff(id: string): Promise<void> {
-  await requireAdmin();
+  await requirePermission("kadro.manage");
   await prisma.staffMember.delete({ where: { id } }).catch(() => {});
   revalidateStaffPages();
 }

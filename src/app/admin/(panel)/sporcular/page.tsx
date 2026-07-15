@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AthletesView, type AthleteRow } from "@/components/admin/views/AthletesView";
 
 export const metadata: Metadata = { title: "Sporcular" };
 
 export default async function SporcularPage() {
+  await requirePermission("sporcular.view");
   const [athletes, teams] = await Promise.all([
     prisma.athlete.findMany({ include: { team: true, user: true }, orderBy: [{ team: { sort: "asc" } }, { name: "asc" }] }),
     prisma.team.findMany({ orderBy: { sort: "asc" }, select: { id: true, name: true } }),

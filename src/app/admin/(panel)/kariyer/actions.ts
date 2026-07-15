@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { jobPostingSchema, JOB_APPLICATION_STATUSES } from "@/lib/validation";
 
 export type JobResult = { error: string };
@@ -25,9 +25,9 @@ function revalidate() {
   revalidatePath("/kurumsal/kariyer");
 }
 
-// --- İlan CRUD (requireAdmin + Zod) ---
+// --- İlan CRUD (requirePermission + Zod) ---
 export async function createJobPosting(input: unknown): Promise<JobResult | void> {
-  await requireAdmin();
+  await requirePermission("kariyer.manage");
   const parsed = jobPostingSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
@@ -39,7 +39,7 @@ export async function createJobPosting(input: unknown): Promise<JobResult | void
 }
 
 export async function updateJobPosting(id: string, input: unknown): Promise<JobResult | void> {
-  await requireAdmin();
+  await requirePermission("kariyer.manage");
   const parsed = jobPostingSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
@@ -51,14 +51,14 @@ export async function updateJobPosting(id: string, input: unknown): Promise<JobR
 }
 
 export async function deleteJobPosting(id: string): Promise<void> {
-  await requireAdmin();
+  await requirePermission("kariyer.manage");
   await prisma.jobPosting.delete({ where: { id } }).catch(() => {});
   revalidate();
 }
 
-// --- Başvuru yönetimi (requireAdmin) ---
+// --- Başvuru yönetimi (requirePermission) ---
 export async function updateJobApplicationStatus(id: string, status: string): Promise<{ error?: string } | void> {
-  await requireAdmin();
+  await requirePermission("kariyer.manage");
   const parsed = z.enum(JOB_APPLICATION_STATUSES).safeParse(status);
   if (!parsed.success) return { error: "Geçersiz durum." };
   await prisma.jobApplication.update({ where: { id }, data: { status: parsed.data } }).catch(() => {});
@@ -66,7 +66,7 @@ export async function updateJobApplicationStatus(id: string, status: string): Pr
 }
 
 export async function deleteJobApplication(id: string): Promise<void> {
-  await requireAdmin();
+  await requirePermission("kariyer.manage");
   await prisma.jobApplication.delete({ where: { id } }).catch(() => {});
   revalidate();
 }

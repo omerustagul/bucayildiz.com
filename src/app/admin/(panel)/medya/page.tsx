@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { MediaView, type FolderNode, type AssetItem, type CategoryItem, type HomeCardItem } from "@/components/admin/views/MediaView";
 
 export const metadata: Metadata = { title: "Medya Kütüphanesi" };
 
 export default async function MedyaPage() {
+  await requirePermission("medya.view");
   const [folders, assets, categories, cards] = await Promise.all([
     prisma.folder.findMany({ orderBy: { createdAt: "asc" } }),
     prisma.mediaAsset.findMany({ orderBy: { createdAt: "desc" }, take: 300 }),

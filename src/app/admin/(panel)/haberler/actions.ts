@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { POST_TEMPLATE_IDS } from "@/lib/enums";
 
 const schema = z.object({
@@ -127,7 +127,7 @@ function toData(d: z.infer<typeof schema>, templateData: string) {
 }
 
 export async function createPost(input: unknown): Promise<PostResult | void> {
-  await requireAdmin();
+  await requirePermission("haberler.manage");
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const tResult = validateTemplateData(parsed.data.template, parsed.data.templateData);
@@ -144,7 +144,7 @@ export async function createPost(input: unknown): Promise<PostResult | void> {
 }
 
 export async function updatePost(id: string, input: unknown): Promise<PostResult | void> {
-  await requireAdmin();
+  await requirePermission("haberler.manage");
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const tResult = validateTemplateData(parsed.data.template, parsed.data.templateData);
@@ -161,7 +161,7 @@ export async function updatePost(id: string, input: unknown): Promise<PostResult
 }
 
 export async function deletePost(id: string): Promise<void> {
-  await requireAdmin();
+  await requirePermission("haberler.manage");
   await prisma.post.delete({ where: { id } }).catch(() => {});
   revalidatePath("/admin/haberler");
   revalidatePath("/haberler");

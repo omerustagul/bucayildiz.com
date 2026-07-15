@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 const hex = /^#[0-9a-fA-F]{6}$/;
 
@@ -35,7 +35,7 @@ function toData(d: z.infer<typeof schema>) {
 }
 
 export async function createJersey(input: unknown): Promise<JerseyResult | void> {
-  await requireAdmin();
+  await requirePermission("formalar.manage");
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
@@ -48,7 +48,7 @@ export async function createJersey(input: unknown): Promise<JerseyResult | void>
 }
 
 export async function updateJersey(id: string, input: unknown): Promise<JerseyResult | void> {
-  await requireAdmin();
+  await requirePermission("formalar.manage");
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
@@ -61,7 +61,7 @@ export async function updateJersey(id: string, input: unknown): Promise<JerseyRe
 }
 
 export async function deleteJersey(id: string): Promise<void> {
-  await requireAdmin();
+  await requirePermission("formalar.manage");
   await prisma.jersey.delete({ where: { id } }).catch(() => {});
   revalidatePath("/admin/formalar");
   revalidatePath("/");

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { notifyAthletes } from "@/lib/notify";
 import { errLabel } from "@/lib/log";
@@ -30,7 +30,7 @@ const measurementSchema = z.object({
 
 /** Yeni periyodik performans ölçümü ekler (geçmişi korur — upsert DEĞİL). */
 export async function addMeasurement(input: unknown): Promise<MeasurementResult> {
-  await requireAdmin();
+  await requirePermission("performans.manage");
   const parsed = measurementSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
@@ -77,7 +77,7 @@ export async function addMeasurement(input: unknown): Promise<MeasurementResult>
 
 /** Bir ölçüm kaydını siler (yanlış girilen kayıtlar için). */
 export async function deleteMeasurement(id: string): Promise<MeasurementResult> {
-  await requireAdmin();
+  await requirePermission("performans.manage");
   try {
     await prisma.performanceMeasurement.delete({ where: { id } });
     revalidatePath("/admin/performans");

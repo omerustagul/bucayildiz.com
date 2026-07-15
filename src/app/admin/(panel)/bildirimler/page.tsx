@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ViewHeader, Panel } from "@/components/admin/ui";
 import { NotificationComposer } from "@/components/admin/NotificationComposer";
@@ -6,6 +7,7 @@ import { NotificationComposer } from "@/components/admin/NotificationComposer";
 export const metadata: Metadata = { title: "Bildirimler" };
 
 export default async function BildirimlerPage() {
+  await requirePermission("bildirimler.view");
   const [teams, totalSubs, subs] = await Promise.all([
     prisma.team.findMany({ orderBy: { sort: "asc" } }),
     prisma.pushSubscription.count(),

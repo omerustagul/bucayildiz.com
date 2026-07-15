@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin, hashPassword } from "@/lib/auth";
+import { requirePermission, hashPassword } from "@/lib/auth";
 
 const schema = z.object({
   name: z.string().trim().min(1, "İsim zorunlu.").max(120),
@@ -41,7 +41,7 @@ function toData(d: z.infer<typeof schema>) {
 }
 
 export async function createAthlete(input: unknown): Promise<AthleteResult | void> {
-  await requireAdmin();
+  await requirePermission("sporcular.manage");
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
@@ -53,7 +53,7 @@ export async function createAthlete(input: unknown): Promise<AthleteResult | voi
 }
 
 export async function updateAthlete(id: string, input: unknown): Promise<AthleteResult | void> {
-  await requireAdmin();
+  await requirePermission("sporcular.manage");
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   try {
@@ -66,7 +66,7 @@ export async function updateAthlete(id: string, input: unknown): Promise<Athlete
 
 /** Sporcuya panel giriş bilgisi oluşturur/günceller. */
 export async function provisionAthleteLogin(athleteId: string, username: string, password: string): Promise<{ ok?: boolean; error?: string }> {
-  await requireAdmin();
+  await requirePermission("sporcular.manage");
   const u = username.trim().toLowerCase();
   if (!u || !/^[a-z0-9._-]{3,40}$/.test(u)) return { error: "Geçerli bir kullanıcı adı girin (a-z, 0-9, . _ -)." };
   if (password && password.length < 8) return { error: "Şifre en az 8 karakter olmalı." };
@@ -91,7 +91,7 @@ export async function provisionAthleteLogin(athleteId: string, username: string,
 }
 
 export async function deleteAthlete(id: string): Promise<void> {
-  await requireAdmin();
+  await requirePermission("sporcular.manage");
   await prisma.athlete.delete({ where: { id } }).catch(() => {});
   revalidatePath("/admin/sporcular");
 }

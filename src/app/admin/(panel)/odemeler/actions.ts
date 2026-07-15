@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export type PaymentResult = { ok: true } | { ok: false; error: string };
@@ -24,7 +24,7 @@ function todayYmd() {
 }
 
 export async function createPayment(input: unknown): Promise<PaymentResult> {
-  await requireAdmin();
+  await requirePermission("odemeler.manage");
   const parsed = createSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
@@ -49,7 +49,7 @@ export async function createPayment(input: unknown): Promise<PaymentResult> {
 }
 
 export async function setPaymentStatus(id: unknown, status: unknown): Promise<PaymentResult> {
-  await requireAdmin();
+  await requirePermission("odemeler.manage");
   const parsed = z.object({ id: z.string().trim().min(1).max(60), status: z.enum(STATUSES) }).safeParse({ id, status });
   if (!parsed.success) return { ok: false, error: "Geçersiz durum." };
   try {
@@ -66,7 +66,7 @@ export async function setPaymentStatus(id: unknown, status: unknown): Promise<Pa
 }
 
 export async function deletePayment(id: string): Promise<PaymentResult> {
-  await requireAdmin();
+  await requirePermission("odemeler.manage");
   try {
     await prisma.payment.delete({ where: { id } });
     revalidatePath("/admin/odemeler");
