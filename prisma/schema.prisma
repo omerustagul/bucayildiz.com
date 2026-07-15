@@ -345,7 +345,10 @@ model User {
   username     String?  @unique
   passwordHash String
   name         String
-  role         String   @default("admin") // admin | athlete
+  role         String   @default("admin") // owner | admin | athlete (owner = tüm izinler, kısılamaz)
+  /// Granular yetki anahtarları (ör. "sporcular.manage"). owner rolünde YOK SAYILIR.
+  /// JWT'ye YAZILMAZ — DB'den okunur → izin değişikliği anında geçerli (yeniden giriş yok).
+  permissions  String[] @default([])
   athleteId    String?  @unique
   athlete      Athlete? @relation(fields: [athleteId], references: [id])
   // Oturum sürümü: artırılınca bu kullanıcının eski JWT'leri geçersizleşir
@@ -353,6 +356,24 @@ model User {
   tokenVersion Int      @default(0)
   pushSubs     PushSubscription[]
   createdAt    DateTime @default(now())
+}
+
+/// Admin denetim izi — yönetici hesap/izin değişikliklerini kaydeder (kim, kimi, ne).
+/// Hesap güvenliği + KVKK: yetki değişiklikleri geri-izlenebilir olmalı. Aktör/hedef
+/// adları denormalize (kullanıcı silinse de iz okunur kalır).
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  actorId    String // işlemi yapan admin (User.id)
+  actorName  String // denormalize
+  action     String // user.create | user.update | user.delete | user.password_reset | permissions.change | role.change
+  targetId   String? // etkilenen kullanıcı (User.id)
+  targetName String? // denormalize
+  detail     String   @default("") // insan-okur özet (ör. "izinler +sporcular.manage, -odemeler.view")
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorId])
 }
 
 /// Web Push aboneliği (cihaz bazlı). KVKK: abonelik = opt-in; tek tıkla silinir.

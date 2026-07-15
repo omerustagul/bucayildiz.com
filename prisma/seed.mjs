@@ -17,7 +17,9 @@ const passwordHash = await bcrypt.hash(password, 12);
 const admin = await prisma.user.upsert({
   where: { email },
   update: { passwordHash, name },
-  create: { email, passwordHash, name, role: "admin" },
+  // İlk kullanıcı owner (tüm izinler örtük, kısılamaz). Sonraki yöneticiler
+  // UI'dan "admin" rolü + izin kümesiyle oluşturulur.
+  create: { email, passwordHash, name, role: "owner" },
 });
 console.log(`✔ Admin: ${admin.email}`);
 

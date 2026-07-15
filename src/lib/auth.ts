@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { hasPermission } from "@/lib/permissions";
 import {
   signSession,
   verifyAdminToken,
@@ -126,6 +127,29 @@ export async function requireAdmin(): Promise<SessionPayload> {
   const s = await getAdminSession();
   if (!s) redirect("/admin/giris");
   return s;
+}
+
+/**
+ * Granular yetki kapısı. Önce requireAdmin (oturum + tazelik), sonra DB'den GÜNCEL
+ * rol+izinleri okuyup `key`'i kontrol eder — izinler JWT'ye YAZILMADIĞINDAN (bkz.
+ * SessionPayload) değişiklik anında geçerli olur. `owner` tümüne erişir. Yetki yoksa
+ * /admin'e yönlendirir (kullanıcı bağlamda kalır; nav zaten yetkisiz sayfayı gizler,
+ * bu server tarafı savunma derinliğidir). Her admin sayfası/action'ı ilgili anahtarla
+ * çağırır: sayfa `alan.view`, mutasyon `alan.manage`.
+ */
+export async function requirePermission(key: string): Promise<SessionPayload> {
+  const s = await requireAdmin();
+  const user = await prisma.user.findUnique({ where: { id: s.sub }, select: { role: true, permissions: true } });
+  if (!user || !hasPermission(user.role, user.permissions, key)) redirect("/admin");
+  return s;
+}
+
+/** Bir admin'in GÜNCEL rol+izinlerini DB'den getirir (nav filtreleme, UI). null = admin değil. */
+export async function getAdminPermissions(): Promise<{ role: string; permissions: string[] } | null> {
+  const s = await getAdminSession();
+  if (!s) return null;
+  const user = await prisma.user.findUnique({ where: { id: s.sub }, select: { role: true, permissions: true } });
+  return user ? { role: user.role, permissions: user.permissions } : null;
 }
 
 /** Sporcu/veli yetki kapısı — yalnız PANEL ÇEREZİNE bakar (athleteId zorunlu). */
