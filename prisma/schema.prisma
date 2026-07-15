@@ -225,6 +225,9 @@ model MediaAsset {
 
   @@index([categoryId])
   @@index([folderId])
+  // Public galeriler: where kind + orderBy createdAt desc (foto/video sayfaları,
+  // admin ayarlar). kind ve createdAt'te tekil index YOKTU → tarama+sıralama.
+  @@index([kind, createdAt])
 }
 
 /// Ana sayfa "Görseller & Videolar" kartı (bir kategoriyi besler).
@@ -262,6 +265,10 @@ model Post {
 
   @@index([status])
   @@index([createdAt])
+  // Haber listesi + anasayfa: where status:"published" + orderBy publishedAt desc.
+  // ([status] tekil index'i bu kompozitin sol-öneki ile kapsanır; ölçek küçük
+  //  olduğu için kaldırılmadı — ileride sadeleştirilebilir.)
+  @@index([status, publishedAt])
 }
 
 /// Antrenman programı kaydı (Takvim Programı). Maçlar burada TUTULMAZ —
