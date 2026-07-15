@@ -3,19 +3,23 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Icon, type IconName } from "@/lib/icons";
-import { SceneBody, SceneSprint, SceneLadder, SceneDribble, SceneRoad, SceneStar, SceneViewport } from "./TrialScenes";
+import { SceneBody, SceneFlex, SceneVertical, SceneLongJump, SceneLadder, SceneSprint, SceneAgility505, SceneTTest, SceneYoyo, SceneRoad, SceneViewport } from "./TrialScenes";
 import "@/styles/trial-journey.css";
 
 /** Buca Yıldız — Ücretsiz Deneme "Yolculuk" ekranı (veli gözünden).
- *  Sahne animasyonları framer-motion ile TrialScenes.tsx'te. */
+ *  Sahne animasyonları framer-motion + eklemli SVG figür ile TrialScenes.tsx'te. */
 
 const TJ_STEPS: { kicker: string; title: string; scene: React.ComponentType; text: string; final?: boolean }[] = [
-  { kicker: "Adım 01", title: "Vücut Profili Çıkarılır", scene: SceneBody, text: "Çocuğunuzun boyu, kilosu, vücut yağ ve kas oranı ölçülür; sağlıklı gelişim için başlangıç noktasını birlikte görürüz." },
-  { kicker: "Adım 02", title: "Kondisyon & Çabukluk Testi", scene: SceneSprint, text: "Kısa mesafe sürat ve mekik koşularıyla dayanıklılık ve hız ölçülür. Nabız takibiyle bilimsel bir değerlendirme yapılır." },
-  { kicker: "Adım 03", title: "Koordinasyon Testi", scene: SceneLadder, text: "Çeviklik merdiveni ve ayak çalışmalarıyla denge, ritim ve koordinasyon becerileri ölçülür — futbolun temel taşı." },
-  { kicker: "Adım 04", title: "Top Becerisi Belirleme", scene: SceneDribble, text: "Top sürme, çalım ve şut; engeller arasında top hakimiyeti gözlemlenir. Çocuğunuzun topla ilişkisini keşfederiz." },
-  { kicker: "Adım 05", title: "Kişiye Özel Yol Haritası", scene: SceneRoad, text: "Tüm test sonuçları birleştirilir ve çocuğunuza özel, adım adım bir gelişim planı hazırlanır. Her sporcu farklıdır." },
-  { kicker: "Sonuç", title: "Geleceğin Yıldızı", scene: SceneStar, final: true, text: "Disiplin, özgüven ve takım ruhuyla; önce iyi bir insan, sonra iyi bir sporcu. Yolculuğun sonunda çocuğunuz sahada parlar." },
+  { kicker: "Test 01", title: "Vücut Profili Çıkarılır", scene: SceneBody, text: "Çocuğunuzun boyu, kilosu, vücut yağ ve kas oranı ölçülür; sağlıklı gelişim için başlangıç noktasını birlikte görürüz." },
+  { kicker: "Test 02", title: "Esneklik Testi", scene: SceneFlex, text: "Otur-uzan ve eklem hareket açıklığı ölçülür; esneklik profili çıkarılarak sakatlık riski azaltılır." },
+  { kicker: "Test 03", title: "Dikey Sıçrama Testi", scene: SceneVertical, text: "Dikey sıçrama yüksekliği ölçülür — patlayıcı bacak gücünün, ivmelenme ve şutun temeli." },
+  { kicker: "Test 04", title: "Uzun Atlama", scene: SceneLongJump, text: "Durarak uzun atlama ile alt vücut patlayıcılığı ve denge değerlendirilir." },
+  { kicker: "Test 05", title: "Koordinasyon Testi", scene: SceneLadder, text: "Çeviklik merdiveni ve ayak çalışmalarıyla denge, ritim ve koordinasyon becerileri ölçülür — futbolun temel taşı." },
+  { kicker: "Test 06", title: "Sprint Testleri", scene: SceneSprint, text: "10-20-30 m sprintlerle ivmelenme ve maksimum hız ölçülür; nabız takibiyle bilimsel bir değerlendirme yapılır." },
+  { kicker: "Test 07", title: "505 Çeviklik Testi", scene: SceneAgility505, text: "Sprint ve keskin 180° dönüşle yön değiştirme hızı — futbolda çevikliğin ölçütü — değerlendirilir." },
+  { kicker: "Test 08", title: "T Testi", scene: SceneTTest, text: "İleri, yana ve geri hareketle çok yönlü çeviklik, denge ve ayak hızı ölçülür." },
+  { kicker: "Test 09", title: "Yo-Yo Testi", scene: SceneYoyo, text: "Aralıklı mekik koşusuyla dayanıklılık ve toparlanma kapasitesi bilimsel olarak ölçülür." },
+  { kicker: "Sonuç", title: "Sporcuya Özel Yol Haritası", scene: SceneRoad, final: true, text: "Tüm test sonuçları birleştirilir ve çocuğunuza özel, adım adım bir gelişim planı hazırlanır. Her sporcu farklıdır." },
 ];
 
 const VALUES: [IconName, string][] = [
@@ -60,7 +64,7 @@ export function TrialJourney() {
             Önce iyi bir <span className="gold">insan</span>,<br />sonra iyi bir <span className="gold">sporcu</span> yetiştiriyoruz
           </h1>
           <p style={{ fontSize: "clamp(16px,2vw,19px)", lineHeight: 1.6, color: "var(--navy-100)", maxWidth: 640, margin: "20px auto 0" }}>
-            Çocuğunuzu sahaya bekliyoruz. Antrenörlerimiz eşliğinde uygulanan <strong style={{ color: "#fff" }}>tamamen ücretsiz</strong> 5 adımlık değerlendirmeyle yeteneğini keşfediyor, ona özel bir yol haritası çiziyoruz.
+            Çocuğunuzu sahaya bekliyoruz. Antrenörlerimiz eşliğinde uygulanan <strong style={{ color: "#fff" }}>tamamen ücretsiz</strong> 9 testlik bilimsel değerlendirmeyle yeteneğini keşfediyor, ona özel bir yol haritası çiziyoruz.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 30 }}>
             <Button as="a" href="/basvuru" variant="accent" size="lg" leftIcon={<Icon name="star" size={18} />}>Hemen Ücretsiz Kayıt Ol</Button>
@@ -92,7 +96,7 @@ export function TrialJourney() {
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12.5, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--gold-700)" }}>
             <span style={{ width: 20, height: 2, background: "var(--gold-500)" }} />Yolculuk
           </span>
-          <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(28px,4vw,44px)", textTransform: "uppercase", color: "var(--text-strong)", margin: "12px 0 0", lineHeight: 1.02 }}>5 Adımda Yeteneği Keşfediyoruz</h2>
+          <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(28px,4vw,44px)", textTransform: "uppercase", color: "var(--text-strong)", margin: "12px 0 0", lineHeight: 1.02 }}>9 Testte Yeteneği Keşfediyoruz</h2>
         </div>
 
         <div className="tj-steps">

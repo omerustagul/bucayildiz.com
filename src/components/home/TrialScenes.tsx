@@ -909,3 +909,201 @@ export function SceneStar() {
     </SceneSvg>
   );
 }
+
+/* ============================================================
+   ESNEKLİK — kalçadan öne eğilip uzanma (otur-uzan hissi), RotG salınımı
+   ============================================================ */
+export function SceneFlex() {
+  const inView = useSceneInView();
+  const reduce = !!useReducedMotion();
+  return (
+    <SceneSvg label="Esneklik testi animasyonu" tag="ESNEKLİK">
+      <Field id="tjflex" />
+      {/* otur-uzan kutusu + cetvel */}
+      <motion.g initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : undefined} transition={{ delay: 0.3, duration: 0.5 }}>
+        <rect x="300" y="240" width="120" height="16" rx="3" fill="rgba(8,15,33,0.6)" stroke="rgba(201,162,39,0.5)" strokeWidth="1" />
+        {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+          <line key={i} x1={308 + i * 17} y1="240" x2={308 + i * 17} y2={i % 2 ? 234 : 230} stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
+        ))}
+        <text x="360" y="226" textAnchor="middle" fill={C.gold300} style={{ fontFamily: "var(--font-stat)", fontWeight: 700, fontSize: 12 }}>cm</text>
+      </motion.g>
+      {/* sporcu — kalçadan (0,-40) öne eğilip uzanır */}
+      <g transform="translate(250 256) scale(1.5)">
+        <ellipse cx="0" cy="1" rx="24" ry="4.6" fill="rgba(0,0,0,0.35)" />
+        <RotG pivot={[0, -40]} center={reduce ? 20 : 16} amp={reduce ? 0 : 16} period={3.4} paused={reduce}>
+          <Athlete pose="stand" paused={reduce} />
+        </RotG>
+      </g>
+      <Chip x={150} y={70} big="+22 cm" small="Esneklik" delay={0.5} />
+    </SceneSvg>
+  );
+}
+
+/* ============================================================
+   DİKEY SIÇRAMA — olduğu yerde dik sıçrama (BobG jump), cetvel + tepe çizgisi
+   ============================================================ */
+export function SceneVertical() {
+  const inView = useSceneInView();
+  const reduce = !!useReducedMotion();
+  const PEAK = 252 - 74; // tepe kesikli çizgi y'si
+  return (
+    <SceneSvg label="Dikey sıçrama testi animasyonu" tag="DİKEY SIÇRAMA">
+      <Field id="tjvert" />
+      <motion.g initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : undefined} transition={{ delay: 0.3, duration: 0.5 }}>
+        {/* dikey cetvel */}
+        <line x1="330" y1="118" x2="330" y2="252" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+        {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+          <line key={i} x1="330" y1={252 - i * 22} x2={330 + (i % 2 ? 7 : 12)} y2={252 - i * 22} stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+        ))}
+        {/* tepe noktası */}
+        <motion.line x1="250" y1={PEAK} x2="337" y2={PEAK} stroke="rgba(233,200,96,0.75)" strokeWidth="1.5" strokeDasharray="5 4" initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : undefined} transition={{ delay: 0.8, duration: 0.5 }} />
+      </motion.g>
+      {/* sporcu — dik sıçrar (amp athlete-uzayında; ×1.5 ölçekle sahnede ~73px) */}
+      <g transform="translate(228 256) scale(1.5)">
+        <ellipse cx="0" cy="1" rx="22" ry="4.4" fill="rgba(0,0,0,0.3)" />
+        <BobG amp={reduce ? 0 : 49} period={1.5} jump paused={reduce}>
+          <Athlete pose={reduce ? "stand" : "hop"} paused={reduce} />
+        </BobG>
+      </g>
+      <Chip x={150} y={70} big="54 cm" small="Dikey" delay={0.5} />
+    </SceneSvg>
+  );
+}
+
+/* ============================================================
+   UZUN ATLAMA — durarak ileri atlama (imperatif ileri parabol) + mesafe oku
+   ============================================================ */
+export function SceneLongJump() {
+  const inView = useSceneInView();
+  const reduce = !!useReducedMotion();
+  const athRef = useRef<SVGGElement>(null);
+  const [pose, setPose] = useState<Pose>("stand");
+  const X0 = 130, X1 = 372, GY = 256, T = 4.2;
+  useAnimationFrame((t) => {
+    if (reduce || !athRef.current) return;
+    const tt = (t / 1000) % T;
+    let x = X0, y = 0;
+    let next: Pose = "stand";
+    if (tt < 1.1) {
+      next = "stand"; // kalkışa hazırlan
+    } else if (tt < 1.85) {
+      const p = (tt - 1.1) / 0.75; // ileri parabol
+      next = "hop";
+      x = X0 + (X1 - X0) * p;
+      y = -190 * p * (1 - p);
+    } else if (tt < 2.8) {
+      next = "stand"; x = X1; // iniş + tut
+    } else {
+      const r = Math.min(1, (tt - 2.8) / 1.2); // geri dön
+      next = "stand"; x = X1 + (X0 - X1) * r;
+    }
+    setPose((prev) => (prev === next ? prev : next));
+    athRef.current.setAttribute("transform", `translate(${x.toFixed(1)} ${(GY + y).toFixed(1)}) scale(1.4)`);
+  });
+  return (
+    <SceneSvg label="Uzun atlama testi animasyonu" tag="UZUN ATLAMA">
+      <Field id="tjlong" />
+      {/* kalkış (beyaz) + iniş (altın) çizgileri */}
+      <line x1={X0} y1="249" x2={X0} y2="263" stroke="rgba(255,255,255,0.55)" strokeWidth="2" />
+      <line x1={X1} y1="249" x2={X1} y2="263" stroke="rgba(233,200,96,0.75)" strokeWidth="2" />
+      {/* mesafe oku */}
+      <motion.g initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : undefined} transition={{ delay: 0.6, duration: 0.5 }}>
+        <line x1={X0} y1="272" x2={X1} y2="272" stroke="rgba(233,200,96,0.6)" strokeWidth="1.5" />
+        <path d={`M ${X1 - 7} 268 L ${X1} 272 L ${X1 - 7} 276`} fill="none" stroke="rgba(233,200,96,0.6)" strokeWidth="1.5" strokeLinecap="round" />
+      </motion.g>
+      <g ref={athRef} transform={`translate(${X0} ${GY}) scale(1.4)`}>
+        <ellipse cx="0" cy="1" rx="22" ry="4.2" fill="rgba(0,0,0,0.3)" />
+        <Athlete pose={reduce ? "stand" : pose} paused={reduce} />
+      </g>
+      <Chip x={150} y={70} big="1.9 m" small="Mesafe" delay={0.6} />
+    </SceneSvg>
+  );
+}
+
+/* ============================================================
+   505 ÇEVİKLİK — çizgiye sprint + keskin 180° dönüş + geri (ShuttleG)
+   ============================================================ */
+export function SceneAgility505() {
+  const reduce = !!useReducedMotion();
+  return (
+    <SceneSvg label="505 çeviklik testi animasyonu" tag="ÇEVİKLİK">
+      <Field id="tj505" />
+      {/* dönüş çizgisi + koniler */}
+      <line x1="418" y1="236" x2="418" y2="264" stroke="rgba(233,200,96,0.75)" strokeWidth="2" strokeDasharray="4 3" />
+      <Cone x={418} y={252} s={0.85} />
+      <Cone x={104} y={252} s={0.85} />
+      <ShuttleG x0={116} x1={402} y={256} period={2.3} paused={reduce}>
+        <g transform="scale(1.4)">
+          <ellipse cx="0" cy="1" rx="22" ry="4.2" fill="rgba(0,0,0,0.3)" />
+          <Athlete pose={reduce ? "stand" : "sprint"} paused={reduce} />
+        </g>
+      </ShuttleG>
+      <Chip x={150} y={70} big="2.3 sn" small="505" delay={0.5} />
+    </SceneSvg>
+  );
+}
+
+/* ============================================================
+   T TESTİ — ileri koş, yana kay (sağ-sol), geri (imperatif T rotası) + 4 koni
+   ============================================================ */
+export function SceneTTest() {
+  const reduce = !!useReducedMotion();
+  const athRef = useRef<SVGGElement>(null);
+  const [pose, setPose] = useState<Pose>("run");
+  const CX = 260, BOT = 256, TOP = 154, LEFT = 156, RIGHT = 364, T = 6.0;
+  const lerp = (a: number, b: number, p: number) => a + (b - a) * (p < 0 ? 0 : p > 1 ? 1 : p);
+  useAnimationFrame((t) => {
+    if (reduce || !athRef.current) return;
+    const tt = (t / 1000) % T;
+    let x = CX, y = BOT, dir = 1;
+    let next: Pose = "run";
+    if (tt < 1.0) { const p = tt / 1.0; next = "sprint"; y = lerp(BOT, TOP, p); } // ileri koş
+    else if (tt < 1.95) { const p = (tt - 1.0) / 0.95; next = "skip"; x = lerp(CX, RIGHT, p); y = TOP; dir = 1; } // sağa kay
+    else if (tt < 3.35) { const p = (tt - 1.95) / 1.4; next = "skip"; x = lerp(RIGHT, LEFT, p); y = TOP; dir = -1; } // sola kay
+    else if (tt < 4.3) { const p = (tt - 3.35) / 0.95; next = "skip"; x = lerp(LEFT, CX, p); y = TOP; dir = 1; } // merkeze
+    else { const p = (tt - 4.3) / 1.0; next = "run"; y = lerp(TOP, BOT, p); } // geri
+    setPose((prev) => (prev === next ? prev : next));
+    athRef.current.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(dir * 1.12).toFixed(2)} 1.12)`);
+  });
+  return (
+    <SceneSvg label="T testi animasyonu" tag="T TESTİ">
+      <Field id="tjt" />
+      {/* T rota çizgileri + 4 koni */}
+      <line x1={CX} y1={BOT} x2={CX} y2={TOP} stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" strokeDasharray="5 5" />
+      <line x1={LEFT} y1={TOP} x2={RIGHT} y2={TOP} stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" strokeDasharray="5 5" />
+      <Cone x={CX} y={TOP} s={0.72} />
+      <Cone x={LEFT} y={TOP} s={0.72} />
+      <Cone x={RIGHT} y={TOP} s={0.72} />
+      <Cone x={CX} y={BOT} s={0.8} />
+      <g ref={athRef} transform={`translate(${CX} ${BOT}) scale(1.12)`}>
+        <Athlete pose={reduce ? "stand" : pose} paused={reduce} />
+      </g>
+      <Chip x={150} y={70} big="9.6 sn" small="T Testi" delay={0.5} />
+    </SceneSvg>
+  );
+}
+
+/* ============================================================
+   YO-YO — iki çizgi arası aralıklı mekik (ShuttleG) + bip/seviye
+   ============================================================ */
+export function SceneYoyo() {
+  const inView = useSceneInView();
+  const reduce = !!useReducedMotion();
+  return (
+    <SceneSvg label="Yo-yo dayanıklılık testi animasyonu" tag="YO-YO">
+      <Field id="tjyoyo" />
+      {/* iki mekik çizgisi */}
+      <line x1="112" y1="240" x2="112" y2="264" stroke="rgba(255,255,255,0.5)" strokeWidth="2" />
+      <line x1="408" y1="240" x2="408" y2="264" stroke="rgba(255,255,255,0.5)" strokeWidth="2" />
+      {/* bip noktası (dönüş çizgisinde yanıp söner) */}
+      <motion.circle cx="408" cy="228" r="4" fill={C.gold} initial={{ opacity: 0 }} animate={inView && !reduce ? { opacity: [1, 0.15, 1] } : inView ? { opacity: 1 } : undefined} transition={{ duration: 1.0, repeat: reduce ? 0 : Infinity }} />
+      <ShuttleG x0={124} x1={396} y={256} period={2.0} paused={reduce}>
+        <g transform="scale(1.4)">
+          <ellipse cx="0" cy="1" rx="22" ry="4.2" fill="rgba(0,0,0,0.3)" />
+          <Athlete pose={reduce ? "stand" : "run"} paused={reduce} />
+        </g>
+      </ShuttleG>
+      <Chip x={150} y={70} big="Sv. 18" small="Yo-Yo" delay={0.5} />
+    </SceneSvg>
+  );
+}
