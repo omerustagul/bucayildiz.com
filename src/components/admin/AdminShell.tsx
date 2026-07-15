@@ -54,7 +54,11 @@ const NAV: NavGroup[] = [
   },
   {
     group: "Sistem",
-    items: [{ href: "/admin/ayarlar", label: "Ayarlar", icon: "settings", ready: true, area: "ayarlar" }],
+    items: [
+      { href: "/admin/ayarlar", label: "Ayarlar", icon: "settings", ready: true, area: "ayarlar" },
+      // Owner-exclusive: "kullanicilar" izni matriste devredilmez → yalnız owner (bypass) görür.
+      { href: "/admin/kullanicilar", label: "Yöneticiler & Yetkiler", icon: "lock", ready: true, area: "kullanicilar" },
+    ],
   },
 ];
 

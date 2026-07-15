@@ -152,6 +152,18 @@ export async function getAdminPermissions(): Promise<{ role: string; permissions
   return user ? { role: user.role, permissions: user.permissions } : null;
 }
 
+/**
+ * Yalnız SAHİP (owner) kapısı. Kullanıcı/yetki yönetimi gibi YETKİ-YÜKSELTMEYE açık
+ * işlemler bununla korunur — bir admin'e "kullanicilar" izni verilse bile owner
+ * değilse geçemez (privilege escalation kapalı). Owner değilse /admin'e yönlendirir.
+ */
+export async function requireOwner(): Promise<SessionPayload> {
+  const s = await requireAdmin();
+  const user = await prisma.user.findUnique({ where: { id: s.sub }, select: { role: true } });
+  if (user?.role !== "owner") redirect("/admin");
+  return s;
+}
+
 /** Sporcu/veli yetki kapısı — yalnız PANEL ÇEREZİNE bakar (athleteId zorunlu). */
 export async function requireAthlete(): Promise<SessionPayload> {
   const s = await getPanelSession();
