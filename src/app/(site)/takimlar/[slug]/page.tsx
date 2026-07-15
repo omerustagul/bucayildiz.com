@@ -18,10 +18,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: team ? team.name : "Takım" };
 }
 
-function fmtDate(d?: string | null) {
-  if (!d) return "—";
-  const [y, m, day] = d.split("-");
-  return y && m && day ? `${day}.${m}.${y}` : d;
+// KVKK veri minimizasyonu: PUBLIC kadroda çocuğun TAM doğum tarihi değil yalnız
+// doğum YILI gösterilir (yaş grubu bağlamı yeterli; tam DOB hassas PII).
+function birthYear(d?: string | null) {
+  return d ? d.slice(0, 4) : "—";
 }
 function initials(name: string) {
   return name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase() || "BY";
@@ -43,8 +43,10 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
         where: { status: "active" },
         orderBy: [{ number: "asc" }, { name: "asc" }],
         select: {
+          // Boy/kilo (fiziksel ölçüm) PUBLIC kadrodan çıkarıldı — reşit olmayan
+          // sporcularda hassas veri; yalnız panel/admin'de görünür.
           id: true, name: true, position: true, birthDate: true,
-          height: true, weight: true, number: true, foot: true, photoUrl: true,
+          number: true, foot: true, photoUrl: true,
         },
       },
     },
@@ -91,9 +93,7 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
                   <tr>
                     <th style={th}>Sporcu</th>
                     <th style={th}>Mevki</th>
-                    <th style={th}>Doğum Tarihi</th>
-                    <th style={{ ...th, textAlign: "right" }}>Boy</th>
-                    <th style={{ ...th, textAlign: "right" }}>Kilo</th>
+                    <th style={th}>Doğum Yılı</th>
                     <th style={{ ...th, textAlign: "center" }}>Forma No</th>
                     <th style={{ ...th, textAlign: "center" }}>Ayak</th>
                   </tr>
@@ -110,9 +110,7 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
                         </div>
                       </td>
                       <td style={td}>{a.position || "—"}</td>
-                      <td style={td}>{fmtDate(a.birthDate)}</td>
-                      <td style={{ ...td, textAlign: "right" }}>{a.height ? <span style={stat}>{a.height}<span style={{ color: "var(--ink-400)", fontSize: 12 }}> cm</span></span> : "—"}</td>
-                      <td style={{ ...td, textAlign: "right" }}>{a.weight ? <span style={stat}>{a.weight}<span style={{ color: "var(--ink-400)", fontSize: 12 }}> kg</span></span> : "—"}</td>
+                      <td style={td}>{birthYear(a.birthDate)}</td>
                       <td style={{ ...td, textAlign: "center" }}>{a.number != null ? <span style={stat}>#{a.number}</span> : "—"}</td>
                       <td style={{ ...td, textAlign: "center" }}>{a.foot || "—"}</td>
                     </tr>
@@ -138,16 +136,8 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
                       <span className="by-squad-card-value">{a.position || "—"}</span>
                     </div>
                     <div className="by-squad-card-field">
-                      <span className="by-squad-card-label">Doğum Tarihi</span>
-                      <span className="by-squad-card-value">{fmtDate(a.birthDate)}</span>
-                    </div>
-                    <div className="by-squad-card-field">
-                      <span className="by-squad-card-label">Boy</span>
-                      <span className="by-squad-card-value">{a.height ? `${a.height} cm` : "—"}</span>
-                    </div>
-                    <div className="by-squad-card-field">
-                      <span className="by-squad-card-label">Kilo</span>
-                      <span className="by-squad-card-value">{a.weight ? `${a.weight} kg` : "—"}</span>
+                      <span className="by-squad-card-label">Doğum Yılı</span>
+                      <span className="by-squad-card-value">{birthYear(a.birthDate)}</span>
                     </div>
                     <div className="by-squad-card-field">
                       <span className="by-squad-card-label">Ayak</span>
