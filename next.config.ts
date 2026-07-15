@@ -25,6 +25,16 @@ const nextConfig: NextConfig = {
         return { protocol: u.protocol.replace(":", "") as "http" | "https", hostname: u.hostname };
       }),
   },
+
+  // Build-time type-check + lint ATLANIR — çünkü commit ÖNCESİ `npm run typecheck`
+  // + `npm run lint` ZATEN çalışır (proje disiplini/CI). `next build` içinde TEKRARI
+  // gereksiz. KRİTİK SEBEP: "Linting and checking validity of types" fazı (tsc+eslint)
+  // CPU/bellek-yoğun; deploy sırasında 2-çekirdekli VPS'te canlı cluster worker'larını
+  // starve edip Nginx timeout→502→bakım ekranı yaratıyordu (ölçüldü: type-check'li build
+  // 31/227 istek 503; atlanınca 0/115). Derleme/webpack fazı zaten sorunsuz.
+  // ⚠️ Tip güvenliği artık commit-öncesi typecheck'e BAĞLI — deploy öncesi tsc temiz olmalı.
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
 };
 
 export default nextConfig;
