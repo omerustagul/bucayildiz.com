@@ -320,8 +320,10 @@ export function MobileTabBar({
                             style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}
                           >
                             <span style={{ display: "block", minWidth: 0, maxWidth: 118, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12.5, fontWeight: 700, color: "var(--navy-800)", whiteSpace: "nowrap" }}>{it.label}</span>
-                            {/* altın alt çizgi — öğeler arasında kayarak taşınır */}
-                            <motion.span layoutId="by-dock-line" transition={spring} style={{ height: 2.5, width: "100%", marginTop: 3.5, borderRadius: 2, background: "var(--grad-gold)" }} />
+                            {/* Altın alt çizgi — AKTİF etikete YEREL (paylaşımlı layoutId YOK).
+                               Paylaşımlı olduğunda framer, navigasyonda çıkan etiketi yeni
+                               öğeye sürükleyip iki etiketi ÜST ÜSTE bindiriyordu (mobil dock hatası). */}
+                            <span style={{ display: "block", height: 2.5, width: "100%", marginTop: 3.5, borderRadius: 2, background: "var(--grad-gold)" }} />
                           </motion.span>
                         )}
                       </AnimatePresence>

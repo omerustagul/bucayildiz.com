@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -104,18 +104,23 @@ export function AdminShell({ user, mobileNav = true, logoUrl, children }: { user
 
   // İzin filtresi — kullanıcının view yetkisi olmayan alanlar nav'dan gizlenir
   // (asıl kapı server tarafı requirePermission; bu UI hijyeni). owner → hepsi görür.
-  const canView = (area?: string) => !area || hasPermission(user.role, user.permissions, `${area}.view`);
-  const nav = NAV.map((g) => ({ ...g, items: g.items.filter((i) => canView(i.area)) })).filter((g) => g.items.length > 0);
-  const navG = (name: string): NavItem[] => nav.find((g) => g.group === name)?.items ?? [];
-  const tabbarItems: TabBarItem[] = (
-    [
-      { kind: "group", id: "kulup", label: "Kulüp", icon: "shield", items: navG("Kulüp").map(toTab) },
-      { kind: "group", id: "site", label: "Site", icon: "newspaper", items: [...navG("Başvurular"), ...navG("İçerik & Site")].map(toTab) },
-      { kind: "link", href: "/admin", label: "Genel Bakış", icon: "layout-dashboard" },
-      { kind: "group", id: "iletisim", label: "İletişim", icon: "bell", items: navG("İletişim").map(toTab) },
-      { kind: "group", id: "sistem", label: "Sistem", icon: "settings", items: [...navG("Sistem"), ...EXTRA_ITEMS].map(toTab) },
-    ] as TabBarItem[]
-  ).filter((t) => t.kind !== "group" || t.items.length > 0);
+  // useMemo: nav/dock referansı stabil kalsın — her render yeni array üretmek
+  // MobileTabBar'ı navigasyon animasyonu sırasında gereksiz re-render ediyordu.
+  const { nav, tabbarItems } = useMemo(() => {
+    const canView = (area?: string) => !area || hasPermission(user.role, user.permissions, `${area}.view`);
+    const nav = NAV.map((g) => ({ ...g, items: g.items.filter((i) => canView(i.area)) })).filter((g) => g.items.length > 0);
+    const navG = (name: string): NavItem[] => nav.find((g) => g.group === name)?.items ?? [];
+    const tabbarItems: TabBarItem[] = (
+      [
+        { kind: "group", id: "kulup", label: "Kulüp", icon: "shield", items: navG("Kulüp").map(toTab) },
+        { kind: "group", id: "site", label: "Site", icon: "newspaper", items: [...navG("Başvurular"), ...navG("İçerik & Site")].map(toTab) },
+        { kind: "link", href: "/admin", label: "Genel Bakış", icon: "layout-dashboard" },
+        { kind: "group", id: "iletisim", label: "İletişim", icon: "bell", items: navG("İletişim").map(toTab) },
+        { kind: "group", id: "sistem", label: "Sistem", icon: "settings", items: [...navG("Sistem"), ...EXTRA_ITEMS].map(toTab) },
+      ] as TabBarItem[]
+    ).filter((t) => t.kind !== "group" || t.items.length > 0);
+    return { nav, tabbarItems };
+  }, [user.role, user.permissions]);
 
   const current = ALL_ITEMS.find((i) => isActive(pathname, i.href));
   const breadcrumb = current?.label ?? "Genel Bakış";
