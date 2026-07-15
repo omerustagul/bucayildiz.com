@@ -6,7 +6,7 @@ import { z } from "zod";
 import { createAdminSession, verifyCredentials } from "@/lib/auth";
 import { isAdminRole } from "@/lib/session";
 import { clientIp } from "@/lib/net";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit } from "@/lib/rate-limit-db";
 
 const schema = z.object({
   email: z.string().trim().min(1),
@@ -23,7 +23,7 @@ export async function loginAction(input: unknown): Promise<LoginResult | void> {
 
   // Brute-force savunma derinliği: IP başına 10 dakikada en çok 10 deneme.
   const ip = clientIp(await headers()) ?? "unknown";
-  const rl = rateLimit(`login:admin:${ip}`, 10, 10 * 60 * 1000);
+  const rl = await rateLimit(`login:admin:${ip}`, 10, 10 * 60 * 1000);
   if (!rl.ok) return { error: "Çok fazla giriş denemesi. Lütfen birkaç dakika sonra tekrar deneyin." };
 
   const session = await verifyCredentials(parsed.data.email, parsed.data.password);

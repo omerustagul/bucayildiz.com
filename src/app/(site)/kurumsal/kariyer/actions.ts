@@ -7,7 +7,7 @@ import { CAREER_CONSENT_TEXT, CAREER_CONSENT_VERSION } from "@/lib/consent";
 import { consentTextHash } from "@/lib/consent.server";
 import { isOwnStorageUrl } from "@/lib/storage";
 import { clientIp } from "@/lib/net";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit } from "@/lib/rate-limit-db";
 import { errLabel } from "@/lib/log";
 
 export type JobSubmitResult =
@@ -30,7 +30,7 @@ export async function submitJobApplication(input: unknown): Promise<JobSubmitRes
   const userAgent = h.get("user-agent") || null;
 
   // Spam/DoS: IP başına 10 dakikada en çok 5 başvuru (basvuru ile aynı deseni miras).
-  const rl = rateLimit(`kariyer:${ipAddress ?? "unknown"}`, 5, 10 * 60 * 1000);
+  const rl = await rateLimit(`kariyer:${ipAddress ?? "unknown"}`, 5, 10 * 60 * 1000);
   if (!rl.ok) return { ok: false, error: "Çok fazla başvuru denemesi. Lütfen birkaç dakika sonra tekrar deneyin." };
 
   const parsed = jobApplicationSchema.safeParse(input);

@@ -1,10 +1,10 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { __resetRateLimit } from "@/lib/rate-limit";
 
 const H = vi.hoisted(() => ({ notify: vi.fn(async () => ({ sent: true })) }));
 vi.mock("next/headers", () => ({ headers: async () => new Map([["x-forwarded-for", "1.2.3.4"]]) }));
 vi.mock("@/lib/mail", () => ({ notifyContactMessage: H.notify }));
+vi.mock("@/lib/rate-limit-db", () => ({ rateLimit: async () => ({ ok: true, retryAfter: 0 }) }));
 
 import { submitContactMessage } from "./actions";
 
@@ -13,7 +13,6 @@ const valid = { name: "Ali Veli", email: "ali@example.com", phone: "", message: 
 beforeEach(() => {
   H.notify.mockClear();
   H.notify.mockResolvedValue({ sent: true });
-  __resetRateLimit();
 });
 
 describe("submitContactMessage", () => {

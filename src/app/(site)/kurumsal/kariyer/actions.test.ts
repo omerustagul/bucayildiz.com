@@ -2,13 +2,15 @@
 // Public iş başvurusu: /basvuru korumaları (honeypot + rate-limit + Zod) +
 // kayıt-İÇİNDE consent audit (hash/version/consentedAt/ip/ua) + cvUrl allowlist.
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { __resetRateLimit } from "@/lib/rate-limit";
 
 vi.mock("server-only", () => ({})); // storage.ts (isOwnStorageUrl) yüklensin
+// Kontrol edilebilir mock: varsayılan ok:true; rate-limit testinde ok:false zorlanır.
+vi.mock("@/lib/rate-limit-db", () => ({ rateLimit: H.rl }));
 
 const H = vi.hoisted(() => ({
   created: null as Record<string, unknown> | null,
   posting: null as { id: string } | null,
+  rl: vi.fn(async () => ({ ok: true, retryAfter: 0 })),
 }));
 
 vi.mock("next/headers", () => ({
@@ -25,7 +27,7 @@ import { submitJobApplication } from "./actions";
 
 const valid = { name: "Ali Veli", email: "ali@example.com", phone: "0532 000 00 00", message: "Merhaba", cvUrl: "", consent: true };
 
-beforeEach(() => { H.created = null; H.posting = null; __resetRateLimit(); });
+beforeEach(() => { H.created = null; H.posting = null; H.rl.mockClear(); });
 
 describe("submitJobApplication — public form korumaları + kayıt-içi consent", () => {
   it("honeypot doluysa: sessizce ok, DB'ye HİÇBİR ŞEY yazılmaz (bot)", async () => {
@@ -70,8 +72,10 @@ describe("submitJobApplication — public form korumaları + kayıt-içi consent
     expect(H.created?.cvUrl).toBe("/uploads/1783-cv.pdf");
   });
 
-  it("aynı IP'den 5 başvurudan sonrası rate-limit'e takılır", async () => {
-    for (let i = 0; i < 5; i++) expect((await submitJobApplication(valid)).ok).toBe(true);
+  it("rate-limit bloklarsa (ok:false) başvuru REDDEDİLİR", async () => {
+    // Sayım/eşik src/lib/rate-limit-db.test.ts'te; burada aksiyonun bloğa saygısı.
+    H.rl.mockResolvedValueOnce({ ok: false, retryAfter: 60 });
     expect((await submitJobApplication(valid)).ok).toBe(false);
+    expect(H.created).toBeNull(); // DB'ye yazılmadı
   });
 });

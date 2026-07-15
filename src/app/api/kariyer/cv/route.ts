@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { saveUpload } from "@/lib/storage";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit } from "@/lib/rate-limit-db";
 import { clientIp } from "@/lib/net";
 
 /**
@@ -11,7 +11,7 @@ import { clientIp } from "@/lib/net";
  */
 export async function POST(req: Request) {
   const ip = clientIp(req.headers) ?? "unknown";
-  const rl = rateLimit(`cv-upload:${ip}`, 5, 10 * 60 * 1000);
+  const rl = await rateLimit(`cv-upload:${ip}`, 5, 10 * 60 * 1000);
   if (!rl.ok) {
     return NextResponse.json({ error: "Çok fazla yükleme isteği. Lütfen biraz bekleyin." }, { status: 429 });
   }

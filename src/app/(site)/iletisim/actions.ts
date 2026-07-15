@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { contactSchema } from "@/lib/validation";
 import { clientIp } from "@/lib/net";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit } from "@/lib/rate-limit-db";
 import { notifyContactMessage } from "@/lib/mail";
 import { errLabel } from "@/lib/log";
 
@@ -16,7 +16,7 @@ export async function submitContactMessage(input: unknown): Promise<ContactResul
   if (typeof honeypot === "string" && honeypot.trim() !== "") return { ok: true };
 
   const ip = clientIp(await headers()) ?? "unknown";
-  const rl = rateLimit(`iletisim:${ip}`, 5, 10 * 60 * 1000);
+  const rl = await rateLimit(`iletisim:${ip}`, 5, 10 * 60 * 1000);
   if (!rl.ok) return { ok: false, error: "Çok fazla mesaj denemesi. Lütfen biraz sonra tekrar deneyin." };
 
   const parsed = contactSchema.safeParse(input);

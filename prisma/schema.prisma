@@ -653,3 +653,17 @@ model JobApplication {
   @@index([status])
   @@index([createdAt])
 }
+
+/// Cluster-güvenli (paylaşılan) rate-limit kovası — NODE tarafı yetkili limitler
+/// için (login/başvuru/iletişim/kariyer/upload/push). 2+ PM2 instance ve restart
+/// arasında TUTARLI sayım: eski in-memory her worker'da ayrı sayıyordu → cluster'da
+/// limit ~2× gevşiyor + her deploy sıfırlıyordu. `key` ör. "login:admin:1.2.3.4".
+/// Bkz. src/lib/rate-limit-db.ts. (Edge/middleware kaba ön-filtre in-memory kalır —
+/// Prisma edge'de çalışmaz; arkasında zaten bu cluster-güvenli Node limiti var.)
+model RateLimitBucket {
+  key     String   @id
+  count   Int      @default(0)
+  resetAt DateTime
+
+  @@index([resetAt]) // süresi dolmuş kovaları toplu temizlemek için
+}

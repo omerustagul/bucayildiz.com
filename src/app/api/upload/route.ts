@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminSession, getPanelSession } from "@/lib/auth";
 import { isAdminRole } from "@/lib/session";
 import { saveUpload } from "@/lib/storage";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit } from "@/lib/rate-limit-db";
 
 /** Görsel yükleme uç noktası — oturumlu yöneticiler veya sporcular (yalnızca görsel). */
 export async function POST(req: Request) {
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   if (!session || (!isAdmin && !isAthlete)) return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
 
   // Kötüye kullanım/disk taşması: kullanıcı başına 5 dakikada en çok 40 yükleme.
-  const rl = rateLimit(`upload:${session.sub}`, 40, 5 * 60 * 1000);
+  const rl = await rateLimit(`upload:${session.sub}`, 40, 5 * 60 * 1000);
   if (!rl.ok) {
     return NextResponse.json({ error: "Çok fazla yükleme isteği. Lütfen biraz bekleyin." }, { status: 429 });
   }

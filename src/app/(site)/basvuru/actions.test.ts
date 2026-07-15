@@ -3,12 +3,15 @@
 // Kanıtlanan: (1) consent yazımı başarısızsa YETİM Application kalmaz (rollback),
 // (2) başarılıysa audit satırları HER ZAMAN yazılır, (3) geçersiz girdi DB'ye gitmez.
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { __resetRateLimit } from "@/lib/rate-limit";
+
+// Kontrol edilebilir mock: varsayılan ok:true; rate-limit testinde ok:false zorlanır.
+vi.mock("@/lib/rate-limit-db", () => ({ rateLimit: H.rl }));
 
 const H = vi.hoisted(() => ({
   activeDocs: [] as Array<Record<string, unknown>>,
   store: { apps: [] as unknown[], consents: [] as unknown[] },
   notify: vi.fn(async () => {}),
+  rl: vi.fn(async () => ({ ok: true, retryAfter: 0 })),
 }));
 
 vi.mock("next/headers", () => ({
@@ -69,7 +72,7 @@ beforeEach(() => {
   H.store.consents = [];
   H.activeDocs = [];
   H.notify.mockClear();
-  __resetRateLimit();
+  H.rl.mockClear();
 });
 
 describe("submitApplication (KVKK atomiklik)", () => {
@@ -108,12 +111,14 @@ describe("submitApplication (KVKK atomiklik)", () => {
     expect(H.store.consents).toHaveLength(0);
   });
 
-  it("aynı IP'den 5 başvurudan sonrası rate-limit'e takılır", async () => {
+  it("rate-limit bloklarsa (ok:false) başvuru REDDEDİLİR, DB'ye YAZILMAZ", async () => {
+    // Sayım/eşik mantığı src/lib/rate-limit-db.test.ts'te; burada aksiyonun bloğa
+    // SAYGI duyduğunu (erken çık, yetim kayıt bırakma) doğrularız.
     H.activeDocs = [{ key: "acik-riza", version: "v1", title: "B", body: "b", ordering: 1 }];
-    for (let i = 0; i < 5; i++) expect((await submitApplication(validInput)).ok).toBe(true);
-    const sixth = await submitApplication(validInput);
-    expect(sixth).toMatchObject({ ok: false });
-    expect(H.store.apps).toHaveLength(5); // 6.'sı yazılmadı
+    H.rl.mockResolvedValueOnce({ ok: false, retryAfter: 60 });
+    const res = await submitApplication(validInput);
+    expect(res).toMatchObject({ ok: false });
+    expect(H.store.apps).toHaveLength(0); // rate-limit, DB yazımından ÖNCE
   });
 
   // --- Madde 4: yaş dallı consent attribution ---

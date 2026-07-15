@@ -7,7 +7,7 @@ import { CONSENT_VERSION } from "@/lib/consent";
 import { recordConsents } from "@/lib/consent.server";
 import { notifyNewApplication } from "@/lib/mail";
 import { clientIp } from "@/lib/net";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit } from "@/lib/rate-limit-db";
 import { errLabel } from "@/lib/log";
 
 export type SubmitResult =
@@ -32,7 +32,7 @@ export async function submitApplication(input: unknown): Promise<SubmitResult> {
 
   // Spam/DoS koruması: IP başına 10 dakikada en çok 5 başvuru (uygulama-katmanı
   // savunma derinliği; asıl kaba filtre reverse-proxy/Cloudflare'de olmalı).
-  const rl = rateLimit(`basvuru:${ipAddress ?? "unknown"}`, 5, 10 * 60 * 1000);
+  const rl = await rateLimit(`basvuru:${ipAddress ?? "unknown"}`, 5, 10 * 60 * 1000);
   if (!rl.ok) return { ok: false, error: "Çok fazla başvuru denemesi. Lütfen birkaç dakika sonra tekrar deneyin." };
 
   const parsed = applicationSchema.safeParse(input);
