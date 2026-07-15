@@ -9,7 +9,12 @@ import { MatchList } from "@/components/content/MatchList";
 export const generateMetadata = () => getPageMetadata("/fikstur/sonuclar");
 
 export default async function SonuclarPage() {
-  const fixtures = await prisma.fixture.findMany({ where: { status: "finished" }, orderBy: { date: "desc" } });
+  const fixtures = await prisma.fixture.findMany({
+    where: { status: "finished" },
+    orderBy: { date: "desc" },
+    // P1: sınırsız sorgu koruması — en yeni 120 kayıt (veri büyürse OOM/yavaşlama önlenir)
+    take: 120,
+  });
   const rows = fixtures.map(mapFixture);
 
   return (

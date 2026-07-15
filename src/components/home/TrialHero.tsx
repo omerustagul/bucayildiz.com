@@ -1,6 +1,3 @@
-"use client";
-
-import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { Icon, type IconName } from "@/lib/icons";
 import { heroImageVars } from "@/components/home/heroImage";
@@ -12,6 +9,12 @@ import { heroImageVars } from "@/components/home/heroImage";
  * gradyan çerçeve, ✓ işaretli 2 sütunlu test listesi. Gerçek antrenman
  * fotoğrafı public/brand/hero-trial.jpg'e konunca otomatik görünür; yoksa
  * koyu lacivert zemin (kırılmaz).
+ *
+ * SERVER component: giriş animasyonu framer-motion yerine CSS ile yapılır
+ * (globals.css .trial-in / .trial-hero-title). Böylece hero SSR HTML'i İLK
+ * BOYADA görünür ve LCP hydration'a takılmaz — eski `"use client"` + framer
+ * `initial="hidden"` (opacity:0) LCP metnini JS yüklenene dek gizliyordu.
+ * prefers-reduced-motion CSS media query ile ele alınır (JS gerekmez).
  */
 
 const TESTS: { icon: IconName; label: string }[] = [
@@ -26,21 +29,8 @@ const TESTS: { icon: IconName; label: string }[] = [
 ];
 
 export function TrialHero({ href = "/ucretsiz-deneme", heroImageUrl, heroMobileImageUrl }: { href?: string; heroImageUrl?: string | null; heroMobileImageUrl?: string | null }) {
-  const reduce = useReducedMotion();
   // Masaüstü 16:9 + mobil 1:1; mobil boşsa masaüstüne düşer (fallback).
   const heroImg = heroImageVars(heroImageUrl, heroMobileImageUrl);
-
-  // Zarif giriş: fade + hafif yukarı kayma; testler 70ms arayla belirir.
-  const fadeUp = reduce
-    ? { hidden: {}, show: {} }
-    : {
-      hidden: { opacity: 0, y: 16 },
-      show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const } },
-    };
-  const stagger = {
-    hidden: {},
-    show: { transition: { staggerChildren: reduce ? 0 : 0.07, delayChildren: reduce ? 0 : 0.15 } },
-  };
 
   return (
     <section
@@ -69,11 +59,8 @@ export function TrialHero({ href = "/ucretsiz-deneme", heroImageUrl, heroMobileI
         }}
       >
         {/* 8-18 yaş rozeti — minik, cam-altın kapsül */}
-        <motion.div
-          className="trial-hero-badge"
-          initial={reduce ? false : { opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+        <div
+          className="trial-hero-badge trial-in"
           style={{
             position: "absolute",
             top: "clamp(30px, 2vw, 50px)",
@@ -89,6 +76,7 @@ export function TrialHero({ href = "/ucretsiz-deneme", heroImageUrl, heroMobileI
             backdropFilter: "blur(8px)",
             WebkitBackdropFilter: "blur(8px)",
             boxShadow: "0 8px 24px rgba(0, 0, 0, 0.35)",
+            animationDelay: "0.2s",
           }}
         >
           <span aria-hidden="true" style={{ width: 26, height: 26, flex: "none", borderRadius: "50%", display: "grid", placeItems: "center", background: "var(--grad-gold)", color: "var(--navy-900)", fontSize: 13, lineHeight: 1 }}>★</span>
@@ -96,18 +84,16 @@ export function TrialHero({ href = "/ucretsiz-deneme", heroImageUrl, heroMobileI
             <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 17, color: "#fff", letterSpacing: ".02em" }}>8–18</span>
             <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 8.5, letterSpacing: ".2em", color: "#DDBB4E" }}>YAŞ ARASI</span>
           </span>
-        </motion.div>
+        </div>
 
-        <motion.div
+        <div
           className="trial-hero-content"
-          variants={stagger}
-          initial="hidden"
-          animate="show"
           style={{ maxWidth: 620, display: "flex", flexDirection: "column", gap: "clamp(18px, 3vw, 26px)" }}
         >
-          <motion.h1
+          {/* h1 = LCP öğesi: CSS .trial-hero-title yalnız transform ile kaydırır
+              (opacity 1 kalır → ilk boyada boyanmış sayılır, LCP gecikmez). */}
+          <h1
             className="trial-hero-title"
-            variants={fadeUp}
             style={{
               fontFamily: "var(--font-heading)",
               fontWeight: 800,
@@ -121,16 +107,17 @@ export function TrialHero({ href = "/ucretsiz-deneme", heroImageUrl, heroMobileI
             }}
           >
             Çocuğunuzun <span style={{ color: "var(--gold-400)" }}> <br /> Futbol Potansiyelini</span> <br /> Bilimsel Olarak Ölçelim!
-          </motion.h1>
+          </h1>
 
           {/* Skaut raporu kartı: 1px altın gradyan çerçeve + cam iç zemin */}
-          <motion.div
-            variants={fadeUp}
+          <div
+            className="trial-in"
             style={{
               padding: 1,
               borderRadius: "var(--radius-lg)",
               background: "linear-gradient(135deg, rgba(201,162,39,0.75), rgba(201,162,39,0.15) 40%, rgba(201,162,39,0.55))",
               boxShadow: "0 18px 48px rgba(0,0,0,.35)",
+              animationDelay: "0.16s",
             }}
           >
             <div
@@ -181,9 +168,8 @@ export function TrialHero({ href = "/ucretsiz-deneme", heroImageUrl, heroMobileI
                 </div>
               </div>
 
-              {/* ✓ işaretli 2 sütunlu test listesi */}
-              <motion.ul
-                variants={stagger}
+              {/* ✓ işaretli 2 sütunlu test listesi — her öğe stagger'lı fade-up */}
+              <ul
                 style={{
                   listStyle: "none",
                   margin: 0,
@@ -194,8 +180,8 @@ export function TrialHero({ href = "/ucretsiz-deneme", heroImageUrl, heroMobileI
                   rowGap: "clamp(9px, 1.4vw, 12px)",
                 }}
               >
-                {TESTS.map((t) => (
-                  <motion.li key={t.label} variants={fadeUp} style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                {TESTS.map((t, i) => (
+                  <li key={t.label} className="trial-in" style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, animationDelay: `${0.24 + i * 0.05}s` }}>
                     <span
                       style={{
                         flex: "0 0 auto",
@@ -225,18 +211,18 @@ export function TrialHero({ href = "/ucretsiz-deneme", heroImageUrl, heroMobileI
                     >
                       {t.label}
                     </span>
-                  </motion.li>
+                  </li>
                 ))}
-              </motion.ul>
+              </ul>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div variants={fadeUp}>
+          <div className="trial-in" style={{ animationDelay: "0.4s" }}>
             <Button as="a" href={href} variant="gold-outline" size="md" rightIcon={<Icon name="arrow-right" size={18} />}>
               Hemen Ücretsiz Randevu Al
             </Button>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </div>
     </section>
   );

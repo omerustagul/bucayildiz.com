@@ -28,6 +28,8 @@ export default async function MediaCategoryPage({ params }: { params: Promise<{ 
     where: { categoryId: id },
     orderBy: { createdAt: "desc" },
     select: { id: true, url: true, title: true, kind: true, createdAt: true },
+    // P1: sınırsız sorgu koruması — en yeni 120 kayıt (veri büyürse OOM/yavaşlama önlenir)
+    take: 120,
   });
   const items: GalleryAsset[] = assets.map((a) => ({ id: a.id, url: a.url, title: a.title, kind: a.kind, category: category.name, date: fmtTrDateShort(a.createdAt) }));
 

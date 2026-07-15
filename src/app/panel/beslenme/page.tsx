@@ -39,6 +39,8 @@ export default async function PanelBeslenme() {
     prisma.mealLog.findMany({
       where: { athleteId, date: { gte: windowStart } },
       orderBy: { date: "desc" },
+      // P1: sınırsız sorgu koruması — en yeni 90 kayıt (veri büyürse OOM/yavaşlama önlenir)
+      take: 90,
     }),
     hasHealthConsent(athleteId),
   ]);

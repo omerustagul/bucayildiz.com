@@ -13,6 +13,8 @@ export default async function VideolarPage() {
     where: { kind: "video" },
     orderBy: { createdAt: "desc" },
     select: { id: true, url: true, title: true, kind: true, createdAt: true, category: { select: { name: true } } },
+    // P1: sınırsız sorgu koruması — en yeni 120 kayıt (veri büyürse OOM/yavaşlama önlenir)
+    take: 120,
   });
 
   return (
