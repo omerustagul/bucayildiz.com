@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { SectionHeading } from "./SectionHeading";
+import { CoverVideo } from "./CoverVideo";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
@@ -31,17 +32,12 @@ function MediaCard({ card, featured }: { card: Card; featured?: boolean }) {
     >
       {card.kind === "video" && card.coverVideoUrl ? (
         // Kapak videosu: sessiz, döngü, otomatik oynar; coverUrl poster/yedek.
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
+        // CoverVideo (client) ekran dışında duraklatır — boşuna decode/CPU olmasın.
+        <CoverVideo
+          src={card.coverVideoUrl}
           poster={card.coverUrl ?? undefined}
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-        >
-          <source src={card.coverVideoUrl} />
-        </video>
+        />
       ) : card.coverUrl ? (
         <Image src={card.coverUrl} alt={card.title} fill style={{ objectFit: "cover" }} sizes="(max-width: 900px) 72vw, 290px" />
       ) : (

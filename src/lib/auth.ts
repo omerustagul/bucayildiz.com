@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
@@ -57,11 +58,22 @@ export async function verifyCredentials(identifier: string, password: string): P
  * - admin portalı için rol hâlâ admin, panel için athleteId hâlâ dolu olmalı.
  * Bu, JWT'nin 7 gün "bayat" kalmasını (silinen/rol-düşürülen kullanıcı) kapatır.
  */
+/**
+ * Kullanıcının DB'deki GÜNCEL satırı — request içinde TEK sorgu (React `cache()`).
+ * Oturum tazeliği (isSessionCurrent) ile rol/izin okumaları (requirePermission,
+ * getAdminPermissions, panel layout) AYNI satırı paylaşır; eskiden tek istekte
+ * 3-4 ayrı findUnique atılıyordu. cache() yalnız request içinde tekilleştirir →
+ * izin değişikliği bir sonraki istekte anında geçerli (bayatlama yok).
+ */
+const getCurrentUser = cache(async (id: string) =>
+  prisma.user.findUnique({
+    where: { id },
+    select: { tokenVersion: true, role: true, athleteId: true, permissions: true },
+  }),
+);
+
 async function isSessionCurrent(s: SessionPayload, portal: "admin" | "panel"): Promise<boolean> {
-  const user = await prisma.user.findUnique({
-    where: { id: s.sub },
-    select: { tokenVersion: true, role: true, athleteId: true },
-  });
+  const user = await getCurrentUser(s.sub);
   if (!user) return false;
   if ((s.tv ?? 0) !== user.tokenVersion) return false;
   if (portal === "admin" && !isAdminRole(user.role)) return false;
@@ -93,19 +105,22 @@ export async function createPanelSession(payload: SessionPayload): Promise<void>
   await setSessionCookie(PANEL_COOKIE, payload);
 }
 
-export async function getAdminSession(): Promise<SessionPayload | null> {
+/** Admin oturumu (cookie + JWT verify + tazelik). `cache()`: aynı istekte layout ve
+ *  sayfa/action ayrı ayrı çağırsa da TEK kez çalışır (2× cookie+jose+DB → 1×). */
+export const getAdminSession = cache(async (): Promise<SessionPayload | null> => {
   const store = await cookies();
   const s = await verifyAdminToken(store.get(ADMIN_COOKIE)?.value);
   if (!s) return null;
   return (await isSessionCurrent(s, "admin")) ? s : null;
-}
+});
 
-export async function getPanelSession(): Promise<SessionPayload | null> {
+/** Sporcu paneli oturumu — bkz. getAdminSession (aynı `cache()` gerekçesi). */
+export const getPanelSession = cache(async (): Promise<SessionPayload | null> => {
   const store = await cookies();
   const s = await verifyPanelToken(store.get(PANEL_COOKIE)?.value);
   if (!s) return null;
   return (await isSessionCurrent(s, "panel")) ? s : null;
-}
+});
 
 export async function destroyAdminSession(): Promise<void> {
   const store = await cookies();
@@ -140,7 +155,7 @@ export async function requireAdmin(): Promise<SessionPayload> {
  */
 export async function requirePermission(key: string): Promise<SessionPayload> {
   const s = await requireAdmin();
-  const user = await prisma.user.findUnique({ where: { id: s.sub }, select: { role: true, permissions: true } });
+  const user = await getCurrentUser(s.sub);
   if (!user || !hasPermission(user.role, user.permissions, key)) redirect("/admin");
   return s;
 }
@@ -149,7 +164,7 @@ export async function requirePermission(key: string): Promise<SessionPayload> {
 export async function getAdminPermissions(): Promise<{ role: string; permissions: string[] } | null> {
   const s = await getAdminSession();
   if (!s) return null;
-  const user = await prisma.user.findUnique({ where: { id: s.sub }, select: { role: true, permissions: true } });
+  const user = await getCurrentUser(s.sub);
   return user ? { role: user.role, permissions: user.permissions } : null;
 }
 

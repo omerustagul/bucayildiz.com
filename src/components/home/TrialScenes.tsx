@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { motion, useAnimationFrame, useInView, useReducedMotion } from "framer-motion";
 
 /**
@@ -52,7 +52,7 @@ function RotG({
   children: React.ReactNode;
 }) {
   const ref = useRef<SVGGElement>(null);
-  useAnimationFrame((t) => {
+  useSceneFrame((t) => {
     if (paused || !ref.current) return;
     const a = center + amp * Math.sin(((t / 1000) * TAU) / period + phase);
     ref.current.setAttribute("transform", `rotate(${a.toFixed(2)} ${pivot[0]} ${pivot[1]})`);
@@ -75,7 +75,7 @@ function SpinG({
   children: React.ReactNode;
 }) {
   const ref = useRef<SVGGElement>(null);
-  useAnimationFrame((t) => {
+  useSceneFrame((t) => {
     if (paused || !ref.current) return;
     const a = (((t / 1000) / period) * 360) % 360;
     ref.current.setAttribute("transform", `rotate(${a.toFixed(1)} ${cx} ${cy})`);
@@ -101,7 +101,7 @@ function BobG({
   children: React.ReactNode;
 }) {
   const ref = useRef<SVGGElement>(null);
-  useAnimationFrame((t) => {
+  useSceneFrame((t) => {
     if (paused || !ref.current) return;
     const s = Math.sin(((t / 1000) * TAU) / period + phase);
     const y = jump ? -Math.abs(s) * amp : s * amp;
@@ -127,7 +127,7 @@ function ShuttleG({
   children: React.ReactNode;
 }) {
   const ref = useRef<SVGGElement>(null);
-  useAnimationFrame((t) => {
+  useSceneFrame((t) => {
     if (paused || !ref.current) return;
     const p = ((t / 1000) % period) / period; // 0..1
     const tri = p < 0.5 ? p * 2 : 2 - p * 2; // 0→1→0
@@ -305,6 +305,26 @@ function Chip({ x, y, w = 104, big, small, delay = 0 }: { x: number; y: number; 
 const SceneInViewCtx = createContext(false);
 const useSceneInView = () => useContext(SceneInViewCtx);
 
+/** Sahne ŞU AN ekrana yakın mı — REAKTİF (once YOK). RAF döngülerini görünmezken
+ *  susturmak için. `SceneInViewCtx` giriş reveal'ı içindir (once:true — geri
+ *  kaydırınca tekrar oynamasın); bu sinyal ise sürekli güncellenir.
+ *  Varsayılan `true`: SceneViewport ile sarılmamış sahne animasyonsuz kalmasın. */
+const SceneLiveCtx = createContext(true);
+const useSceneLive = () => useContext(SceneLiveCtx);
+
+/** `useAnimationFrame` + görünürlük kapısı: sahne EKRAN DIŞINDAYKEN callback HİÇ
+ *  çalışmaz → her karede SVG özniteliği yazılmaz (off-screen CPU/paint tasarrufu;
+ *  /ucretsiz-deneme'de 10 sahne AYNI ANDA mount'ludur, eskiden hepsi kaydırma
+ *  konumundan bağımsız her karede çalışıyordu). Mevcut `paused`/`reduce` kapıları
+ *  callback'in İÇİNDE aynen kalır (reduced-motion davranışı değişmez). */
+function useSceneFrame(cb: (t: number) => void) {
+  const live = useSceneLive();
+  useAnimationFrame((time) => {
+    if (!live) return;
+    cb(time);
+  });
+}
+
 /** Sahneyi saran sütun: görünürlük gözlemi burada yapılır ve context ile
  *  sahnenin İÇİNDE çalışan tüm bileşenlere dağıtılır. Provider'ın sahne
  *  bileşeninin ÜSTÜNDE olması şart — bileşen kendi render ettiği provider'ın
@@ -312,9 +332,24 @@ const useSceneInView = () => useContext(SceneInViewCtx);
 export function SceneViewport({ className, children }: { className?: string; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.35 });
+  // RAF kapısı — GÜVENLİ VARSAYILAN `true`: observer HİÇ ateşlemezse (IO yok /
+  // ortam desteklemiyor) sahneler ESKİSİ GİBİ çalışmaya devam eder; yalnız observer
+  // açıkça "görünmüyor" dediğinde susarlar. (framer useInView `false` başladığı için
+  // burada kullanılmaz — ateşlemediği bir ortamda animasyonları kalıcı dondururdu.)
+  // 200px pay: sahne yaklaşırken canlanır, kaydırmada geç başlama olmaz.
+  const [live, setLive] = useState(true);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !("IntersectionObserver" in window)) return; // destek yoksa live=true kalır
+    const io = new IntersectionObserver(([e]) => setLive(e.isIntersecting), { rootMargin: "200px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   return (
     <div ref={ref} className={className}>
-      <SceneInViewCtx.Provider value={inView}>{children}</SceneInViewCtx.Provider>
+      <SceneLiveCtx.Provider value={live}>
+        <SceneInViewCtx.Provider value={inView}>{children}</SceneInViewCtx.Provider>
+      </SceneLiveCtx.Provider>
     </div>
   );
 }
@@ -354,7 +389,7 @@ function LadderHopShow({ gaps, groundY, paused }: { gaps: number[]; groundY: num
   const TRAVEL = (points.length - 1) * SEG;
   const T = TRAVEL + 1.1; // sonda bekle + başa dön
 
-  useAnimationFrame((t) => {
+  useSceneFrame((t) => {
     if (paused || !bodyRef.current) return;
     const tt = (t / 1000) % T;
     let x = startX;
@@ -427,7 +462,7 @@ function DribbleShow({ paused }: { paused: boolean }) {
   const GROUND = 256;
   const T = 6.6;
 
-  useAnimationFrame((t) => {
+  useSceneFrame((t) => {
     if (paused) return;
     const tt = (t / 1000) % T;
     let ax = 56, ay = 0, bx = 80, by = 0, actorOpacity = 1, flash = 0, gol = 0, ballOpacity = 1;
@@ -979,7 +1014,7 @@ export function SceneLongJump() {
   const athRef = useRef<SVGGElement>(null);
   const [pose, setPose] = useState<Pose>("stand");
   const X0 = 130, X1 = 372, GY = 256, T = 4.2;
-  useAnimationFrame((t) => {
+  useSceneFrame((t) => {
     if (reduce || !athRef.current) return;
     const tt = (t / 1000) % T;
     let x = X0, y = 0;
@@ -1052,7 +1087,7 @@ export function SceneTTest() {
   const [pose, setPose] = useState<Pose>("run");
   const CX = 260, BOT = 256, TOP = 154, LEFT = 156, RIGHT = 364, T = 6.0;
   const lerp = (a: number, b: number, p: number) => a + (b - a) * (p < 0 ? 0 : p > 1 ? 1 : p);
-  useAnimationFrame((t) => {
+  useSceneFrame((t) => {
     if (reduce || !athRef.current) return;
     const tt = (t / 1000) % T;
     let x = CX, y = BOT, dir = 1;

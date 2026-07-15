@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
 
-type Stats = { athletes: number; teams: number; trainings: number; injured: number };
+// injured/featured `null` = yetkisiz yönetici (sporcular.view yok) → sakatlık (KVKK
+// sağlık verisi) ve sporcu listesi HİÇ gösterilmez. Boş liste ile karıştırılmasın diye null.
+type Stats = { athletes: number; teams: number; trainings: number; injured: number | null };
 type Bar = { name: string; count: number; highlight: boolean };
 type Up = { id: string; day: string; competition: string; time: string; home: string; away: string };
 type Featured = { id: string; name: string; number: number | null; position: string; teamName: string; status: string; photoUrl: string | null };
@@ -35,7 +37,7 @@ function SquadChart({ bars }: { bars: Bar[] }) {
   );
 }
 
-export function DashboardView({ stats, bars, upcoming, featured, today }: { stats: Stats; bars: Bar[]; upcoming: Up[]; featured: Featured[]; today: string }) {
+export function DashboardView({ stats, bars, upcoming, featured, today }: { stats: Stats; bars: Bar[]; upcoming: Up[]; featured: Featured[] | null; today: string }) {
   const router = useRouter();
 
   const cols: Column<Featured>[] = [
@@ -68,7 +70,7 @@ export function DashboardView({ stats, bars, upcoming, featured, today }: { stat
         <StatTile label="Toplam Sporcu" value={stats.athletes} icon="users" accent />
         <StatTile label="Aktif Takım" value={stats.teams} icon="shield" sub="A → U-15" deltaTone="neutral" />
         <StatTile label="Planlı Antrenman" value={stats.trainings} unit="seans" icon="dumbbell" deltaTone="neutral" />
-        <StatTile label="Sakatlık" value={stats.injured} icon="heart-pulse" sub="takipte" deltaTone="neutral" />
+        {stats.injured != null && <StatTile label="Sakatlık" value={stats.injured} icon="heart-pulse" sub="takipte" deltaTone="neutral" />}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 18 }} className="hp-grid-2">
@@ -95,33 +97,36 @@ export function DashboardView({ stats, bars, upcoming, featured, today }: { stat
         </Panel>
       </div>
 
-      <Panel title="Öne Çıkan Sporcular" action={<Button variant="ghost" size="sm" onClick={() => router.push("/admin/sporcular")} rightIcon={<Icon name="arrow-right" size={15} />}>Tüm Sporcular</Button>} pad={0}>
-        <div className="adm-table-wrap">
-          <Table columns={cols} rows={featured} getRowKey={(r) => r.id} onRowClick={() => router.push("/admin/sporcular")} style={{ border: "none", borderRadius: 0 }} />
-        </div>
-        <CardList style={{ padding: 14 }}>
-          {featured.length === 0 ? (
-            <CardEmpty>Öne çıkan sporcu yok.</CardEmpty>
-          ) : (
-            featured.map((r) => (
-              <DataCard key={r.id} onClick={() => router.push("/admin/sporcular")}>
-                <CardHeader
-                  avatar={<Avatar name={r.name} src={r.photoUrl} size="sm" />}
-                  title={r.name}
-                  subtitle={`${r.number != null ? `#${r.number} ` : ""}${r.position ? `· ${r.position}` : ""}`}
-                  badge={<Badge tone={STATUS[r.status]?.tone ?? "neutral"} dot={r.status === "injured"}>{STATUS[r.status]?.label ?? r.status}</Badge>}
-                />
-                <CardFields
-                  items={[
-                    { label: "Takım", value: <Badge tone="navy">{r.teamName}</Badge> },
-                    { label: "Mevki", value: r.position || "—" },
-                  ]}
-                />
-              </DataCard>
-            ))
-          )}
-        </CardList>
-      </Panel>
+      {/* Yalnız sporcular.view izni olan yöneticiye — sporcu adı/foto + SAKATLIK durumu. */}
+      {featured && (
+        <Panel title="Öne Çıkan Sporcular" action={<Button variant="ghost" size="sm" onClick={() => router.push("/admin/sporcular")} rightIcon={<Icon name="arrow-right" size={15} />}>Tüm Sporcular</Button>} pad={0}>
+          <div className="adm-table-wrap">
+            <Table columns={cols} rows={featured} getRowKey={(r) => r.id} onRowClick={() => router.push("/admin/sporcular")} style={{ border: "none", borderRadius: 0 }} />
+          </div>
+          <CardList style={{ padding: 14 }}>
+            {featured.length === 0 ? (
+              <CardEmpty>Öne çıkan sporcu yok.</CardEmpty>
+            ) : (
+              featured.map((r) => (
+                <DataCard key={r.id} onClick={() => router.push("/admin/sporcular")}>
+                  <CardHeader
+                    avatar={<Avatar name={r.name} src={r.photoUrl} size="sm" />}
+                    title={r.name}
+                    subtitle={`${r.number != null ? `#${r.number} ` : ""}${r.position ? `· ${r.position}` : ""}`}
+                    badge={<Badge tone={STATUS[r.status]?.tone ?? "neutral"} dot={r.status === "injured"}>{STATUS[r.status]?.label ?? r.status}</Badge>}
+                  />
+                  <CardFields
+                    items={[
+                      { label: "Takım", value: <Badge tone="navy">{r.teamName}</Badge> },
+                      { label: "Mevki", value: r.position || "—" },
+                    ]}
+                  />
+                </DataCard>
+              ))
+            )}
+          </CardList>
+        </Panel>
+      )}
     </>
   );
 }
