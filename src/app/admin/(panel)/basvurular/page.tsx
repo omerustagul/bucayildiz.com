@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { ViewHeader, Panel } from "@/components/admin/ui";
-import { ApplicationStatusSelect } from "@/components/admin/ApplicationStatusSelect";
-import { ApplicationConsentCell } from "@/components/admin/ApplicationConsentCell";
-import { CardList, DataCard, CardHeader, CardFields, CardActions } from "@/components/admin/MobileCardList";
+import { BasvurularView, type ApplicationRow } from "@/components/admin/BasvurularView";
 import { Icon } from "@/lib/icons";
 
 export const metadata: Metadata = { title: "Başvurular" };
@@ -13,25 +11,6 @@ function fmtDate(d: Date) {
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   return `${dd}.${mm}.${d.getFullYear()}`;
 }
-
-const TH: React.CSSProperties = {
-  textAlign: "left",
-  padding: "12px 16px",
-  fontSize: 11.5,
-  fontWeight: 700,
-  letterSpacing: "0.06em",
-  textTransform: "uppercase",
-  color: "var(--text-muted)",
-  whiteSpace: "nowrap",
-};
-
-const TD: React.CSSProperties = {
-  padding: "14px 16px",
-  fontSize: 14,
-  color: "var(--text-body)",
-  borderTop: "1px solid var(--border-subtle)",
-  whiteSpace: "nowrap",
-};
 
 function fmtDateTime(d: Date) {
   return `${fmtDate(d)} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
@@ -44,12 +23,40 @@ export default async function BasvurularPage() {
     take: 200,
   });
 
+  // Server tarafında düzleştir (tarih formatı + consent map) → client view'a
+  // serileştirilebilir düz veri geçer; filtreleme/renklendirme orada anlık yapılır.
+  const rows: ApplicationRow[] = apps.map((a) => ({
+    id: a.id,
+    athleteName: a.athleteName,
+    position: a.position,
+    ageGroup: a.ageGroup,
+    parentName: a.parentName,
+    phone: a.phone,
+    email: a.email,
+    createdAt: fmtDate(a.createdAt),
+    status: a.status,
+    consents: a.consents.map((c) => ({
+      documentKey: c.documentKey,
+      documentTitle: c.documentTitle,
+      documentVersion: c.documentVersion,
+      granted: c.granted,
+      granterName: c.granterName,
+      granterRelation: c.granterRelation,
+      channel: c.channel,
+      textHash: c.textHash,
+      ipAddress: c.ipAddress,
+      otpVerified: c.otpVerified,
+      createdAt: fmtDateTime(c.createdAt),
+      withdrawnAt: c.withdrawnAt ? fmtDateTime(c.withdrawnAt) : null,
+    })),
+  }));
+
   return (
     <>
       <ViewHeader title="Başvurular" subtitle={`Toplam ${apps.length} başvuru`} />
 
       <Panel>
-        {apps.length === 0 ? (
+        {rows.length === 0 ? (
           <div style={{ padding: "56px 20px", textAlign: "center", color: "var(--text-muted)" }}>
             <span style={{ display: "inline-grid", placeItems: "center", width: 56, height: 56, borderRadius: "50%", background: "var(--surface-subtle)", color: "var(--ink-400)", marginBottom: 14 }}>
               <Icon name="inbox" size={26} />
@@ -58,105 +65,7 @@ export default async function BasvurularPage() {
             <p style={{ margin: "6px 0 0", fontSize: 13 }}>Sitedeki başvuru formundan gelen kayıtlar burada listelenir.</p>
           </div>
         ) : (
-          <>
-          <div className="adm-table-wrap">
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 920 }}>
-              <thead>
-                <tr style={{ background: "var(--surface-subtle)" }}>
-                  <th style={TH}>Sporcu</th>
-                  <th style={TH}>Yaş Grubu</th>
-                  <th style={TH}>Veli</th>
-                  <th style={TH}>Telefon</th>
-                  <th style={TH}>E-posta</th>
-                  <th style={TH}>Tarih</th>
-                  <th style={TH}>KVKK Onayları</th>
-                  <th style={TH}>Durum</th>
-                </tr>
-              </thead>
-              <tbody>
-                {apps.map((a) => (
-                  <tr key={a.id}>
-                    <td style={{ ...TD, fontWeight: 600, color: "var(--text-strong)" }}>
-                      {a.athleteName}
-                      {a.position && <span style={{ color: "var(--text-muted)", fontWeight: 400 }}> · {a.position}</span>}
-                    </td>
-                    <td style={TD}>{a.ageGroup}</td>
-                    <td style={TD}>{a.parentName}</td>
-                    <td style={TD}>{a.phone}</td>
-                    <td style={{ ...TD, color: a.email ? "var(--text-body)" : "var(--ink-400)" }}>{a.email || "—"}</td>
-                    <td style={{ ...TD, color: "var(--text-muted)" }}>{fmtDate(a.createdAt)}</td>
-                    <td style={TD}>
-                      <ApplicationConsentCell
-                        consents={a.consents.map((c) => ({
-                          documentKey: c.documentKey,
-                          documentTitle: c.documentTitle,
-                          documentVersion: c.documentVersion,
-                          granted: c.granted,
-                          granterName: c.granterName,
-                          granterRelation: c.granterRelation,
-                          channel: c.channel,
-                          textHash: c.textHash,
-                          ipAddress: c.ipAddress,
-                          otpVerified: c.otpVerified,
-                          createdAt: fmtDateTime(c.createdAt),
-                          withdrawnAt: c.withdrawnAt ? fmtDateTime(c.withdrawnAt) : null,
-                        }))}
-                      />
-                    </td>
-                    <td style={TD}>
-                      <ApplicationStatusSelect id={a.id} status={a.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          </div>
-
-          <CardList style={{ padding: 14 }}>
-            {apps.map((a) => (
-              <DataCard key={a.id}>
-                <CardHeader
-                  title={
-                    <>
-                      {a.athleteName}
-                      {a.position && <span style={{ color: "var(--text-muted)", fontWeight: 400 }}> · {a.position}</span>}
-                    </>
-                  }
-                  subtitle={a.ageGroup}
-                  badge={<ApplicationStatusSelect id={a.id} status={a.status} />}
-                />
-                <CardFields
-                  items={[
-                    { label: "Veli", value: a.parentName },
-                    { label: "Telefon", value: a.phone },
-                    { label: "E-posta", value: a.email || "—" },
-                    { label: "Tarih", value: fmtDate(a.createdAt) },
-                  ]}
-                />
-                <CardActions>
-                  <ApplicationConsentCell
-                    consents={a.consents.map((c) => ({
-                      documentKey: c.documentKey,
-                      documentTitle: c.documentTitle,
-                      documentVersion: c.documentVersion,
-                      granted: c.granted,
-                      granterName: c.granterName,
-                      granterRelation: c.granterRelation,
-                      channel: c.channel,
-                      textHash: c.textHash,
-                      ipAddress: c.ipAddress,
-                      otpVerified: c.otpVerified,
-                      createdAt: fmtDateTime(c.createdAt),
-                      withdrawnAt: c.withdrawnAt ? fmtDateTime(c.withdrawnAt) : null,
-                    }))}
-                  />
-                </CardActions>
-              </DataCard>
-            ))}
-          </CardList>
-          </>
+          <BasvurularView apps={rows} />
         )}
       </Panel>
     </>

@@ -4,13 +4,10 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateApplicationStatus } from "@/app/admin/(panel)/basvurular/actions";
 import { Select } from "@/components/ui/Select";
+import { APPLICATION_STATUSES } from "@/lib/applicationStatus";
 
-const OPTIONS = [
-  { value: "new", label: "Yeni" },
-  { value: "contacted", label: "İletişime Geçildi" },
-  { value: "scheduled", label: "Randevu Verildi" },
-  { value: "closed", label: "Kapandı" },
-];
+// Etiketler tek kaynaktan (applicationStatus) — filtre sekmeleri + satır rengiyle uyumlu.
+const OPTIONS = APPLICATION_STATUSES.map((s) => ({ value: s.value, label: s.label }));
 
 export function ApplicationStatusSelect({ id, status }: { id: string; status: string }) {
   const router = useRouter();

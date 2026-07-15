@@ -29,15 +29,15 @@ export function CardEmpty({ children }: { children: ReactNode }) {
 }
 
 /** Tek bir kart — onClick verilirse tıklanabilir buton olur (satır tıklama davranışını korur). */
-export function DataCard({ onClick, children }: { onClick?: () => void; children: ReactNode }) {
+export function DataCard({ onClick, children, style }: { onClick?: () => void; children: ReactNode; style?: React.CSSProperties }) {
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className="adm-card adm-card--clickable">
+      <button type="button" onClick={onClick} className="adm-card adm-card--clickable" style={style}>
         {children}
       </button>
     );
   }
-  return <div className="adm-card">{children}</div>;
+  return <div className="adm-card" style={style}>{children}</div>;
 }
 
 /** Kart üst satırı: birincil kimlik (avatar/thumbnail + başlık + alt başlık) + sağda rozet. */
