@@ -8,6 +8,7 @@ import {
   signSession,
   verifyAdminToken,
   verifyPanelToken,
+  isAdminRole,
   ADMIN_COOKIE,
   PANEL_COOKIE,
   SESSION_MAX_AGE,
@@ -63,7 +64,7 @@ async function isSessionCurrent(s: SessionPayload, portal: "admin" | "panel"): P
   });
   if (!user) return false;
   if ((s.tv ?? 0) !== user.tokenVersion) return false;
-  if (portal === "admin" && user.role !== "admin") return false;
+  if (portal === "admin" && !isAdminRole(user.role)) return false;
   if (portal === "panel" && !user.athleteId) return false;
   return true;
 }
@@ -82,7 +83,7 @@ async function setSessionCookie(cookieName: string, payload: SessionPayload): Pr
 
 /** Admin portal oturumu kurar — yalnız admin rolü. */
 export async function createAdminSession(payload: SessionPayload): Promise<void> {
-  if (payload.role !== "admin") throw new Error("Admin oturumu yalnız admin rolüyle kurulabilir.");
+  if (!isAdminRole(payload.role)) throw new Error("Admin oturumu yalnız admin/owner rolüyle kurulabilir.");
   await setSessionCookie(ADMIN_COOKIE, payload);
 }
 

@@ -2,7 +2,7 @@
 // (jose, jsdom'un cross-realm Uint8Array'ini reddeder; oturum mantığı zaten
 //  sunucu/edge tarafıdır — DOM gerekmez.)
 import { beforeAll, describe, expect, it } from "vitest";
-import { signSession, verifySession, type SessionPayload } from "@/lib/session";
+import { signSession, verifySession, isAdminRole, type SessionPayload } from "@/lib/session";
 
 // Oturum JWT'sinin imzalama/doğrulama turu — güvenliğin kalbi.
 // AUTH_SECRET testte set edilir (session.ts her çağrıda process.env'den okur).
@@ -47,5 +47,21 @@ describe("session", () => {
   it("token'da tv yoksa 0'a düşer (eski token uyumu — zorla çıkış yok)", async () => {
     const token = await signSession(payload); // tv alanı yok
     expect((await verifySession(token))?.tv).toBe(0);
+  });
+});
+
+// Regresyon: RBAC'te admin→owner göçünden sonra owner admin portalına GİREBİLMELİ.
+// Bu kapı yalnız "admin" kabul edince tüm yöneticiler kilitlenmişti — o hata bir daha olmasın.
+describe("isAdminRole (RBAC admin portal kapısı)", () => {
+  it("owner ve admin erişir; athlete/bilinmeyen erişemez (fail-closed)", () => {
+    expect(isAdminRole("owner")).toBe(true);
+    expect(isAdminRole("admin")).toBe(true);
+    expect(isAdminRole("athlete")).toBe(false);
+    expect(isAdminRole("")).toBe(false);
+  });
+
+  it("owner token'ı verifySession'da REDDEDİLMEZ (kilitlenme yok)", async () => {
+    const token = await signSession({ ...payload, role: "owner", athleteId: undefined });
+    expect((await verifySession(token))?.role).toBe("owner");
   });
 });

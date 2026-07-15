@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { createAdminSession, verifyCredentials } from "@/lib/auth";
+import { isAdminRole } from "@/lib/session";
 import { clientIp } from "@/lib/net";
 import { rateLimit } from "@/lib/rate-limit";
 
@@ -28,8 +29,8 @@ export async function loginAction(input: unknown): Promise<LoginResult | void> {
   const session = await verifyCredentials(parsed.data.email, parsed.data.password);
   if (!session) return { error: "Giriş bilgileri hatalı. Lütfen kontrol edin." };
 
-  // Rol kapısı: çerez yalnız admin hesabı için yazılır (portallar tamamen ayrı)
-  if (session.role !== "admin") {
+  // Rol kapısı: çerez admin/owner hesabı için yazılır (portallar tamamen ayrı)
+  if (!isAdminRole(session.role)) {
     return { error: "Bu giriş yöneticiler içindir. Sporcu girişi için panel giriş sayfasını kullanın." };
   }
   await createAdminSession(session);

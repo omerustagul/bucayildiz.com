@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminSession, getPanelSession } from "@/lib/auth";
+import { isAdminRole } from "@/lib/session";
 import { saveUpload } from "@/lib/storage";
 import { rateLimit } from "@/lib/rate-limit";
 
@@ -7,7 +8,7 @@ import { rateLimit } from "@/lib/rate-limit";
 export async function POST(req: Request) {
   // İki portal oturumu da geçerli (admin medya yükler, sporcu avatar/push)
   const session = (await getAdminSession()) ?? (await getPanelSession());
-  const isAdmin = session?.role === "admin";
+  const isAdmin = !!session && isAdminRole(session.role);
   const isAthlete = Boolean(session?.athleteId);
   if (!session || (!isAdmin && !isAthlete)) return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
 

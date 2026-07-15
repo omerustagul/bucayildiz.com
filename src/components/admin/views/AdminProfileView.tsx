@@ -44,7 +44,7 @@ function Info({ label: l, value }: { label: string; value: string }) {
 }
 
 export function AdminProfileView({ name, email, role }: { name: string; email: string; role: string }) {
-  const roleLabel = role === "admin" ? "Yönetici" : "Editör";
+  const roleLabel = role === "owner" ? "Sahip" : "Yönetici";
 
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");

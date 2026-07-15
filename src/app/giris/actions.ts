@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { createPanelSession, verifyCredentials } from "@/lib/auth";
+import { isAdminRole } from "@/lib/session";
 import { clientIp } from "@/lib/net";
 import { rateLimit } from "@/lib/rate-limit";
 
@@ -30,7 +31,7 @@ export async function panelLoginAction(input: unknown): Promise<PanelLoginResult
   if (!session) return { error: "Giriş bilgileri hatalı. Lütfen kontrol edin." };
 
   // Rol kapısı: çerez yalnız sporcu hesabı için yazılır (portallar tamamen ayrı)
-  if (session.role === "admin" || !session.athleteId) {
+  if (isAdminRole(session.role) || !session.athleteId) {
     return { error: "Bu giriş sporcular içindir. Yönetici girişi için yönetim paneli giriş sayfasını kullanın." };
   }
   await createPanelSession(session);

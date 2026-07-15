@@ -36,15 +36,21 @@ export async function signSession(payload: SessionPayload): Promise<string> {
     .sign(secretKey());
 }
 
+/** Admin portalına erişebilen roller: "admin" ve "owner" (RBAC — owner tüm izinlere
+ *  sahip). Panel/sporcu portalı ayrıdır (athlete). Tüm admin-portal kapıları bunu kullanır. */
+export function isAdminRole(role: string): boolean {
+  return role === "admin" || role === "owner";
+}
+
 export async function verifySession(token: string | undefined): Promise<SessionPayload | null> {
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, secretKey());
     if (typeof payload.sub === "string" && typeof payload.email === "string") {
       // Bilinmeyen rolü sessizce "athlete"e DÜŞÜRME — token'ı reddet (fail-closed,
-      // açık). Meşru token'lar yalnız "admin"|"athlete" taşır; diğerleri bozuktur.
+      // açık). Meşru token'lar yalnız "admin"|"owner"|"athlete" taşır; diğerleri bozuktur.
       const role = payload.role;
-      if (role !== "admin" && role !== "athlete") return null;
+      if (role !== "admin" && role !== "owner" && role !== "athlete") return null;
       return {
         sub: payload.sub,
         email: payload.email,
@@ -63,7 +69,7 @@ export async function verifySession(token: string | undefined): Promise<SessionP
 /** Admin çerezinden YALNIZ admin oturumu döner (rol kapısı çerezde de uygulanır). */
 export async function verifyAdminToken(token: string | undefined): Promise<SessionPayload | null> {
   const s = await verifySession(token);
-  return s && s.role === "admin" ? s : null;
+  return s && isAdminRole(s.role) ? s : null;
 }
 
 /** Panel çerezinden YALNIZ sporcu oturumu döner (athleteId zorunlu). */
