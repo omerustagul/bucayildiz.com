@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * Leaflet + OpenStreetMap haritaları (ücretsiz, API-key yok, KVKK-dostu — Google'a
- * veri gitmez). İki kullanım: MapPicker (admin ayarlar — tıkla-seç), LocationMap
+ * Leaflet haritaları — CARTO Positron temel katman, OSM verisi (ücretsiz, API-key
+ * yok, KVKK-dostu — Google'a veri gitmez). İki kullanım: MapPicker (admin ayarlar —
+ * tıkla-seç), LocationMap
  * (/iletisim — statik önizleme, tıklayınca Google Maps'te açılır).
  *
  * Tuzaklar ele alındı:
@@ -24,8 +25,13 @@ const PIN_HTML = `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" st
   <circle cx="12" cy="9" r="2.6" fill="#DDBA4E"/>
 </svg>`;
 
-const TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-const TILE_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+// CARTO Positron — açık/minimal gri temel harita (API-key'siz, KVKK-dostu). Tile'lar
+// CARTO CDN'inden {a,b,c,d} subdomain'leri üzerinden gelir. Attribution hem OSM (veri)
+// hem CARTO (stil) içerir — CARTO kullanım şartı.
+const TILE_URL = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png";
+const TILE_ATTR =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+const TILE_SUB = "abcd";
 
 /** Admin: haritaya tıklayınca marker konur ve (lat,lng) yukarı bildirilir. */
 export function MapPicker({
@@ -56,7 +62,7 @@ export function MapPicker({
       if (cancelled || !el || el._leaflet_id) return;
       const start: [number, number] = lat != null && lng != null ? [lat, lng] : DEFAULT_CENTER;
       map = L.map(el).setView(start, lat != null ? 16 : 13);
-      L.tileLayer(TILE_URL, { attribution: TILE_ATTR, maxZoom: 19 }).addTo(map);
+      L.tileLayer(TILE_URL, { attribution: TILE_ATTR, subdomains: TILE_SUB, maxZoom: 19 }).addTo(map);
       const icon = L.divIcon({ html: PIN_HTML, className: "", iconSize: [30, 30], iconAnchor: [15, 30] });
       let marker: import("leaflet").Marker | null = lat != null && lng != null ? L.marker([lat, lng], { icon }).addTo(map) : null;
       map.on("click", (e: import("leaflet").LeafletMouseEvent) => {
@@ -107,7 +113,7 @@ export function LocationMap({ lat, lng, height = 300 }: { lat: number; lng: numb
         touchZoom: false,
         keyboard: false,
       });
-      L.tileLayer(TILE_URL, { attribution: TILE_ATTR, maxZoom: 19 }).addTo(map);
+      L.tileLayer(TILE_URL, { attribution: TILE_ATTR, subdomains: TILE_SUB, maxZoom: 19 }).addTo(map);
       const icon = L.divIcon({ html: PIN_HTML, className: "", iconSize: [30, 30], iconAnchor: [15, 30] });
       L.marker([lat, lng], { icon }).addTo(map);
     })();
