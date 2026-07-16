@@ -4,10 +4,12 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateApplicationStatus } from "@/app/admin/(panel)/basvurular/actions";
 import { Select } from "@/components/ui/Select";
-import { APPLICATION_STATUSES } from "@/lib/applicationStatus";
+import { MANUAL_APPLICATION_STATUSES } from "@/lib/applicationStatus";
 
 // Etiketler tek kaynaktan (applicationStatus) — filtre sekmeleri + satır rengiyle uyumlu.
-const OPTIONS = APPLICATION_STATUSES.map((s) => ({ value: s.value, label: s.label }));
+// Sistem-yazımlı durumlar (ör. "Kayıtlandı") LİSTEDE YOK: onları yalnız dönüşüm
+// aksiyonu koyar; elle seçilebilseydi sporcu yokken "Kayıtlandı" görünürdü.
+const OPTIONS = MANUAL_APPLICATION_STATUSES.map((s) => ({ value: s.value, label: s.label }));
 
 export function ApplicationStatusSelect({ id, status }: { id: string; status: string }) {
   const router = useRouter();
