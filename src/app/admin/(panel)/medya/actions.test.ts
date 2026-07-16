@@ -7,6 +7,7 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 const H = vi.hoisted(() => ({
   created: [] as Array<Record<string, unknown>>,
   deleted: [] as string[],
+  assets: [] as Array<Record<string, unknown>>,
   maxSort: 3,
   requireAdmin: vi.fn(async () => ({ role: "admin", sub: "u1", name: "A", email: "" })),
   requirePermission: vi.fn(async () => ({ role: "admin", sub: "u1", name: "A", email: "" })),
@@ -26,16 +27,39 @@ vi.mock("@/lib/prisma", () => ({
       }),
       aggregate: vi.fn(async () => ({ _max: { sort: H.maxSort } })),
     },
+    mediaAsset: {
+      create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
+        H.assets.push(data);
+        return { id: "asset1", ...data };
+      }),
+    },
+    folder: { findUnique: vi.fn(async () => null) },
   },
 }));
 
-import { createHomeCard, deleteHomeCard } from "./actions";
+import { createHomeCard, deleteHomeCard, createMediaAsset } from "./actions";
 
 beforeEach(() => {
   H.created = [];
   H.deleted = [];
+  H.assets = [];
   H.requireAdmin.mockClear();
   H.requirePermission.mockClear();
+});
+
+describe("createMediaAsset — URL allowlist", () => {
+  it("kendi depolamamızdan (/uploads/) medya kaydedilir", async () => {
+    const r = await createMediaAsset({ url: "/uploads/foto.webp", categoryId: "cat1", kind: "photo" });
+    expect(r).toEqual({ ok: true });
+    expect(H.assets).toHaveLength(1);
+    expect(H.assets[0].url).toBe("/uploads/foto.webp");
+  });
+
+  it("keyfi HARİCİ medya URL'i REDDEDİLİR (KVKK: MediaAsset.url ham <img>/<video> ile render edilir → next/image allowlist'ini baypas edip ziyaretçi IP'sini sızdırırdı)", async () => {
+    const r = await createMediaAsset({ url: "https://evil.example/pixel.gif", categoryId: "cat1", kind: "photo" });
+    expect(r).toMatchObject({ ok: false });
+    expect(H.assets).toHaveLength(0);
+  });
 });
 
 describe("createHomeCard — yetki + URL allowlist + boş durum", () => {

@@ -71,6 +71,12 @@ export async function createMediaAsset(input: unknown): Promise<MediaResult> {
   const parsed = assetSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Geçersiz veri." };
   const d = parsed.data;
+  // Yalnız KENDİ depomuz (bkz. createHomeCard:187 — aynı kural). Server action'lar
+  // doğrudan çağrılabilir POST uçlarıdır; UI hep /api/upload çıktısı geçirse de bu
+  // aşılabilir. Önemli: MediaAsset.url ham <img>/<video> ile render edilir
+  // (MediaGallery/MediaViewer) → next/image allowlist'ini BAYPAS eder; harici URL
+  // ziyaretçinin tarayıcısından çekilir ve IP/Referer'ını üçüncü tarafa sızdırır (KVKK).
+  if (!isOwnStorageUrl(d.url)) return { ok: false, error: "Geçersiz medya adresi." };
 
   // Kategori kuralı: klasör bir kategoriye bağlıysa medya onu devralır — istemciden
   // gelen categoryId'ye güvenme, klasörünkiyle EZ. Klasör bağlı değilse (kök yükleme

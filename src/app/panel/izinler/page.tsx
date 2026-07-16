@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getPanelSession } from "@/lib/auth";
+import { requireAthlete } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveConsentDocuments } from "@/lib/consent.server";
 import { ConsentManager, type ConsentItem } from "@/components/panel/ConsentManager";
@@ -11,8 +11,9 @@ function fmt(d: Date) {
 }
 
 export default async function IzinlerPage() {
-  const session = await getPanelSession();
-  const athleteId = session!.athleteId!;
+  // requireAthlete: oturum bayatsa (şifre değişimi vb.) 500 yerine /giris'e yönlendirir.
+  const session = await requireAthlete();
+  const athleteId = session.athleteId!;
 
   const [docs, records] = await Promise.all([
     getActiveConsentDocuments(),

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/auth";
+import { isOwnStorageUrl } from "@/lib/storage";
 import { POST_TEMPLATE_IDS } from "@/lib/enums";
 
 const schema = z.object({
@@ -17,7 +18,13 @@ const schema = z.object({
   category: z.string().trim().max(40).optional().or(z.literal("")),
   template: z.enum(POST_TEMPLATE_IDS).default("standart"),
   status: z.enum(["draft", "published", "scheduled"]).default("draft"),
-  coverUrl: z.string().trim().refine((v) => !v || /^(https?:\/\/|\/)/.test(v), "Geçersiz URL.").nullable().optional(),
+  // Kapak yalnız KENDİ depomuzdan (medya alanındaki kuralla aynı — bkz.
+  // medya/actions.ts createHomeCard). Şema seviyesinde: createPost ve updatePost
+  // aynı şemayı kullandığı için ikisi de kapsanır.
+  coverUrl: z.string().trim()
+    .refine((v) => !v || /^(https?:\/\/|\/)/.test(v), "Geçersiz URL.")
+    .refine((v) => !v || isOwnStorageUrl(v), "Kapak görseli yalnız kendi medya kütüphanenizden seçilebilir.")
+    .nullable().optional(),
   excerpt: z.string().trim().max(400).optional().or(z.literal("")),
   body: z.string().trim().max(20000).optional().or(z.literal("")),
   templateData: z.string().max(20000).default("{}"),

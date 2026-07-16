@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getPanelSession } from "@/lib/auth";
+import { requireAthlete } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AthleteCard } from "@/components/panel/AthleteCard";
 import { TrainingCalendar, type CalFixture, type CalTraining } from "@/components/panel/TrainingCalendar";
@@ -19,9 +19,14 @@ function fmtShortDate(ymd: string) {
 export const metadata: Metadata = { title: "Genel Bakış — Sporcu Paneli" };
 
 export default async function PanelDashboard() {
-  const session = await getPanelSession();
+  // requireAthlete: oturum güncel DEĞİLSE (şifre değişimi → tokenVersion, kullanıcı
+  // silinmiş vb.) /giris'e yönlendirir. Eski `getPanelSession()! ` deseni bu durumda
+  // 500 atıyordu: middleware yalnız EDGE'de JWT imzasına bakar (DB'ye bakmaz), sayfa
+  // ise DB kontrolüyle null alırdı; layout'un redirect'i de yetişmez çünkü Next
+  // layout ile page'i PARALEL render eder → page'in TypeError'ı redirect'i yener.
+  const session = await requireAthlete();
   const athlete = await prisma.athlete.findUnique({
-    where: { id: session!.athleteId! },
+    where: { id: session.athleteId! },
     include: { team: true, measurements: { orderBy: { measuredAt: "asc" } } },
   });
   if (!athlete) return null;

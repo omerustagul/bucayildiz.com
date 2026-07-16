@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { getPanelSession } from "@/lib/auth";
+import { requireAthlete } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AssignmentsPanelView, type PanelAssignment } from "@/components/panel/AssignmentsPanelView";
 
 export const metadata: Metadata = { title: "Mesajlar — Sporcu Paneli" };
 
 export default async function PanelMesajlar() {
-  const session = await getPanelSession();
-  const athleteId = session!.athleteId!;
+  // requireAthlete: oturum bayatsa (şifre değişimi vb.) 500 yerine /giris'e yönlendirir.
+  const session = await requireAthlete();
+  const athleteId = session.athleteId!;
 
   const rawAssignments = await prisma.athleteAssignment.findMany({
     where: { athleteId },

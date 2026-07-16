@@ -22,9 +22,30 @@ export type SessionPayload = {
   tv?: number;
 };
 
+/** HS256 SİMETRİKtir: anahtar zayıfsa çevrimdışı brute-force ile GEÇERLİ admin
+ *  token'ı üretilebilir (tam hesap devralma). jose bu konuda korumaz — HS* yolunda
+ *  anahtar uzunluğu HİÇ kontrol edilmez (uzunluk kapısı yalnız RSA'da var) → kapı burada.
+ *  `openssl rand -hex 32` 64 karakter üretir; 32 güvenli alt sınırdır. */
+const MIN_SECRET_LENGTH = 32;
+
+/** Depoda AÇIKÇA duran örnek değerler — sır DEĞİLdirler. Uzunluk kapısını geçebildikleri
+ *  için (placeholder 33, dev varsayılanı 48 karakter) ayrıca reddedilirler. Yalnız
+ *  ÜRETİMde: yerel geliştirme .env.example varsayılanıyla çalışmaya devam etsin. */
+const PUBLIC_EXAMPLE_SECRETS = new Set([
+  "dev-secret-change-in-production-0a1b2c3d4e5f6071", // .env.example
+  "BURAYA_OPENSSL_RAND_HEX_32_DEGERI", // .env.production.example
+]);
+
 function secretKey() {
   const secret = process.env.AUTH_SECRET;
   if (!secret) throw new Error("AUTH_SECRET tanımlı değil.");
+  if (secret.length < MIN_SECRET_LENGTH) {
+    // Yalnız UZUNLUK yazılır — değerin kendisi asla log'a/hataya girmez.
+    throw new Error(`AUTH_SECRET çok kısa (${secret.length} karakter) — en az ${MIN_SECRET_LENGTH} olmalı. Üretin: openssl rand -hex 32`);
+  }
+  if (process.env.NODE_ENV === "production" && PUBLIC_EXAMPLE_SECRETS.has(secret)) {
+    throw new Error("AUTH_SECRET depodaki ÖRNEK değerde — herkese açık olduğu için sır değil. Üretimde kendi değerinizi koyun: openssl rand -hex 32");
+  }
   return new TextEncoder().encode(secret);
 }
 

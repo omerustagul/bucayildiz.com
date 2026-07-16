@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getPanelSession } from "@/lib/auth";
+import { requireAthlete } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasHealthConsent } from "@/lib/consent.server";
 import { NutritionPanelView, type PanelPlan, type PanelMealLog } from "@/components/panel/NutritionPanelView";
@@ -24,8 +24,9 @@ function daysAgo(dateStr: string, n: number): string {
 }
 
 export default async function PanelBeslenme() {
-  const session = await getPanelSession();
-  const athleteId = session!.athleteId!;
+  // requireAthlete: oturum bayatsa (şifre değişimi vb.) 500 yerine /giris'e yönlendirir.
+  const session = await requireAthlete();
+  const athleteId = session.athleteId!;
 
   const todayYmd = todayStr();
   const windowStart = daysAgo(todayYmd, 30);

@@ -1,7 +1,7 @@
 // @vitest-environment node
 // (jose, jsdom'un cross-realm Uint8Array'ini reddeder; oturum mantığı zaten
 //  sunucu/edge tarafıdır — DOM gerekmez.)
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { signSession, verifySession, isAdminRole, type SessionPayload } from "@/lib/session";
 
 // Oturum JWT'sinin imzalama/doğrulama turu — güvenliğin kalbi.
@@ -18,6 +18,38 @@ const payload: SessionPayload = {
   name: "Arda Yılmaz",
   athleteId: "ath-1",
 };
+
+// AUTH_SECRET kapısı — HS256 SİMETRİK olduğu için zayıf anahtar = token forge =
+// tam hesap devralma. jose HS* yolunda uzunluk KONTROL ETMEZ, kapı bizde.
+describe("AUTH_SECRET kapısı", () => {
+  const GOOD = "test-secret-0123456789abcdef0123456789abcdef";
+  afterEach(() => {
+    process.env.AUTH_SECRET = GOOD; // diğer testler bozulmasın
+  });
+
+  it("32 karakterden KISA secret reddedilir (brute-force'a açık)", async () => {
+    process.env.AUTH_SECRET = "kisa-secret";
+    await expect(signSession(payload)).rejects.toThrow(/en az 32/i);
+  });
+
+  it("tam 32 karakter kabul edilir (sınır)", async () => {
+    process.env.AUTH_SECRET = "a".repeat(32);
+    await expect(signSession(payload)).resolves.toBeTypeOf("string");
+  });
+
+  it("AUTH_SECRET yoksa reddedilir", async () => {
+    delete (process.env as Record<string, string | undefined>).AUTH_SECRET;
+    await expect(signSession(payload)).rejects.toThrow(/tanımlı değil/i);
+  });
+
+  it("hata mesajı secret DEĞERİNİ sızdırmaz (yalnız uzunluk)", async () => {
+    const gizli = "cok-gizli-kisa";
+    process.env.AUTH_SECRET = gizli;
+    await expect(signSession(payload)).rejects.toThrow(
+      expect.objectContaining({ message: expect.not.stringContaining(gizli) }),
+    );
+  });
+});
 
 describe("session", () => {
   it("imzalanan token aynı payload'a çözülür", async () => {

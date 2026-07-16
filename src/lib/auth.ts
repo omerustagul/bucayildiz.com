@@ -175,7 +175,7 @@ export async function getAdminPermissions(): Promise<{ role: string; permissions
  */
 export async function requireOwner(): Promise<SessionPayload> {
   const s = await requireAdmin();
-  const user = await prisma.user.findUnique({ where: { id: s.sub }, select: { role: true } });
+  const user = await getCurrentUser(s.sub);
   if (user?.role !== "owner") redirect("/admin");
   return s;
 }
