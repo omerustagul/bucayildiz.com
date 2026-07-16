@@ -32,6 +32,8 @@ model Application {
   createdAt        DateTime @default(now())
 
   consents ConsentRecord[]
+  /// Bu başvurudan oluşturulan sporcu (varsa) — dönüşüm sonrası 1:1.
+  athlete  Athlete?
 
   @@index([status])
   @@index([createdAt])
@@ -119,6 +121,12 @@ model Athlete {
   birthYear   Int? // (kullanımdan kalktı — birthDate'e taşındı)
   birthDate   String? // "YYYY-MM-DD"
   parentPhone String?
+  /// Bu sporcu hangi başvurudan oluşturuldu (varsa) — admin'in elle yarattığında null.
+  /// @unique: bir başvurudan EN FAZLA bir sporcu (mükerrer dönüşüm DB'de engellenir).
+  /// Bağ, başvuruda verilen KVKK rızalarının (ConsentRecord) sporcuya taşınmasının
+  /// soykütüğüdür — bkz. docs/superpowers/specs/2026-07-16-basvuru-sporcu-donusumu-design.md
+  applicationId String?      @unique
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
   user         User?
   measurements PerformanceMeasurement[]
   consents     ConsentRecord[]
