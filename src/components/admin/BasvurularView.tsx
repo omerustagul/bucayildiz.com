@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApplicationStatusSelect } from "@/components/admin/ApplicationStatusSelect";
@@ -12,9 +12,11 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
 import { APPLICATION_STATUSES, applicationStatusMeta } from "@/lib/applicationStatus";
-import { createAthleteFromApplication } from "@/app/admin/(panel)/basvurular/actions";
+import { createAthleteFromApplication, linkAthleteToApplication, unlinkAthleteFromApplication } from "@/app/admin/(panel)/basvurular/actions";
 
 export type TeamOption = { id: string; name: string };
+/** Hiçbir başvuruya bağlı OLMAYAN sporcular — "mevcut sporcuya bağla" seçicisi. */
+export type UnlinkedAthlete = { id: string; name: string; birthDate: string | null; teamName: string };
 
 /** Sayfadan (server) gelen düzleştirilmiş, serileştirilebilir başvuru satırı. */
 export type ApplicationRow = {
@@ -136,27 +138,164 @@ function ConvertModal({ app, teams, onClose }: { app: ApplicationRow; teams: Tea
   );
 }
 
-/** Satır/kartta: dönüşmüşse sporcuya link, değilse (ve yetki varsa) eylem. */
-function ConvertCell({ app, teams, canConvert }: { app: ApplicationRow; teams: TeamOption[]; canConvert: boolean }) {
-  const [open, setOpen] = useState(false);
+/** Mevcut (bağsız) sporcuyu bu başvuruya bağlama. Yanlış bağlama = sporcu BAŞKA
+ *  çocuğun velisinin rızasını devralır → adı eşleşenleri üste al, uyuşmazlıkta UYAR
+ *  (bloklama: ad varyasyonu meşru olabilir, ama yönetici bilerek onaylasın). */
+function LinkModal({ app, athletes, onClose }: { app: ApplicationRow; athletes: UnlinkedAthlete[]; onClose: () => void }) {
+  const router = useRouter();
+  const [athleteId, setAthleteId] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const norm = (s: string) => s.trim().toLocaleLowerCase("tr");
+  // Adı eşleşenler ÜSTTE (tam eşleşme → içeren → diğerleri), sonra alfabetik.
+  const sorted = useMemo(() => {
+    const target = norm(app.athleteName);
+    const score = (n: string) => (norm(n) === target ? 0 : norm(n).includes(target) || target.includes(norm(n)) ? 1 : 2);
+    return [...athletes].sort((a, b) => score(a.name) - score(b.name) || a.name.localeCompare(b.name, "tr"));
+  }, [athletes, app.athleteName]);
+
+  const selected = sorted.find((a) => a.id === athleteId);
+  // Uyuşmazlık sinyalleri — doğum tarihi çoğu sporcuda YOK, o yüzden ad da kontrol edilir.
+  const adUyusmuyor = !!selected && norm(selected.name) !== norm(app.athleteName);
+  const dogumUyusmuyor = !!selected && !!selected.birthDate && selected.birthDate !== app.birthDate;
+
+  const submit = () => {
+    setError(null);
+    startTransition(async () => {
+      const res = await linkAthleteToApplication(app.id, athleteId);
+      if (res.ok) { onClose(); router.refresh(); } else setError(res.error);
+    });
+  };
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title="Mevcut Sporcuya Bağla"
+      footer={
+        <>
+          <Button variant="ghost" size="sm" onClick={onClose} disabled={pending}>İptal</Button>
+          <Button variant="primary" size="sm" onClick={submit} disabled={pending || !athleteId}>
+            {pending ? "Bağlanıyor…" : "Bağla"}
+          </Button>
+        </>
+      }
+    >
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ fontSize: 13, color: "var(--ink-700)", lineHeight: 1.5 }}>
+          <strong>{app.athleteName}</strong> ({app.birthDate}) başvurusunun KVKK rızaları, seçtiğiniz sporcuya bağlanacak.
+        </div>
+
+        <Select
+          label="Sporcu"
+          required
+          placeholder="Sporcu seç"
+          options={sorted.map((a) => ({ value: a.id, label: `${a.name} — ${a.teamName}${a.birthDate ? ` (${a.birthDate})` : ""}` }))}
+          value={athleteId}
+          onChange={(e) => setAthleteId(e.target.value)}
+          hint="Yalnız hiçbir başvuruya bağlı olmayan sporcular listelenir; adı eşleşenler üstte."
+        />
+
+        {(adUyusmuyor || dogumUyusmuyor) && (
+          <div style={{ display: "flex", gap: 9, padding: "10px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--gold-500)", background: "rgba(201,162,39,0.08)", fontSize: 12.5, lineHeight: 1.45, color: "var(--ink-800)" }}>
+            <span style={{ flex: "none", display: "inline-flex", color: "var(--gold-700)" }}><Icon name="alert-triangle" size={16} /></span>
+            <span style={{ minWidth: 0 }}>
+              <strong>Bilgiler uyuşmuyor</strong> — {adUyusmuyor && <>ad: “{selected?.name}” ≠ “{app.athleteName}”{dogumUyusmuyor && "; "}</>}
+              {dogumUyusmuyor && <>doğum: {selected?.birthDate} ≠ {app.birthDate}</>}. Yanlış sporcuya bağlarsanız <strong>başka bir çocuğun velisinin rızası</strong> bu sporcuya geçer. Emin değilseniz bağlamayın.
+            </span>
+          </div>
+        )}
+
+        {error && (
+          <div style={{ padding: "10px 12px", borderRadius: "var(--radius-md)", background: "var(--amber-100)", border: "1px solid var(--amber-600)", fontSize: 13, color: "var(--ink-800)" }}>{error}</div>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+/** Bağlantıyı geri alma onayı — yanlış bağlamanın telafisi. */
+function UnlinkModal({ app, onClose }: { app: ApplicationRow; onClose: () => void }) {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const submit = () => {
+    setError(null);
+    startTransition(async () => {
+      const res = await unlinkAthleteFromApplication(app.id);
+      if (res.ok) { onClose(); router.refresh(); } else setError(res.error);
+    });
+  };
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title="Bağlantıyı Kaldır"
+      footer={
+        <>
+          <Button variant="ghost" size="sm" onClick={onClose} disabled={pending}>Vazgeç</Button>
+          <Button variant="danger" size="sm" onClick={submit} disabled={pending}>
+            {pending ? "Kaldırılıyor…" : "Bağlantıyı Kaldır"}
+          </Button>
+        </>
+      }
+    >
+      <div style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--ink-700)" }}>
+        <p style={{ margin: "0 0 10px" }}>
+          <strong>{app.athlete?.name}</strong> ile <strong>{app.athleteName}</strong> başvurusu arasındaki bağ kaldırılacak.
+        </p>
+        <p style={{ margin: "0 0 10px" }}>
+          Başvurunun rıza kayıtları <strong>silinmez</strong> — yalnız sporcu bağı çözülür (denetim izi durur).
+          Sporcunun kendi panelinden verdiği rızalar etkilenmez.
+        </p>
+        <p style={{ margin: 0, color: "var(--ink-600)" }}>
+          Sonuç: bu rızalara dayanan <strong>fotoğraf public kadrodan kalkar</strong>; başvuru “İletişime Geçildi” durumuna döner.
+        </p>
+        {error && (
+          <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: "var(--radius-md)", background: "var(--amber-100)", border: "1px solid var(--amber-600)", fontSize: 13, color: "var(--ink-800)" }}>{error}</div>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+/** Satır/kartta: dönüşmüşse sporcuya link + geri alma, değilse (ve yetki varsa) eylemler. */
+function ConvertCell({ app, teams, canConvert, unlinkedAthletes }: { app: ApplicationRow; teams: TeamOption[]; canConvert: boolean; unlinkedAthletes: UnlinkedAthlete[] }) {
+  const [open, setOpen] = useState<null | "convert" | "link" | "unlink">(null);
 
   if (app.athlete) {
     return (
-      <Link href="/admin/sporcular" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "var(--navy-700)", textDecoration: "none", minWidth: 0 }}>
-        <Icon name="user-round" size={14} />
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.athlete.name}</span>
-      </Link>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+        <Link href="/admin/sporcular" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "var(--navy-700)", textDecoration: "none", minWidth: 0 }}>
+          <Icon name="user-round" size={14} />
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.athlete.name}</span>
+        </Link>
+        {canConvert && (
+          <Button variant="ghost" size="sm" onClick={() => setOpen("unlink")} aria-label="Bağlantıyı kaldır" title="Bağlantıyı kaldır">
+            <Icon name="x" size={14} />
+          </Button>
+        )}
+        {open === "unlink" && <UnlinkModal app={app} onClose={() => setOpen(null)} />}
+      </span>
     );
   }
   if (!canConvert) return <span style={{ color: "var(--ink-400)", fontSize: 13 }}>—</span>;
 
   return (
-    <>
-      <Button variant="secondary" size="sm" onClick={() => setOpen(true)} leftIcon={<Icon name="user-round" size={14} />}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+      <Button variant="secondary" size="sm" onClick={() => setOpen("convert")} leftIcon={<Icon name="user-round" size={14} />}>
         Sporcu Oluştur
       </Button>
-      {open && <ConvertModal app={app} teams={teams} onClose={() => setOpen(false)} />}
-    </>
+      {/* Mevcut sporcuyu bu başvuruya bağla — elle yaratılmış, rızasız sporcular için */}
+      <Button variant="ghost" size="sm" onClick={() => setOpen("link")} title="Mevcut sporcuya bağla">
+        Bağla
+      </Button>
+      {open === "convert" && <ConvertModal app={app} teams={teams} onClose={() => setOpen(null)} />}
+      {open === "link" && <LinkModal app={app} athletes={unlinkedAthletes} onClose={() => setOpen(null)} />}
+    </span>
   );
 }
 
@@ -166,7 +305,7 @@ function ConvertCell({ app, teams, canConvert }: { app: ApplicationRow; teams: T
  * Durum meta'sı (etiket + renk) tek kaynaktan: lib/applicationStatus.
  * 2026-07-16: başvurudan sporcu oluşturma (KVKK rıza taşıma) eylemi.
  */
-export function BasvurularView({ apps, teams, canConvert }: { apps: ApplicationRow[]; teams: TeamOption[]; canConvert: boolean }) {
+export function BasvurularView({ apps, teams, canConvert, unlinkedAthletes }: { apps: ApplicationRow[]; teams: TeamOption[]; canConvert: boolean; unlinkedAthletes: UnlinkedAthlete[] }) {
   const [filter, setFilter] = useState<string>("all");
 
   // Durum sayaçları — sekmelerde canlı gösterilir.
@@ -258,7 +397,7 @@ export function BasvurularView({ apps, teams, canConvert }: { apps: ApplicationR
                           <ApplicationStatusSelect id={a.id} status={a.status} />
                         </td>
                         <td style={TD}>
-                          <ConvertCell app={a} teams={teams} canConvert={canConvert} />
+                          <ConvertCell app={a} teams={teams} canConvert={canConvert} unlinkedAthletes={unlinkedAthletes} />
                         </td>
                       </tr>
                     );
@@ -294,7 +433,7 @@ export function BasvurularView({ apps, teams, canConvert }: { apps: ApplicationR
                   />
                   <CardActions>
                     <ApplicationConsentCell consents={a.consents} />
-                    <ConvertCell app={a} teams={teams} canConvert={canConvert} />
+                    <ConvertCell app={a} teams={teams} canConvert={canConvert} unlinkedAthletes={unlinkedAthletes} />
                   </CardActions>
                 </DataCard>
               );

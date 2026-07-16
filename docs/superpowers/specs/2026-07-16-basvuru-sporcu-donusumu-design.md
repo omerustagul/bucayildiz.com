@@ -122,11 +122,46 @@ bile sporcu ve rıza kayıtları yaşamaya devam eder.
 - **C — UI:** başvurular ekranında eylem + form + dönüştürülmüş durum görünümü;
   tarayıcıda görsel doğrulama.
 
-## Kapsam dışı (bilinçli)
+## EK (2026-07-16, kullanıcı onaylı): Mevcut sporcuyu geçmiş başvuruya bağlama
 
-- **Mevcut sporcuyu geçmiş başvuruya bağlama** ("ilişkilendir" akışı). Prod'daki
-  4 sporcunun rıza kaydı yok; bu özellik yalnız BUNDAN SONRAKİ dönüşümleri kapsar.
-  Gerekirse ayrı iş.
+Dönüşüm yalnız BUNDAN SONRAKİ başvuruları kapsıyordu; admin'in ELLE yarattığı
+mevcut sporcuların rıza kaydı yok (fotoğrafları public'te görünmez). Bu ek, mevcut
+bir sporcuyu geçmiş başvurusuna bağlayıp rızaları ona taşır.
+
+**Risk (tasarımı belirleyen):** yanlış başvuruya bağlamak = sporcu **BAŞKA bir
+çocuğun velisinin** rızasını devralır ve fotoğrafı ona dayanarak yayımlanır —
+gerçek bir KVKK ihlali. **Otomatik doğrulama zayıf:** ölçüldü, bağsız 12 sporcunun
+yalnız 1'inde `birthDate` var → doğum tarihi eşleştirmesi güvenilmez. Bu yüzden
+**geri alma (unlink) ZORUNLU** (kullanıcı onaylı).
+
+**`linkAthleteToApplication(applicationId, athleteId)`**
+- Yetki: `basvurular.manage` + `sporcular.manage` (dönüşümle aynı).
+- Kapılar: başvuru zaten bağlıysa RED; sporcu zaten bir başvuruya bağlıysa RED
+  (`@unique` son kapı, P2002 dostane mesaja çevrilir).
+- TEK transaction: `athlete.applicationId = app.id` → `consentRecord.updateMany
+  ({ where: { applicationId } }, { athleteId })` → `application.status = "registered"`.
+- Sporcunun ALANLARI (ad/doğum/telefon) **EZİLMEZ** — sporcu verisi authoritative;
+  bu işlem yalnız RIZA bağıdır.
+- Sporcunun panelden verdiği mevcut rızalarla çakışma YOK: başvuru satırları daha
+  ESKİdir, "en yeni kayıt kazanır" kuralı gereği panel kaydı geçerli kalır.
+
+**`unlinkAthleteFromApplication(applicationId)`** — simetrik geri alma
+- TEK transaction: `consentRecord.updateMany({ where: { applicationId } },
+  { athleteId: null })` → `athlete.applicationId = null` → `application.status`
+  **"contacted"**e döner (sporcu yokken "Kayıtlandı" kalırsa durum yalan söyler;
+  önceki durum saklanmadığı için nötr "İletişime Geçildi"ye dönülür, admin
+  select'ten ayarlayabilir).
+- Rıza satırları **SİLİNMEZ** — yalnız `athleteId` boşalır; `applicationId` ve tüm
+  denetim izi (an/IP/UA/hash/sürüm/veli) durur. Yani başvurunun rıza geçmişi bozulmaz.
+- Sporcunun KENDİ (panelden verdiği) rızaları etkilenmez: onların `applicationId`'si
+  null olduğu için `where: { applicationId }` filtresine girmezler.
+
+**UI:** başvuru satırında — bağlı değilse `[Sporcu Oluştur]` + `[Bağla]`; bağlıysa
+sporcu linki + geri alma. Seçicide yalnız **bağsız** sporcular (ad + takım + varsa
+doğum tarihi), **adı eşleşenler ÜSTTE**; ad/doğum uyuşmazlığında UYARI (bloklamaz —
+ad varyasyonu meşru olabilir, ama yönetici bilerek onaylasın). Geri alma onay ister.
+
+## Kapsam dışı (bilinçli)
 - **Dönüşümde panel hesabı provision** — mevcut `sporcular` ekranındaki akış kullanılır.
 - **Aynı ad + doğum tarihli mükerrer sporcu uyarısı** (DB'de zorlanamaz; soft kontrol
   ileride).

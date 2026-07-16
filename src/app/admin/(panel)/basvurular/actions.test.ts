@@ -9,8 +9,15 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const H = vi.hoisted(() => ({
   app: null as Record<string, unknown> | null,
+  athlete: null as Record<string, unknown> | null,
   // committed store — yalnız transaction başarıyla dönerse dolar
-  store: { athletes: [] as Record<string, unknown>[], consentUpdates: [] as Record<string, unknown>[], statuses: [] as string[] },
+  store: {
+    athletes: [] as Record<string, unknown>[],
+    athleteUpdates: [] as Record<string, unknown>[],
+    consentUpdates: [] as Record<string, unknown>[],
+    consentDeletes: [] as Record<string, unknown>[],
+    statuses: [] as string[],
+  },
   failConsentUpdate: false,
   requirePermission: vi.fn(async (key: string) => ({ role: "admin", sub: "u1", name: "Admin", email: "", perm: key })),
   audit: vi.fn(async () => ({})),
@@ -25,11 +32,18 @@ vi.mock("next/headers", () => ({ headers: async () => new Map([["x-forwarded-for
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     application: { findUnique: async () => H.app },
+    athlete: { findUnique: async () => H.athlete },
     adminAuditLog: { create: H.audit },
     // Gerçekçi atomiklik: cb stage'e yazar; throw ederse stage ATILIR (rollback).
     $transaction: async (cb: (tx: unknown) => Promise<unknown>) => {
       H.txSpy();
-      const stage = { athletes: [] as Record<string, unknown>[], consentUpdates: [] as Record<string, unknown>[], statuses: [] as string[] };
+      const stage = {
+        athletes: [] as Record<string, unknown>[],
+        athleteUpdates: [] as Record<string, unknown>[],
+        consentUpdates: [] as Record<string, unknown>[],
+        consentDeletes: [] as Record<string, unknown>[],
+        statuses: [] as string[],
+      };
       const tx = {
         athlete: {
           create: async ({ data }: { data: Record<string, unknown> }) => {
@@ -37,12 +51,21 @@ vi.mock("@/lib/prisma", () => ({
             stage.athletes.push(row);
             return row;
           },
+          update: async (args: Record<string, unknown>) => {
+            stage.athleteUpdates.push(args);
+            return {};
+          },
         },
         consentRecord: {
           updateMany: async (args: Record<string, unknown>) => {
             if (H.failConsentUpdate) throw new Error("consent update patladı");
             stage.consentUpdates.push(args);
             return { count: 2 };
+          },
+          // Rıza satırı SİLİNMEMELİ — çağrılırsa testler yakalasın diye kaydediyoruz.
+          deleteMany: async (args: Record<string, unknown>) => {
+            stage.consentDeletes.push(args);
+            return { count: 0 };
           },
         },
         application: {
@@ -54,14 +77,16 @@ vi.mock("@/lib/prisma", () => ({
       };
       const r = await cb(tx);
       H.store.athletes.push(...stage.athletes);
+      H.store.athleteUpdates.push(...stage.athleteUpdates);
       H.store.consentUpdates.push(...stage.consentUpdates);
+      H.store.consentDeletes.push(...stage.consentDeletes);
       H.store.statuses.push(...stage.statuses);
       return r;
     },
   },
 }));
 
-import { createAthleteFromApplication } from "./actions";
+import { createAthleteFromApplication, linkAthleteToApplication, unlinkAthleteFromApplication } from "./actions";
 
 const APP = {
   id: "app-1",
@@ -76,7 +101,8 @@ const INPUT = { teamId: "team-1", number: 7 };
 
 beforeEach(() => {
   H.app = { ...APP };
-  H.store = { athletes: [], consentUpdates: [], statuses: [] };
+  H.athlete = null;
+  H.store = { athletes: [], athleteUpdates: [], consentUpdates: [], consentDeletes: [], statuses: [] };
   H.failConsentUpdate = false;
   H.requirePermission.mockClear();
   H.audit.mockClear();
@@ -173,5 +199,74 @@ describe("createAthleteFromApplication — KVKK rıza taşıma + atomiklik", () 
     const res = await createAthleteFromApplication("app-1", { teamId: "", number: 7 });
     expect(res).toMatchObject({ ok: false });
     expect(H.store.athletes).toHaveLength(0);
+  });
+});
+
+// --- EK: mevcut sporcuyu geçmiş başvuruya bağlama + geri alma ---
+// Risk: yanlış bağlama = sporcu BAŞKA çocuğun velisinin rızasını devralır ve fotoğrafı
+// ona dayanarak yayımlanır → geri alma (unlink) simetrik ve kayıpsız olmalı.
+describe("linkAthleteToApplication / unlinkAthleteFromApplication", () => {
+  it("bağlama: rızalar sporcuya bağlanır, sporcu başvuruya işaretlenir, durum 'registered'", async () => {
+    H.athlete = { id: "ath-1", name: "Kerem Yıldız", applicationId: null };
+    const res = await linkAthleteToApplication("app-1", "ath-1");
+    expect(res).toMatchObject({ ok: true });
+    expect(H.store.consentUpdates[0]).toEqual({ where: { applicationId: "app-1" }, data: { athleteId: "ath-1" } });
+    expect(H.store.athleteUpdates[0]).toEqual({ where: { id: "ath-1" }, data: { applicationId: "app-1" } });
+    expect(H.store.statuses).toEqual(["registered"]);
+  });
+
+  it("bağlama ATOMİK: rıza bağlama patlarsa sporcu işaretlenmez", async () => {
+    H.athlete = { id: "ath-1", name: "Kerem", applicationId: null };
+    H.failConsentUpdate = true;
+    const res = await linkAthleteToApplication("app-1", "ath-1");
+    expect(res).toMatchObject({ ok: false });
+    expect(H.store.athleteUpdates).toHaveLength(0);
+    expect(H.store.statuses).toHaveLength(0);
+  });
+
+  it("bağlama: sporcu ZATEN başka başvuruya bağlıysa reddedilir (rıza karışmasın)", async () => {
+    H.athlete = { id: "ath-1", name: "Kerem", applicationId: "baska-app" };
+    const res = await linkAthleteToApplication("app-1", "ath-1");
+    expect(res).toMatchObject({ ok: false });
+    expect(H.store.consentUpdates).toHaveLength(0);
+  });
+
+  it("bağlama: başvuru ZATEN bir sporcuya bağlıysa reddedilir", async () => {
+    H.app = { ...APP, athlete: { id: "ath-eski", name: "Eski" } };
+    H.athlete = { id: "ath-1", name: "Kerem", applicationId: null };
+    const res = await linkAthleteToApplication("app-1", "ath-1");
+    expect(res).toMatchObject({ ok: false });
+    expect(H.store.consentUpdates).toHaveLength(0);
+  });
+
+  it("GERİ ALMA: rıza satırları SİLİNMEZ, yalnız athleteId boşalır (denetim izi durur)", async () => {
+    H.app = { ...APP, athlete: { id: "ath-1", name: "Kerem Yıldız" } };
+    const res = await unlinkAthleteFromApplication("app-1");
+    expect(res).toMatchObject({ ok: true });
+    // deleteMany DEĞİL updateMany: satırlar korunur
+    expect(H.store.consentDeletes).toHaveLength(0);
+    expect(H.store.consentUpdates[0]).toEqual({ where: { applicationId: "app-1" }, data: { athleteId: null } });
+    expect(H.store.athleteUpdates[0]).toEqual({ where: { id: "ath-1" }, data: { applicationId: null } });
+  });
+
+  it("GERİ ALMA: durum 'registered' kalmaz (sporcu yokken yalan söylerdi)", async () => {
+    H.app = { ...APP, athlete: { id: "ath-1", name: "Kerem" } };
+    await unlinkAthleteFromApplication("app-1");
+    expect(H.store.statuses).toEqual(["contacted"]);
+  });
+
+  it("GERİ ALMA: başvuru bağlı değilse reddedilir, yazma olmaz", async () => {
+    H.app = { ...APP, athlete: null };
+    const res = await unlinkAthleteFromApplication("app-1");
+    expect(res).toMatchObject({ ok: false });
+    expect(H.store.consentUpdates).toHaveLength(0);
+  });
+
+  it("YETKİ: bağlama da iki anahtar ister", async () => {
+    H.athlete = { id: "ath-1", name: "Kerem", applicationId: null };
+    await linkAthleteToApplication("app-1", "ath-1");
+    const keys = H.requirePermission.mock.calls.map((c) => c[0]);
+    expect(keys).toContain("basvurular.manage");
+    expect(keys).toContain("sporcular.manage");
   });
 });

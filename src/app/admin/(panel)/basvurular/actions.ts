@@ -132,3 +132,116 @@ export async function createAthleteFromApplication(applicationId: unknown, input
   revalidatePath("/admin/sporcular");
   return { ok: true, athleteId };
 }
+
+// --- Mevcut sporcuyu geçmiş başvuruya bağlama + geri alma ---
+// Spec §EK. Dönüşüm yalnız YENİ başvuruları kapsar; admin'in ELLE yarattığı mevcut
+// sporcuların rıza kaydı yoktur (fotoğrafları public'te görünmez). Bu ikili, mevcut
+// sporcuyu geçmiş başvurusuna bağlayıp rızaları taşır — ve gerekirse GERİ ALIR.
+//
+// RİSK: yanlış başvuruya bağlamak = sporcu BAŞKA çocuğun velisinin rızasını devralır
+// ve fotoğrafı ona dayanarak yayımlanır (gerçek KVKK ihlali). Sporcuların çoğunda
+// birthDate olmadığı için sistem bunu güvenilir yakalayamaz → geri alma ŞART.
+
+export type LinkResult = { ok: true } | { ok: false; error: string };
+
+/** Mevcut (bağsız) sporcuyu geçmiş başvuruya bağlar; başvurunun rızalarını sporcuya taşır. */
+export async function linkAthleteToApplication(applicationId: unknown, athleteId: unknown): Promise<LinkResult> {
+  await requirePermission("basvurular.manage");
+  const actor = await requirePermission("sporcular.manage");
+
+  const appId = idSchema.safeParse(applicationId);
+  const athId = idSchema.safeParse(athleteId);
+  if (!appId.success || !athId.success) return { ok: false, error: "Geçersiz istek." };
+
+  const [app, athlete] = await Promise.all([
+    prisma.application.findUnique({ where: { id: appId.data }, include: { athlete: { select: { id: true, name: true } } } }),
+    prisma.athlete.findUnique({ where: { id: athId.data }, select: { id: true, name: true, applicationId: true } }),
+  ]);
+  if (!app) return { ok: false, error: "Başvuru bulunamadı." };
+  if (!athlete) return { ok: false, error: "Sporcu bulunamadı." };
+  if (app.athlete) return { ok: false, error: `Bu başvuru zaten bir sporcuya bağlı: ${app.athlete.name}` };
+  // Sporcu başka bir başvuruya bağlıysa bağlama YAPILMAZ: rızalar karışır
+  // (sporcu iki farklı velinin rıza kümesini taşıyamaz). @unique son kapı.
+  if (athlete.applicationId) return { ok: false, error: "Bu sporcu zaten başka bir başvuruya bağlı. Önce o bağlantıyı kaldırın." };
+
+  try {
+    // ATOMİK: bağ + rıza taşıma + durum birlikte (bkz. createAthleteFromApplication).
+    await prisma.$transaction(async (tx) => {
+      // Sporcunun ALANLARI (ad/doğum/telefon) EZİLMEZ — sporcu verisi authoritative;
+      // bu işlem yalnız RIZA bağıdır.
+      await tx.athlete.update({ where: { id: athlete.id }, data: { applicationId: app.id } });
+      await tx.consentRecord.updateMany({ where: { applicationId: app.id }, data: { athleteId: athlete.id } });
+      await tx.application.update({ where: { id: app.id }, data: { status: "registered" } });
+    });
+  } catch (e) {
+    if (typeof e === "object" && e !== null && (e as { code?: string }).code === "P2002") {
+      return { ok: false, error: "Bu sporcu ya da başvuru zaten bağlı." };
+    }
+    return { ok: false, error: "Bağlanamadı. Lütfen tekrar deneyin." };
+  }
+
+  await prisma.adminAuditLog
+    .create({
+      data: {
+        actorId: actor.sub, actorName: actor.name,
+        action: "athlete.link_application",
+        targetId: athlete.id, targetName: athlete.name,
+        detail: `Başvuru ${app.id} → mevcut sporcuya bağlandı; KVKK rıza kayıtları taşındı.`,
+        ipAddress: clientIp(await headers()),
+      },
+    })
+    .catch(() => { });
+
+  revalidatePath("/admin/basvurular");
+  revalidatePath("/admin/sporcular");
+  return { ok: true };
+}
+
+/** Bağlantıyı GERİ ALIR — yanlış bağlamanın telafisi (KVKK güvenlik ağı). */
+export async function unlinkAthleteFromApplication(applicationId: unknown): Promise<LinkResult> {
+  await requirePermission("basvurular.manage");
+  const actor = await requirePermission("sporcular.manage");
+
+  const appId = idSchema.safeParse(applicationId);
+  if (!appId.success) return { ok: false, error: "Geçersiz istek." };
+
+  const app = await prisma.application.findUnique({
+    where: { id: appId.data },
+    include: { athlete: { select: { id: true, name: true } } },
+  });
+  if (!app) return { ok: false, error: "Başvuru bulunamadı." };
+  if (!app.athlete) return { ok: false, error: "Bu başvuru bir sporcuya bağlı değil." };
+  const ath = app.athlete;
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Rıza satırları SİLİNMEZ — yalnız athleteId boşalır. applicationId ve tüm
+      // denetim izi (an/IP/UA/hash/sürüm/veli) DURUR → başvurunun rıza geçmişi bozulmaz.
+      // where YALNIZ applicationId: sporcunun KENDİ (panelden verdiği) rızalarının
+      // applicationId'si null olduğu için onlar ETKİLENMEZ.
+      await tx.consentRecord.updateMany({ where: { applicationId: app.id }, data: { athleteId: null } });
+      await tx.athlete.update({ where: { id: ath.id }, data: { applicationId: null } });
+      // Sporcu yokken "registered" kalırsa durum YALAN söyler. Önceki durum
+      // saklanmadığı için nötr "İletişime Geçildi"ye dönülür; admin select'ten ayarlar.
+      await tx.application.update({ where: { id: app.id }, data: { status: "contacted" } });
+    });
+  } catch {
+    return { ok: false, error: "Bağlantı kaldırılamadı. Lütfen tekrar deneyin." };
+  }
+
+  await prisma.adminAuditLog
+    .create({
+      data: {
+        actorId: actor.sub, actorName: actor.name,
+        action: "athlete.unlink_application",
+        targetId: ath.id, targetName: ath.name,
+        detail: `Başvuru ${app.id} bağlantısı KALDIRILDI; rıza kayıtlarının sporcu bağı çözüldü (satırlar korundu).`,
+        ipAddress: clientIp(await headers()),
+      },
+    })
+    .catch(() => { });
+
+  revalidatePath("/admin/basvurular");
+  revalidatePath("/admin/sporcular");
+  return { ok: true };
+}

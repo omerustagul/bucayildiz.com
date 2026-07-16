@@ -34,6 +34,16 @@ export default async function BasvurularPage() {
     getAdminPermissions(),
   ]);
 
+  // "Mevcut sporcuya bağla" seçicisi: yalnız HİÇBİR başvuruya bağlı OLMAYAN sporcular
+  // (bağlı olan ikinci bir başvuruya bağlanamaz — rızalar karışır). Doğum tarihi
+  // eşleştirme sinyali olarak taşınır (çoğu sporcuda yok → yönetici gözle doğrular).
+  const unlinkedAthletes = await prisma.athlete.findMany({
+    where: { applicationId: null },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, birthDate: true, team: { select: { name: true } } },
+    take: 500,
+  });
+
   // Dönüşüm İKİ varlıkta mutasyon yapar → aksiyonla AYNI iki kapı burada da aranır.
   // (Sunucu tarafı kapı aksiyonun kendisinde; bu yalnız UI'ı yetkisize göstermemek için.)
   const canConvert =
@@ -85,7 +95,12 @@ export default async function BasvurularPage() {
             <p style={{ margin: "6px 0 0", fontSize: 13 }}>Sitedeki başvuru formundan gelen kayıtlar burada listelenir.</p>
           </div>
         ) : (
-          <BasvurularView apps={rows} teams={teams} canConvert={canConvert} />
+          <BasvurularView
+            apps={rows}
+            teams={teams}
+            canConvert={canConvert}
+            unlinkedAthletes={unlinkedAthletes.map((a) => ({ id: a.id, name: a.name, birthDate: a.birthDate, teamName: a.team.name }))}
+          />
         )}
       </Panel>
     </>
