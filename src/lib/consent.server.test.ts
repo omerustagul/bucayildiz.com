@@ -1,7 +1,17 @@
 // @vitest-environment node
-// KVKK denetim izi bütünlüğü — recordConsents guard'ı + satır üretimi.
+// KVKK denetim izi bütünlüğü — recordConsents guard'ı + satır üretimi
+// + foto-video rıza kapısı (photoConsentedAthleteIds).
 import { describe, it, expect, vi } from "vitest";
-import { recordConsents } from "@/lib/consent.server";
+
+// photoConsentedAthleteIds modül-seviyesi prisma kullanır (recordConsents'in aksine
+// db enjekte edilemez) → mock'lanır. recordConsents testleri kendi fake db'lerini
+// geçtiği için bu mock onları ETKİLEMEZ.
+const H = vi.hoisted(() => ({ rows: [] as Array<Record<string, unknown>> }));
+vi.mock("@/lib/prisma", () => ({
+  prisma: { consentRecord: { findMany: vi.fn(async () => H.rows) } },
+}));
+
+import { recordConsents, photoConsentedAthleteIds } from "@/lib/consent.server";
 
 function fakeDb(docs: unknown[]) {
   const createMany = vi.fn(async (args: { data: unknown[] }) => ({ count: args.data.length }));
@@ -46,5 +56,49 @@ describe("recordConsents (KVKK audit bütünlüğü)", () => {
     // istemciye güvenilmez: metnin SHA-256'sı (64 hex) her satırda var
     expect(rows.every((r) => typeof r.textHash === "string" && (r.textHash as string).length === 64)).toBe(true);
     expect(rows.every((r) => r.applicationId === "a1")).toBe(true);
+  });
+});
+
+// Foto-video rıza kapısı: public kadroda çocuğun fotoğrafının gösterilip
+// gösterilmeyeceğini belirler → yanlışı KVKK ihlali demek. Sorgu createdAt DESC
+// döndüğü için her sporcunun İLK satırı en yenisidir; mock'lar bu sırayı taklit eder.
+describe("photoConsentedAthleteIds (foto-video kapısı)", () => {
+  it("kayıt YOKSA rıza sayılmaz (fail-closed — 'hiç sorulmamış' da yayımlanmaz)", async () => {
+    H.rows = [];
+    expect([...(await photoConsentedAthleteIds(["a1"]))]).toEqual([]);
+  });
+
+  it("granted + geri alınmamış → rıza VAR", async () => {
+    H.rows = [{ athleteId: "a1", granted: true, withdrawnAt: null }];
+    expect([...(await photoConsentedAthleteIds(["a1"]))]).toEqual(["a1"]);
+  });
+
+  it("EN YENİ kayıt geri alınmışsa, ESKİ granted kaydı rızayı geri getirmez", async () => {
+    // DESC: önce en yeni (geri alma), sonra eski (verilmiş)
+    H.rows = [
+      { athleteId: "a1", granted: false, withdrawnAt: new Date() },
+      { athleteId: "a1", granted: true, withdrawnAt: null },
+    ];
+    expect([...(await photoConsentedAthleteIds(["a1"]))]).toEqual([]);
+  });
+
+  it("withdrawnAt doluysa granted:true olsa bile rıza YOK", async () => {
+    H.rows = [{ athleteId: "a1", granted: true, withdrawnAt: new Date() }];
+    expect([...(await photoConsentedAthleteIds(["a1"]))]).toEqual([]);
+  });
+
+  it("çok sporcu: yalnız rızalı olanlar döner", async () => {
+    H.rows = [
+      { athleteId: "a1", granted: true, withdrawnAt: null },
+      { athleteId: "a2", granted: false, withdrawnAt: null },
+      { athleteId: "a3", granted: true, withdrawnAt: null },
+    ];
+    const set = await photoConsentedAthleteIds(["a1", "a2", "a3"]);
+    expect([...set].sort()).toEqual(["a1", "a3"]);
+  });
+
+  it("boş liste → sorgu atılmaz, boş küme", async () => {
+    H.rows = [{ athleteId: "a1", granted: true, withdrawnAt: null }]; // yine de boş dönmeli
+    expect([...(await photoConsentedAthleteIds([]))]).toEqual([]);
   });
 });

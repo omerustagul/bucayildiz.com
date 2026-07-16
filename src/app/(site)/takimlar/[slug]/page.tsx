@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { photoConsentedAthleteIds } from "@/lib/consent.server";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section, Prose } from "@/components/content/blocks";
 
@@ -53,6 +54,18 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
   });
   if (!team) notFound();
 
+  // KVKK — foto-video AÇIK RIZASI kapısı: çocuğun görüntüsü, ayrı ve reddedilebilir
+  // bir muvafakatname olmadan halka açık yayımlanamaz. Rıza YOKSA (ya da hiç
+  // sorulmamışsa / geri alınmışsa) photoUrl HTML'e HİÇ girmez — baş harf rozetine
+  // düşülür. Böylece "gizleme" değil, gerçek veri minimizasyonu olur.
+  // Rıza /panel/izinler'den veli tarafından verilir/geri alınır → burası anında yansır
+  // (bu sayfa ISR/SSG ise revalidate sonrası; geri alma acilse revalidatePath gerekir).
+  const photoOk = await photoConsentedAthleteIds(team.athletes.map((a) => a.id));
+  const roster = team.athletes.map((a) => ({
+    ...a,
+    photoUrl: a.photoUrl && photoOk.has(a.id) ? a.photoUrl : null,
+  }));
+
   const cover = team.coverImage ?? null;
   const bornLabel = team.born === "Üst yapı" ? "Üst yapı kadrosu" : team.born ? `${team.born} doğumlular` : "";
   const meta = [`${team._count.athletes} sporcu`, bornLabel, team.coach].filter(Boolean).join("  ·  ");
@@ -80,7 +93,7 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
 
       <Section>
         <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "var(--text-h3)", textTransform: "uppercase", color: "var(--text-strong)", margin: "0 0 18px" }}>Kadro</h2>
-        {team.athletes.length === 0 ? (
+        {roster.length === 0 ? (
           <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--ink-400)", fontSize: 15, border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", background: "var(--surface-card)" }}>
             Bu takımda henüz aktif sporcu yok.
           </div>
@@ -99,7 +112,7 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
                   </tr>
                 </thead>
                 <tbody>
-                  {team.athletes.map((a) => (
+                  {roster.map((a) => (
                     <tr key={a.id}>
                       <td style={td}>
                         <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
@@ -121,7 +134,7 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
 
             {/* Mobil (<900px): kart listesi — yatay kaydırma yerine dikey akış, bkz. globals.css .by-squad-cards */}
             <div className="by-squad-cards">
-              {team.athletes.map((a) => (
+              {roster.map((a) => (
                 <div className="by-squad-card" key={a.id}>
                   <div className="by-squad-card-head">
                     <span style={{ width: 36, height: 36, flex: "none", borderRadius: "50%", overflow: "hidden", background: "var(--navy-50)", border: "1px solid var(--border-subtle)", display: "grid", placeItems: "center", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 13, color: "var(--navy-600)", position: "relative" }}>

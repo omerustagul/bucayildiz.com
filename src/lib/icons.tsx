@@ -2,6 +2,7 @@
    Line icons come from lucide-react; brand/social marks are inline SVG
    (Lucide dropped brand glyphs). Usable in both server and client components. */
 import {
+  AlertTriangle,
   Lock,
   ClipboardList,
   ArrowRight,
@@ -64,7 +65,12 @@ import {
   Footprints,
 } from "lucide-react";
 
-const ICONS: Record<string, LucideIcon> = {
+// DİKKAT: `Record<string, LucideIcon>` ile TİPLEME — o zaman `keyof typeof ICONS`
+// düz `string`e çöker ve IconName hiçbir güvenlik sağlamaz (yanlış yazılan ikon adı
+// typecheck'ten geçip SESSİZCE boş render eder). `satisfies` ile hem literal anahtarlar
+// korunur hem de değerlerin LucideIcon olduğu doğrulanır.
+const ICONS = {
+  "alert-triangle": AlertTriangle,
   lock: Lock,
   "clipboard-list": ClipboardList,
   "arrow-right": ArrowRight,
@@ -125,7 +131,7 @@ const ICONS: Record<string, LucideIcon> = {
   apple: Apple,
   "eye-off": EyeOff,
   camera: Camera,
-};
+} satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;
 

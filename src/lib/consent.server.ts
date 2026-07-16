@@ -85,3 +85,38 @@ export async function hasHealthConsent(athleteId: string): Promise<boolean> {
   });
   return Boolean(rec && rec.granted && !rec.withdrawnAt);
 }
+
+/** Sporcunun 'foto-video' (Fotoğraf ve Video Paylaşım Muvafakatnamesi) onayı aktif mi?
+ *  hasHealthConsent ile AYNI kurala dayanır (en yeni kayıt + geri alınmamış).
+ *  KVKK: bu onay OPSİYONELdir (reddedilebilir) — yokluğu hizmeti engellemez, yalnız
+ *  görüntünün PAYLAŞIMINI engeller. Bkz. photoConsentedAthleteIds (kadro için toplu). */
+export async function hasPhotoConsent(athleteId: string): Promise<boolean> {
+  const rec = await prisma.consentRecord.findFirst({
+    where: { athleteId, documentKey: "foto-video" },
+    orderBy: { createdAt: "desc" },
+  });
+  return Boolean(rec && rec.granted && !rec.withdrawnAt);
+}
+
+/** Verilen sporculardan foto-video onayı AKTİF olanların id kümesi — kadro gibi
+ *  listelerde hasPhotoConsent'i sporcu başına çağırmak (N+1) yerine TEK sorgu.
+ *  Kayıtlar createdAt DESC geldiği için her sporcunun İLK görülen satırı en yenisidir;
+ *  eskiler atlanır (append-only model — bkz. hasHealthConsent notu).
+ *  Kayıt YOKSA sporcu kümeye girmez → "hiç sorulmamış" da "rıza yok" sayılır
+ *  (fail-closed: rızayı kanıtlayamıyorsak çocuğun fotoğrafını yayımlamayız). */
+export async function photoConsentedAthleteIds(athleteIds: string[]): Promise<Set<string>> {
+  if (athleteIds.length === 0) return new Set();
+  const rows = await prisma.consentRecord.findMany({
+    where: { athleteId: { in: athleteIds }, documentKey: "foto-video" },
+    orderBy: { createdAt: "desc" },
+    select: { athleteId: true, granted: true, withdrawnAt: true },
+  });
+  const seen = new Set<string>();
+  const allowed = new Set<string>();
+  for (const r of rows) {
+    if (!r.athleteId || seen.has(r.athleteId)) continue; // yalnız EN YENİ kayıt sayılır
+    seen.add(r.athleteId);
+    if (r.granted && !r.withdrawnAt) allowed.add(r.athleteId);
+  }
+  return allowed;
+}

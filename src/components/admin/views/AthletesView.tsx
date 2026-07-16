@@ -36,6 +36,10 @@ export type AthleteRow = {
   parentPhone: string | null;
   hasLogin: boolean;
   username: string | null;
+  /** KVKK: foto-video açık rızası AKTİF mi (en yeni kayıt, geri alınmamış).
+   *  Public kadroda fotoğrafın görünüp görünmediğini belirler — bkz.
+   *  src/lib/consent.server.ts photoConsentedAthleteIds. */
+  photoConsent: boolean;
 };
 
 const STATUS: Record<string, { tone: "success" | "live" | "neutral"; label: string }> = {
@@ -166,6 +170,31 @@ function AthleteDrawer({ athlete, teams, onClose }: { athlete: AthleteRow | null
             </Field>
           </div>
         </div>
+
+        {/* KVKK foto-video kapısı — YALNIZ fotoğraf varken göster (yoksa söylenecek bir şey yok).
+            Yönetici, yüklediği fotoğrafın public kadroda neden görünmediğini buradan anlar. */}
+        {v.photoUrl && (
+          <div
+            style={{
+              display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px",
+              borderRadius: "var(--radius-md)", fontSize: 12.5, lineHeight: 1.45,
+              border: `1px solid ${athlete?.photoConsent ? "var(--border-subtle)" : "var(--gold-500)"}`,
+              background: athlete?.photoConsent ? "var(--surface-subtle)" : "rgba(201,162,39,0.08)",
+              color: "var(--ink-700)",
+            }}
+          >
+            <span style={{ flex: "none", display: "inline-flex", color: athlete?.photoConsent ? "var(--ink-400)" : "var(--gold-700)" }}>
+              <Icon name={athlete?.photoConsent ? "shield-check" : "alert-triangle"} size={16} />
+            </span>
+            <span style={{ minWidth: 0 }}>
+              {athlete?.photoConsent ? (
+                <><strong>Foto-video rızası var</strong> — bu fotoğraf halka açık kadroda görünür. Veli rızayı geri alırsa fotoğraf otomatik olarak kaldırılır.</>
+              ) : (
+                <><strong>Bu fotoğraf halka açık kadroda GÖRÜNMEZ.</strong> KVKK gereği çocuğun görüntüsü yalnız <em>foto-video açık rızası</em> ile yayımlanabilir; rızayı veli <strong>Sporcu Paneli → İzinler</strong> ekranından verir. Panel/admin tarafında fotoğraf görünmeye devam eder.</>
+              )}
+            </span>
+          </div>
+        )}
 
         <div style={{ height: 1, background: "var(--border-subtle)" }} />
         <div style={sectionTitle}>Takım & Mevki</div>
