@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { getAdminSession, getPanelSession } from "@/lib/auth";
+import { isSameOrigin } from "@/lib/net";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit-db";
 
 /** Web Push aboneliği kaydı — oturumlu kullanıcı (sporcu/veli veya admin). */
 export async function POST(req: Request) {
+  // CSRF savunma derinliği — bkz. lib/net.ts isSameOrigin (route handler'lar Next'in
+  // Server Action origin kontrolünden geçmez).
+  if (!isSameOrigin(req.headers)) return NextResponse.json({ error: "Geçersiz istek kaynağı." }, { status: 403 });
+
   // İki portal oturumu da geçerli (admin medya yükler, sporcu avatar/push)
   const session = (await getAdminSession()) ?? (await getPanelSession());
   if (!session) return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });

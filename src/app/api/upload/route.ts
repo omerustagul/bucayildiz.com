@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 import { getAdminSession, getPanelSession } from "@/lib/auth";
 import { isAdminRole } from "@/lib/session";
+import { isSameOrigin } from "@/lib/net";
 import { saveUpload } from "@/lib/storage";
 import { rateLimit } from "@/lib/rate-limit-db";
 
 /** Görsel yükleme uç noktası — oturumlu yöneticiler veya sporcular (yalnızca görsel). */
 export async function POST(req: Request) {
+  // CSRF savunma derinliği: çerezle yetkilenen POST — Server Action'ların aksine
+  // route handler'lar Next'in yerleşik origin kontrolünden GEÇMEZ. Ucuz olduğu için
+  // oturum/DB sorgusundan ÖNCE. (Bkz. lib/net.ts isSameOrigin: sameSite=lax'ın
+  // bıraktığı ALT ALAN boşluğunu kapatır.)
+  if (!isSameOrigin(req.headers)) return NextResponse.json({ error: "Geçersiz istek kaynağı." }, { status: 403 });
+
   // İki portal oturumu da geçerli (admin medya yükler, sporcu avatar/push)
   const session = (await getAdminSession()) ?? (await getPanelSession());
   const isAdmin = !!session && isAdminRole(session.role);
