@@ -1,5 +1,9 @@
 # Başvuru → Sporcu Dönüşümü + Rıza Taşıma — Uygulama Planı
 
+> **Durum: TAMAMLANDI (2026-07-16)** — Faz A `bb8eec2`, Faz B `12a860f`, Faz C `b1d2df7`.
+> Hepsi canlıda; her deploy 0×503. Uçtan uca KVKK zinciri Playwright ile kanıtlandı
+> (15/15): başvuruda onaylıysa foto public kadroda görünür, reddedildiyse görünmez.
+
 > **For agentic workers:** Spec: `docs/superpowers/specs/2026-07-16-basvuru-sporcu-donusumu-design.md`
 > (Prisma bloğu + alan eşleme tablosu ORADA — birebir uygulanır). Kontratlar bu
 > planda. Builder ajanları API'leri yazmadan ÖNCE dosyadan doğrular.
