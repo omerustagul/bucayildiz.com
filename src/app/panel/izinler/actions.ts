@@ -66,5 +66,18 @@ export async function setAthleteConsent(documentKey: unknown, granted: unknown):
   }
 
   revalidatePath("/panel/izinler");
+
+  // foto-video, PUBLIC kadroda fotoğrafın gösterilip gösterilmeyeceğini belirler
+  // (bkz. takimlar/[slug] + consent.server.ts photoConsentedAthleteIds). O sayfa
+  // ISR'li (site layout revalidate=60) → tazelemezsek GERİ ALMA 60sn'ye kadar
+  // gecikir. KVKK'da geri alma gecikmeksizin işlemeli: sporcunun takım sayfasını
+  // hemen tazele. Yalnız bu belgede yapılır (diğerleri public kadroyu etkilemez).
+  if (doc.key === "foto-video") {
+    const ath = await prisma.athlete.findUnique({
+      where: { id: session.athleteId },
+      select: { team: { select: { slug: true } } },
+    });
+    if (ath?.team?.slug) revalidatePath(`/takimlar/${ath.team.slug}`);
+  }
   return { ok: true };
 }
