@@ -26,18 +26,19 @@ const nextConfig: NextConfig = {
       }),
   },
 
-  // Build-time ESLint + TYPE-CHECK atlanır. Deploy'da `next build`'in "Linting and
-  // checking validity of types" fazı, 2-çekirdekli VPS'te canlı cluster worker'larını
-  // CPU/bellek açlığına sokup Nginx timeout→502→bakım ekranı yaratıyordu. Zaman-damgalı
-  // ölçüm: faz AÇIKken 31/227 istek 503; KAPALIyken 0/115. ASIL suçlu ESLint fazı
-  // (yalnız type-check kapatınca hâlâ 32/118 503 çıktı → eslint da kapatılmalı).
+  // Build-time TYPE-CHECK atlanır. Deploy'da `next build`'in tip-denetimi fazı,
+  // 2-çekirdekli VPS'te canlı cluster worker'larını CPU/bellek açlığına sokup Nginx
+  // timeout→502→BAKIM EKRANI yaratıyordu. Zaman-damgalı ölçüm: faz AÇIKken 31/227
+  // istek 503; kapatıldıktan sonraki 7 deploy'un HEPSİ 0×503. Build de ~2× hızlandı.
   // Güvenli: type-check commit ÖNCESİ `npm run typecheck` ile ZATEN çalışır (gerçek gate).
   // ⚠️ Tip güvenliği artık pre-commit typecheck'e BAĞLI — deploy öncesi tsc temiz OLMALI.
+  //
+  // NOT (2026-07-16): burada bir de `eslint: { ignoreDuringBuilds: true }` vardı.
+  // Next 16 bu anahtarı DESTEKLEMİYOR ("`eslint` configuration ... is no longer
+  // supported" + "Unrecognized key(s): 'eslint'") → hiçbir işe yaramadan her build/dev
+  // çıktısını kirletiyordu. Next 16 zaten `next build` içinde ESLint çalıştırmıyor;
+  // lint ayrı `npm run lint` ile yapılır. Kaldırıldı.
   typescript: { ignoreBuildErrors: true },
-  // NextConfig (Next 16) tipi 'eslint' anahtarını içermiyor ama `next build` runtime'da
-  // DESTEKLER (build-time ESLint'i kapatır). Bilinçli tip-boşluğu bastırması.
-  // @ts-expect-error - eslint anahtarı NextConfig tipinde yok ama runtime geçerli
-  eslint: { ignoreDuringBuilds: true },
 };
 
 export default nextConfig;

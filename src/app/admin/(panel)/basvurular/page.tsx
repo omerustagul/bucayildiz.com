@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getAdminPermissions } from "@/lib/auth";
+import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { ViewHeader, Panel } from "@/components/admin/ui";
 import { BasvurularView, type ApplicationRow } from "@/components/admin/BasvurularView";
@@ -19,11 +20,26 @@ function fmtDateTime(d: Date) {
 
 export default async function BasvurularPage() {
   await requirePermission("basvurular.view");
-  const apps = await prisma.application.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { consents: { orderBy: { documentKey: "asc" } } },
-    take: 200,
-  });
+  const [apps, teams, perms] = await Promise.all([
+    prisma.application.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        consents: { orderBy: { documentKey: "asc" } },
+        // Dönüşüm yapılmış mı: sporcuya link göster, eylemi gizle (mükerrer olmasın).
+        athlete: { select: { id: true, name: true } },
+      },
+      take: 200,
+    }),
+    prisma.team.findMany({ orderBy: { sort: "asc" }, select: { id: true, name: true } }),
+    getAdminPermissions(),
+  ]);
+
+  // Dönüşüm İKİ varlıkta mutasyon yapar → aksiyonla AYNI iki kapı burada da aranır.
+  // (Sunucu tarafı kapı aksiyonun kendisinde; bu yalnız UI'ı yetkisize göstermemek için.)
+  const canConvert =
+    !!perms &&
+    hasPermission(perms.role, perms.permissions, "basvurular.manage") &&
+    hasPermission(perms.role, perms.permissions, "sporcular.manage");
 
   // Server tarafında düzleştir (tarih formatı + consent map) → client view'a
   // serileştirilebilir düz veri geçer; filtreleme/renklendirme orada anlık yapılır.
@@ -32,6 +48,8 @@ export default async function BasvurularPage() {
     athleteName: a.athleteName,
     position: a.position,
     ageGroup: a.ageGroup,
+    birthDate: a.birthDate,
+    athlete: a.athlete,
     parentName: a.parentName,
     phone: a.phone,
     email: a.email,
@@ -67,7 +85,7 @@ export default async function BasvurularPage() {
             <p style={{ margin: "6px 0 0", fontSize: 13 }}>Sitedeki başvuru formundan gelen kayıtlar burada listelenir.</p>
           </div>
         ) : (
-          <BasvurularView apps={rows} />
+          <BasvurularView apps={rows} teams={teams} canConvert={canConvert} />
         )}
       </Panel>
     </>
