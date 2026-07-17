@@ -403,6 +403,7 @@ main:has(+ footer) .by-page-transition> :last-child {
   overscroll-behavior-x: contain;
   padding-bottom: 2px;
 }
+
 .hp-media-scroll::-webkit-scrollbar {
   display: none;
 }
@@ -449,8 +450,8 @@ main:has(+ footer) .by-page-transition> :last-child {
   }
 
   /* Marka bloğu ve bülten tam genişlik; link kolonları yan yana kalır (kompakt) */
-  .hp-grid-footer > :first-child,
-  .hp-grid-footer > :last-child {
+  .hp-grid-footer> :first-child,
+  .hp-grid-footer> :last-child {
     grid-column: 1 / -1;
   }
 }
@@ -1554,6 +1555,7 @@ body {
     grid-auto-columns: 44%;
   }
 }
+
 /* Sosyal medya ikon bağlantıları (header/footer) */
 .by-social-link:hover {
   background: rgba(255, 255, 255, 0.16) !important;

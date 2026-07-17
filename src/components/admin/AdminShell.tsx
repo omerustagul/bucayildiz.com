@@ -136,7 +136,7 @@ export function AdminShell({ user, mobileNav = true, logoUrl, children }: { user
       <aside
         className="adm-sidebar"
         style={{
-          width: isMobile ? 256 : collapsed ? 76 : 256,
+          width: isMobile ? 256 : collapsed ? 76 : 236,
           flex: "none",
           background: "var(--navy-950)",
           borderRight: "1px solid rgba(255,255,255,.07)",
