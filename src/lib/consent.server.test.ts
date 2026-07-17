@@ -6,12 +6,18 @@ import { describe, it, expect, vi } from "vitest";
 // photoConsentedAthleteIds modül-seviyesi prisma kullanır (recordConsents'in aksine
 // db enjekte edilemez) → mock'lanır. recordConsents testleri kendi fake db'lerini
 // geçtiği için bu mock onları ETKİLEMEZ.
-const H = vi.hoisted(() => ({ rows: [] as Array<Record<string, unknown>> }));
+const H = vi.hoisted(() => ({
+  rows: [] as Array<Record<string, unknown>>,
+  requiredDocs: [] as Array<{ key: string }>,
+}));
 vi.mock("@/lib/prisma", () => ({
-  prisma: { consentRecord: { findMany: vi.fn(async () => H.rows) } },
+  prisma: {
+    consentRecord: { findMany: vi.fn(async () => H.rows) },
+    consentDocument: { findMany: vi.fn(async () => H.requiredDocs) },
+  },
 }));
 
-import { recordConsents, photoConsentedAthleteIds } from "@/lib/consent.server";
+import { recordConsents, photoConsentedAthleteIds, missingRequiredConsents } from "@/lib/consent.server";
 
 function fakeDb(docs: unknown[]) {
   const createMany = vi.fn(async (args: { data: unknown[] }) => ({ count: args.data.length }));
@@ -100,5 +106,55 @@ describe("photoConsentedAthleteIds (foto-video kapısı)", () => {
   it("boş liste → sorgu atılmaz, boş küme", async () => {
     H.rows = [{ athleteId: "a1", granted: true, withdrawnAt: null }]; // yine de boş dönmeli
     expect([...(await photoConsentedAthleteIds([]))]).toEqual([]);
+  });
+});
+
+// Panel ilk-giriş kapısının tetikleyicisi: hangi zorunlu rızalar EKSİK.
+// Yanlışı = ya sıfır-rızalı sporcu paneli açar (fail-open, KVKK ihlali) ya da
+// rızalı sporcu kilitlenir. DB-güdümlü (aktif+required belgeler).
+describe("missingRequiredConsents (panel ilk-giriş kapısı)", () => {
+  const REQ = [{ key: "aydinlatma" }, { key: "acik-riza" }, { key: "saglik-verisi" }];
+
+  it("hiç kayıt yoksa TÜM zorunlular eksik (sıfır-rızalı admin sporcusu)", async () => {
+    H.requiredDocs = REQ; H.rows = [];
+    expect((await missingRequiredConsents("a1")).sort()).toEqual(["acik-riza", "aydinlatma", "saglik-verisi"]);
+  });
+
+  it("hepsi aktif onaylıysa eksik YOK (kapı tetiklenmez)", async () => {
+    H.requiredDocs = REQ;
+    H.rows = REQ.map((d) => ({ documentKey: d.key, granted: true, withdrawnAt: null }));
+    expect(await missingRequiredConsents("a1")).toEqual([]);
+  });
+
+  it("bir zorunlu geri alınmışsa yalnız o eksik sayılır", async () => {
+    H.requiredDocs = REQ;
+    H.rows = [
+      { documentKey: "aydinlatma", granted: true, withdrawnAt: null },
+      { documentKey: "acik-riza", granted: true, withdrawnAt: null },
+      { documentKey: "saglik-verisi", granted: false, withdrawnAt: new Date() },
+    ];
+    expect(await missingRequiredConsents("a1")).toEqual(["saglik-verisi"]);
+  });
+
+  it("EN YENİ kayıt esas: eski granted, yeni geri-alma varsa EKSİK", async () => {
+    H.requiredDocs = [{ key: "saglik-verisi" }];
+    // DESC: önce yeni (geri alma), sonra eski (verilmiş)
+    H.rows = [
+      { documentKey: "saglik-verisi", granted: false, withdrawnAt: new Date() },
+      { documentKey: "saglik-verisi", granted: true, withdrawnAt: null },
+    ];
+    expect(await missingRequiredConsents("a1")).toEqual(["saglik-verisi"]);
+  });
+
+  it("OPSİYONEL belgeler (required:false) tetikleyiciye GİRMEZ", async () => {
+    // requiredDocs yalnız required:true döndürür (query where'i) → foto-video/pazarlama yok
+    H.requiredDocs = REQ; // opsiyoneller listeye hiç gelmez
+    H.rows = REQ.map((d) => ({ documentKey: d.key, granted: true, withdrawnAt: null }));
+    expect(await missingRequiredConsents("a1")).toEqual([]);
+  });
+
+  it("aktif zorunlu belge yoksa eksik YOK (kapı kurulmadan panel açılır)", async () => {
+    H.requiredDocs = []; H.rows = [];
+    expect(await missingRequiredConsents("a1")).toEqual([]);
   });
 });

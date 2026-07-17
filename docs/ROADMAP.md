@@ -50,6 +50,49 @@ Son güncelleme: 2026-06-16
 
 ## 🔜 Sıradaki adımlar
 
+### ⭐ AKTİF — Birleşik Yol Haritası (2026-07-17): KVKK denetimi + özellik listesi
+
+3 paralel KVKK denetimi (rıza uygulama · veri sahibi hakları · minimizasyon/çerez/bildirim)
++ kullanıcının 14 maddelik özellik listesi harmanlandı. Sıra: KVKK yasal riski → ucuz
+görünür düzeltmeler → tamamlayıcı KVKK → büyük özellikler → cila.
+Sahip: 🤖 orkestratör(+builder) · 🧑 kullanıcı(karar/tasarım/cihaz) · ⚖️ avukat(metin). Büyük: S/M/L
+
+**Faz 0 — KVKK Kritik+Yüksek (gerçek kullanıcı öncesi ŞART)**
+- **0.1 Giriş sözleşme modalı (L, 🤖):** sıfır-rızalı sporcu panele girince zorunlu
+  sözleşmeleri (aşağı-kaydır-oku doğrulamalı) imzalatan SERVER-ENFORCED kapı; imzalanmadan
+  panel açılmaz. Zorunlu belgeleri de toplayabilmeli (mevcut `/panel/izinler` toplayamıyor).
+  Çözer: A1 panel kapısı yok · A2 `createAthlete` sıfır rıza · A3 `provisionAthleteLogin`
+  sıfır rıza · A4 `/panel/performans` kapısız sağlık · A5 `/panel/profil` boy/kilo kapısız.
+- **0.2 Silme/imha hakkı (M, 🤖):** `deleteAthlete` tam cascade + `Application` silme +
+  öksüz `User` + yüklenen DOSYALARIN diskten silinmesi + silme denetim izi. (B1-B4)
+  Karar: rıza kaydı saklama süresi (🧑/⚖️).
+
+**Faz 1 — Hızlı düzeltmeler (S, 🤖):** 1.1 favicon+logo ayarı · 1.2 panel takvimi güncel
+hafta · 1.3 mobil A-takım kartı · 1.4 footer adres/tel→ayarlar · 1.5 "Bildirimleri Aç"
+buton durumu.
+
+**Faz 2 — Tamamlayıcı KVKK:** 2.1 çerez onay popup'ı + politika metni hizalama (M, 🤖/⚖️,
+=D3/C2) · 2.2 pazarlama rızası uygulama + bülten formu rıza (M, 🤖, =C1) · 2.3 rıza sürüm
+kayması (M, 🤖, =C3) · 2.4 saklama/imha politikası (M, 🧑/⚖️ karar→🤖, =C4).
+
+**Faz 3 — Ana sayfa + tesis haritası:** 3.1 fikstür fallback (puan/son-3-maç) (M) · 3.2
+"NASIL ÇALIŞIYORUZ" örnek rapor→9 test (M, hissi🧑) · 3.3 header dropdown hover animasyonu
+(M, perf-güvenli, hissi🧑) · 3.4 tesis OpenStreetMap (S; D1: CARTO IP politikaya).
+
+**Faz 4 — Büyük özellikler:** 4.1 toplu takvim/haftalık tekrar (L) · 4.2 hatırlatma
+bildirimleri (2-3g+1g) + GERÇEK mobil push (L, 🧑 cihaz testi; D2: gövdeye sağlık YAZMA;
+bağımlı: 4.1+push altyapısı) · 4.3 header arama (L).
+
+**Faz 5 — Düşük sertleştirme:** D4 public kadroya tam doğum tarihi→yıl · D5 rıza geri-alım
+gerçek veli adı · D6/D7 rıza geçmişi+export · D8 4 noktada ham hata logu (`errLabel`).
+
+**Zaten güvenli (denetim pozitif kontrolleri):** append-only rıza denetim izi + atomik
+taşıma + başvuru zorunlu-rıza zorlaması; foto/sağlık fail-closed kapıları; bayat JWT bir
+sonraki istekte kapanır; sağlık/ölçüm/ödeme sporcu silininde CASCADE ile imha; analytics/
+tracker/pixel YOK; fontlar self-hosted; loglar çoğunlukla PII-güvenli (`errLabel`).
+
+---
+
 ### A. Canlıya alma blokerleri (dış kaynak/karar gerektirir)
 1. **Prod barındırma seçimi** — Türkiye'de bir sağlayıcı (Turkcell Bulut,
    Radore, Natro vb. — bkz DEPLOYMENT §3). `DATABASE_URL` + `AUTH_SECRET`.

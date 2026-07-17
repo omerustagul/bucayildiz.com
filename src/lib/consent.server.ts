@@ -104,6 +104,34 @@ export async function hasPhotoConsent(athleteId: string): Promise<boolean> {
  *  eskiler atlanır (append-only model — bkz. hasHealthConsent notu).
  *  Kayıt YOKSA sporcu kümeye girmez → "hiç sorulmamış" da "rıza yok" sayılır
  *  (fail-closed: rızayı kanıtlayamıyorsak çocuğun fotoğrafını yayımlamayız). */
+/** Sporcunun EKSİK zorunlu rıza anahtarları — panel ilk-giriş kapısının tetikleyicisi.
+ *  Aktif+required ConsentDocument'ların hangileri bu sporcuda AKTİF onaylı DEĞİL
+ *  (en yeni kayıt granted && geri-alınmamış olmayan). Boş dizi = tüm zorunlular tam →
+ *  kapı tetiklenmez. DB-güdümlü (statik liste değil): kapının gösterdiği aktif
+ *  belgelerle birebir tutarlı. Bkz. docs/superpowers/specs/2026-07-17-panel-ilk-giris-*. */
+export async function missingRequiredConsents(athleteId: string): Promise<string[]> {
+  const requiredDocs = await prisma.consentDocument.findMany({
+    where: { active: true, required: true },
+    select: { key: true },
+  });
+  const requiredKeys = [...new Set(requiredDocs.map((d) => d.key))];
+  if (requiredKeys.length === 0) return [];
+
+  const rows = await prisma.consentRecord.findMany({
+    where: { athleteId, documentKey: { in: requiredKeys } },
+    orderBy: { createdAt: "desc" },
+    select: { documentKey: true, granted: true, withdrawnAt: true },
+  });
+  const activeGranted = new Set<string>();
+  const seen = new Set<string>();
+  for (const r of rows) {
+    if (seen.has(r.documentKey)) continue; // yalnız EN YENİ kayıt sayılır (append-only)
+    seen.add(r.documentKey);
+    if (r.granted && !r.withdrawnAt) activeGranted.add(r.documentKey);
+  }
+  return requiredKeys.filter((k) => !activeGranted.has(k));
+}
+
 export async function photoConsentedAthleteIds(athleteIds: string[]): Promise<Set<string>> {
   if (athleteIds.length === 0) return new Set();
   const rows = await prisma.consentRecord.findMany({
