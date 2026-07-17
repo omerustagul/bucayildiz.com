@@ -25,7 +25,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <main>
         <PageTransition>{children}</PageTransition>
       </main>
-      <SiteFooter socials={socials} logoUrl={settings.logoUrl} />
+      <SiteFooter socials={socials} logoUrl={settings.logoUrl} address={settings.address} phone={settings.phone} />
     </>
   );
 }

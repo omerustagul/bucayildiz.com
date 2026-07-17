@@ -34,7 +34,9 @@ export default async function PanelAntrenmanlar() {
   const now = new Date();
   const todayYmd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const upcoming = trainings.find((t) => t.date >= todayYmd);
-  const initialAnchor = upcoming?.date ?? trainings[0]?.date ?? todayYmd;
+  // Sıradaki antrenman varsa onun haftası; yoksa GEÇMİŞ antrenmana değil, BU haftaya
+  // sabitlen (tüm antrenmanlar geçmişteyken takvim eski bir haftada açılmasın).
+  const initialAnchor = upcoming?.date ?? todayYmd;
 
   return <TrainingCalendar trainings={trainings} fixtures={fixtures} todayYmd={todayYmd} initialAnchor={initialAnchor} />;
 }

@@ -55,7 +55,9 @@ export default async function PanelDashboard() {
   const now = new Date();
   const todayYmd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const upcoming = trainings.find((t) => t.date >= todayYmd);
-  const initialAnchor = upcoming?.date ?? trainings[0]?.date ?? todayYmd;
+  // Sıradaki antrenman varsa onun haftası; yoksa GEÇMİŞ antrenmana değil, BU haftaya
+  // sabitlen (aksi halde tüm antrenmanlar geçmişteyken takvim eski bir haftada açılırdı).
+  const initialAnchor = upcoming?.date ?? todayYmd;
 
   // Rapor kartları: sporcunun ilk bakışta görmesi gerekenler
   const nextFixture = fixtures.find((f) => f.date >= todayYmd && f.status !== "played");

@@ -57,13 +57,19 @@ export async function generateMetadata(): Promise<Metadata> {
       // Eski iOS sürümlerinin tam-ekran (standalone) açılışı için klasik etiket
       "apple-mobile-web-app-capable": "yes",
     },
-    icons: {
-      icon: [
-        { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-        { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
-      ],
-      apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
-    },
+    // Favicon admin logosunu İZLER: logo seçilince tarayıcı sekme ikonu da onunla
+    // güncellenir (kullanıcı isteği: "logo seçince favicon da değişsin"). Logo boşsa
+    // statik yıldız PNG'lerine düşer. Statik app/favicon.ico kaldırıldı — yoksa
+    // sizes="any" ile dinamik ikonu ezip eski ikonu gösteriyordu.
+    icons: s.logoUrl
+      ? { icon: s.logoUrl, shortcut: s.logoUrl, apple: s.logoUrl }
+      : {
+          icon: [
+            { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+            { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+          ],
+          apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+        },
     openGraph: {
       type: "website",
       locale: "tr_TR",

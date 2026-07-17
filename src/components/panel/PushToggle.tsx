@@ -25,6 +25,9 @@ type State = "loading" | "unsupported" | "ios-needs-pwa" | "off" | "on" | "denie
 export function PushToggle() {
   const [state, setState] = useState<State>("loading");
   const [busy, setBusy] = useState(false);
+  // Hata geri bildirimi: eskiden başarısız açılışta state sessizce "off"a dönüyordu
+  // → buton "değişmedi" gibi görünüyordu. Artık her başarısızlıkta neden gösterilir.
+  const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
     const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
@@ -50,12 +53,20 @@ export function PushToggle() {
 
   const enable = async () => {
     setBusy(true);
+    setErr(null);
     try {
+      if (!VAPID_PUBLIC) {
+        setState("off");
+        setErr("Bildirim servisi henüz yapılandırılmadı. Lütfen daha sonra deneyin.");
+        return;
+      }
       const reg = await navigator.serviceWorker.register("/sw.js");
       await navigator.serviceWorker.ready;
       const perm = await Notification.requestPermission();
       if (perm !== "granted") {
+        // "denied" = tarayıcı engelledi; "default" = kullanıcı pencereyi kapattı.
         setState(perm === "denied" ? "denied" : "off");
+        if (perm !== "denied") setErr("İzin verilmedi. Açmak için izin penceresinden “İzin Ver”i seçin.");
         return;
       }
       const sub = await reg.pushManager.subscribe({
@@ -67,10 +78,16 @@ export function PushToggle() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(sub.toJSON()),
       });
-      setState(res.ok ? "on" : "off");
+      if (res.ok) {
+        setState("on");
+      } else {
+        setState("off");
+        setErr("Bildirim kaydı yapılamadı. Lütfen tekrar deneyin.");
+      }
     } catch (e) {
       console.error("[push] abone olunamadı:", e);
       setState("off");
+      setErr("Bildirim açılamadı. Lütfen tekrar deneyin.");
     } finally {
       setBusy(false);
     }
@@ -78,6 +95,7 @@ export function PushToggle() {
 
   const disable = async () => {
     setBusy(true);
+    setErr(null);
     try {
       const reg = await navigator.serviceWorker.getRegistration();
       const sub = reg ? await reg.pushManager.getSubscription() : null;
@@ -125,6 +143,9 @@ export function PushToggle() {
         <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5 }}>
           {on ? "Antrenman, maç ve duyuru bildirimleri açık." : "Antrenman, maç ve duyurulardan haberdar olun (opsiyonel, KVKK)."}
         </div>
+        {err && !on && (
+          <div style={{ fontSize: 12.5, color: "var(--red-600, #dc2626)", lineHeight: 1.5, marginTop: 4 }}>{err}</div>
+        )}
       </div>
       <button
         onClick={on ? disable : enable}

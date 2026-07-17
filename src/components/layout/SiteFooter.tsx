@@ -31,7 +31,7 @@ function Col({ title, links }: { title: string; links: { label: string; href: st
   );
 }
 
-export function SiteFooter({ socials = [], logoUrl }: { socials?: SocialLink[]; logoUrl?: string | null }) {
+export function SiteFooter({ socials = [], logoUrl, address, phone }: { socials?: SocialLink[]; logoUrl?: string | null; address?: string | null; phone?: string | null }) {
   return (
     <footer style={{ position: "relative", background: "linear-gradient(180deg, var(--navy-900) 0%, var(--navy-950) 30%)" }}>
       {/* Üst kenar: takım renkleri şeridi (header'daki dilin aynası) */}
@@ -114,14 +114,22 @@ export function SiteFooter({ socials = [], logoUrl }: { socials?: SocialLink[]; 
               />
               <Button variant="accent" size="sm">Katıl</Button>
             </form>
-            <div style={{ fontSize: 13, color: "rgba(255, 255, 255, 0.62)", display: "flex", flexDirection: "column", gap: 7, marginTop: 2 }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <Icon name="map-pin" size={15} style={{ color: "var(--gold-400)" }} /><span>Buca, İzmir</span>
-              </span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <Icon name="phone" size={15} style={{ color: "var(--gold-400)" }} /><span>+90 232 000 00 00</span>
-              </span>
-            </div>
+            {/* Adres/telefon admin ayarlarından beslenir (tek kaynak). Boşsa satır
+                gösterilmez — sahte iletişim bilgisi basmayız (bkz. /iletisim aynı kaynak). */}
+            {(address || phone) && (
+              <div style={{ fontSize: 13, color: "rgba(255, 255, 255, 0.62)", display: "flex", flexDirection: "column", gap: 7, marginTop: 2 }}>
+                {address && (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                    <Icon name="map-pin" size={15} style={{ color: "var(--gold-400)" }} /><span>{address}</span>
+                  </span>
+                )}
+                {phone && (
+                  <a href={`tel:${phone.replace(/[^\d+]/g, "")}`} className="footer-link" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                    <Icon name="phone" size={15} style={{ color: "var(--gold-400)" }} /><span>{phone}</span>
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
