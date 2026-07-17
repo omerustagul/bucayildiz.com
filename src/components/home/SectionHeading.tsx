@@ -7,6 +7,7 @@ export function SectionHeading({
   title,
   action,
   onDark = false,
+  kickerColor = "gold",
   align = "left",
   style = {},
   titleStyle,
@@ -15,11 +16,23 @@ export function SectionHeading({
   title: string;
   action?: React.ReactNode;
   onDark?: boolean;
+  /** Kicker metni rengi. "gold" (varsayılan) marka aksanı; "text" gövde metni
+   *  rengini kullanır — başlığın altın aksanla yarışmaması istendiğinde.
+   *  Altın çizgi her iki durumda da kalır (marka işareti). */
+  kickerColor?: "gold" | "text";
   align?: "left" | "center";
   style?: React.CSSProperties;
   titleStyle?: React.CSSProperties;
 }) {
   const titleColor = onDark ? "#fff" : "var(--text-strong)";
+  const kickerTextColor =
+    kickerColor === "text"
+      ? onDark
+        ? "#fff"
+        : "var(--text-strong)"
+      : onDark
+        ? "var(--gold-400)"
+        : "var(--gold-700)";
   return (
     <div
       style={{
@@ -44,7 +57,7 @@ export function SectionHeading({
               fontSize: 13,
               letterSpacing: "0.14em",
               textTransform: "uppercase",
-              color: onDark ? "var(--gold-400)" : "var(--gold-700)",
+              color: kickerTextColor,
             }}
           >
             <span style={{ width: 22, height: 2, background: "var(--gold-500)" }} />
