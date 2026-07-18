@@ -108,7 +108,31 @@ destekli) · 3.4 tesislerde OpenStreetMap (Facility.latitude/longitude göçü +
   aksansız arama ("goztepe"→"Göztepe", "TACLANDI"→"taçlandırdı").
   Not: katlama indeks kullanmaz (seq scan) — bu hacimde sorunsuz; büyürse ifade-indeksi.
 
-**⏭ Sıradaki:** 14 maddelik liste BİTTİ. Sırada Faz 5 (cila) — bkz. aşağısı.
+**⏭ 14 maddelik liste BİTTİ.** Faz 5 (cila) başladı:
+
+- **D4 public kadroda doğum tarihi → ZATEN YAPILMIŞ (iş yok).** Kadro sayfası yalnız YIL
+  basıyor (`birthYear()`), `parentPhone`/`licenseNo`/boy/kilo public sorguya hiç dahil
+  değil. Canlı doğrulama: iki kadro sayfasının HTML'inde tam tarih (YYYY-MM-DD) sayısı **0**.
+  Roadmap kaydı bayattı.
+- **✅ D5 rıza kaydında GERÇEK sorumlu kişi.** Kök neden: panel hesabı
+  `provisionAthleteLogin` ile `name: athlete.name` (yani ÇOCUĞUN adı) olarak açılıyor;
+  `/panel/izinler` ise `granterName: session.name` + sabit `granterRelation: "veli"`
+  yazıyordu → her kayıt **"Veli: <çocuğun adı>"** diyordu (hukuki ispat belgesinde
+  kendi içinde tutarsız iz). Çözüm: `Athlete.parentName` (migration + başvurudan
+  idempotent geri doldurma), admin formunda alan, başvuru→sporcu dönüşümünde taşıma ve
+  `lib/consent.server.ts resolveAthleteGranter` (öncelik: parentName → kişinin daha önce
+  KENDİ beyan ettiği ad/ilişki → hesap adı ama yakınlık **İDDİA EDİLMEZ**: "hesap-sahibi").
+  Not: diğer iki rıza yolu (başvuru formu, panel ilk-giriş kapısı) adı zaten kişiden
+  soruyordu — yalnız izinler toggle'ı varsayıyordu.
+- **✅ D8 kritik yutulan hatalar konuşturuldu.** `errLabel` (PII'siz etiket) zaten vardı
+  ama hata anlarında kullanılmıyordu. Düzeltilen 6 nokta: 3 başvuru denetim izi yazımı +
+  `kullanicilar/writeAudit` (KVKK izinde açıklanamayan boşluk sessizce kalıyordu) ve
+  **yalancı başarı** dönen 2 silme (`deleteTeam`, `deleteHomeCard`: hata yutulup
+  `{ ok: true }` dönüyordu → arayüz "silindi" diyor, kayıt duruyordu).
+  Kapsam dışı bırakıldı (bilinçli): void dönen ~20 silme — başarısızsa satır tazelenen
+  listede zaten görünür kalıyor.
+
+**⏭ Sıradaki:** D6/D7 rıza geçmişi + dışa aktarım (tasarım onayı bekliyor).
 
 **Faz 0 — KVKK Kritik+Yüksek (gerçek kullanıcı öncesi ŞART)**
 - **0.1 Giriş sözleşme modalı (L, 🤖):** sıfır-rızalı sporcu panele girince zorunlu

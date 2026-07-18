@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin, requirePermission } from "@/lib/auth";
 import { isOwnStorageUrl } from "@/lib/storage";
 import { idSchema } from "@/lib/validation";
+import { errLabel } from "@/lib/log";
 
 const hex = /^#[0-9a-fA-F]{6}$/;
 
@@ -227,7 +228,14 @@ export async function deleteHomeCard(id: unknown): Promise<MediaResult> {
   await requirePermission("medya.manage");
   const parsed = idSchema.safeParse(id);
   if (!parsed.success) return { ok: false, error: "Geçersiz kayıt." };
-  await prisma.homeMediaCard.delete({ where: { id: parsed.data } }).catch(() => {});
+  // Hata YUTULMAZ: eskiden silinemese bile { ok: true } dönüyordu → arayüz "silindi"
+  // diyor, kart yerinde duruyordu. Silinemediyse bunu SÖYLE.
+  try {
+    await prisma.homeMediaCard.delete({ where: { id: parsed.data } });
+  } catch (e) {
+    console.error("[medya] homeMediaCard silinemedi", errLabel(e));
+    return { ok: false, error: "Kart silinemedi. Lütfen tekrar deneyin." };
+  }
   revalidatePath("/admin/medya");
   revalidatePath("/medya");
   revalidatePath("/");

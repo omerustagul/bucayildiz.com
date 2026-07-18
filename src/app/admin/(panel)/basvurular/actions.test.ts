@@ -93,6 +93,9 @@ const APP = {
   athleteName: "Kerem Yıldız",
   birthDate: "2012-04-08",
   position: "Kanat",
+  // Sorumlu kişi başvuruda ZORUNLU (schema: parentName String) — sporcuya taşınır,
+  // rıza kayıtlarında "onaylayan" olarak bu ad kullanılır.
+  parentName: "  Ayşe Yıldız  ",
   phone: "0532 111 22 33",
   ageGroup: "U-14",
   athlete: null as null | { id: string; name: string },
@@ -153,18 +156,27 @@ describe("createAthleteFromApplication — KVKK rıza taşıma + atomiklik", () 
     expect(H.store.statuses).toEqual(["registered"]);
   });
 
-  it("alan eşlemesi: athleteName→name, phone→parentPhone, position null → ''", async () => {
+  it("alan eşlemesi: athleteName→name, phone→parentPhone, parentName→parentName, position null → ''", async () => {
     H.app = { ...APP, position: null };
     await createAthleteFromApplication("app-1", INPUT);
     expect(H.store.athletes[0]).toMatchObject({
       name: "Kerem Yıldız",
       birthDate: "2012-04-08",
       parentPhone: "0532 111 22 33",
+      parentName: "Ayşe Yıldız", // kırpılarak taşınır
       position: "",
       teamId: "team-1",
       number: 7,
       applicationId: "app-1",
     });
+  });
+
+  // Sorumlu kişi taşınmazsa, sporcunun sonraki rıza kayıtları "onaylayan" olarak
+  // hesabın adını (yani ÇOCUĞUN adını) yazmak zorunda kalır — bu bağ o yüzden kritik.
+  it("başvuruda sorumlu kişi boşsa sporcuda null olur ('' yazılmaz)", async () => {
+    H.app = { ...APP, parentName: "   " };
+    await createAthleteFromApplication("app-1", INPUT);
+    expect(H.store.athletes[0]!.parentName).toBeNull();
   });
 
   it("MÜKERRER: başvuru zaten sporcuya bağlıysa reddedilir, hiçbir yazma olmaz", async () => {

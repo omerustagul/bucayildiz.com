@@ -30,6 +30,7 @@ export default async function SporcularPage() {
     status: a.status,
     licenseNo: a.licenseNo,
     photoUrl: a.photoUrl,
+    parentName: a.parentName,
     parentPhone: a.parentPhone,
     hasLogin: !!a.user,
     username: a.user?.username ?? null,

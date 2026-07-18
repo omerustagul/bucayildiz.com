@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/auth";
+import { errLabel } from "@/lib/log";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Takım adı zorunlu.").max(60),
@@ -69,7 +70,14 @@ export async function deleteTeam(id: string): Promise<{ ok: boolean; error?: str
   await requirePermission("takimlar.manage");
   const count = await prisma.athlete.count({ where: { teamId: id } });
   if (count > 0) return { ok: false, error: `Bu takımda ${count} sporcu var. Önce sporcuları başka takıma taşıyın.` };
-  await prisma.team.delete({ where: { id } }).catch(() => {});
+  // Hata YUTULMAZ: eskiden silinemese bile { ok: true } dönüyordu → arayüz "silindi"
+  // diyor, takım duruyordu. Silinemediyse bunu SÖYLE (ör. bağlı fikstür/antrenman FK'sı).
+  try {
+    await prisma.team.delete({ where: { id } });
+  } catch (e) {
+    console.error("[takimlar] takım silinemedi", errLabel(e));
+    return { ok: false, error: "Takım silinemedi. Takıma bağlı kayıtlar (fikstür, antrenman) olabilir." };
+  }
   revalidatePath("/admin/takimlar");
   return { ok: true };
 }

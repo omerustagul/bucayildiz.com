@@ -33,6 +33,7 @@ export type AthleteRow = {
   status: string;
   licenseNo: string | null;
   photoUrl: string | null;
+  parentName: string | null;
   parentPhone: string | null;
   hasLogin: boolean;
   username: string | null;
@@ -63,6 +64,7 @@ function AthleteDrawer({ athlete, teams, onClose }: { athlete: AthleteRow | null
     weight: athlete?.weight?.toString() ?? "",
     birthDate: athlete?.birthDate ?? "",
     licenseNo: athlete?.licenseNo ?? "",
+    parentName: athlete?.parentName ?? "",
     parentPhone: athlete?.parentPhone ?? "",
     photoUrl: athlete?.photoUrl ?? "",
     active: athlete ? athlete.status === "active" : true,
@@ -102,6 +104,7 @@ function AthleteDrawer({ athlete, teams, onClose }: { athlete: AthleteRow | null
       foot: v.foot || null,
       status: v.active ? "active" : "rest",
       licenseNo: v.licenseNo,
+      parentName: v.parentName,
       parentPhone: v.parentPhone,
       photoUrl: v.photoUrl || null,
     };
@@ -223,6 +226,11 @@ function AthleteDrawer({ athlete, teams, onClose }: { athlete: AthleteRow | null
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <Field label="Lisans No">
             <TextInput value={v.licenseNo} onChange={(e) => set("licenseNo", e.target.value)} placeholder="BY-1001" />
+          </Field>
+          {/* KVKK: rıza kayıtlarında "onaylayan" olarak bu ad kullanılır. Boşsa sistem
+              yakınlık iddia etmez — bkz. lib/consent.server.ts resolveAthleteGranter. */}
+          <Field label="Veli / Sorumlu Kişi" hint="KVKK onay kayıtlarında onaylayan olarak görünür">
+            <TextInput value={v.parentName} onChange={(e) => set("parentName", e.target.value)} placeholder="Ad Soyad" />
           </Field>
           <Field label="Veli Telefon">
             <TextInput value={v.parentPhone} onChange={(e) => set("parentPhone", e.target.value)} placeholder="05xx xxx xx xx" />

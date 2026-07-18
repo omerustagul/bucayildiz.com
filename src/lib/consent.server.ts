@@ -73,6 +73,43 @@ export async function recordConsents(
   return rows.length;
 }
 
+export type Granter = { name: string; relation: string | null };
+
+/**
+ * Bir sporcunun rıza kaydına yazılacak "onaylayan kişi" bilgisini çözer.
+ *
+ * NEDEN: Panel hesabının adı ÇOCUĞUN adıdır (provisionAthleteLogin → name: athlete.name).
+ * Onu `granterRelation: "veli"` ile yazmak, denetim izinde "Veli: <çocuğun adı>" gibi
+ * kendi içinde tutarsız — ve ispat değeri şüpheli — bir kayıt üretiyordu.
+ *
+ * Öncelik sırası (her biri bir öncekinden daha zayıf ama DÜRÜST):
+ *  1) `Athlete.parentName` — sorumlu kişi; başvurudan doldurulur, admin düzenleyebilir.
+ *  2) En son rıza kaydındaki ad/ilişki — başvuru formunda ya da panel ilk-giriş
+ *     kapısında KİŞİNİN KENDİ yazdığı bilgi (uydurma değil, beyan).
+ *  3) Hesap sahibinin adı — ama ilişki İDDİA EDİLMEZ ("hesap-sahibi"). Bilmediğimiz
+ *     bir yakınlığı kayda geçirmektense boş bırakmak doğrudur.
+ */
+export async function resolveAthleteGranter(athleteId: string, accountName: string): Promise<Granter> {
+  const athlete = await prisma.athlete.findUnique({
+    where: { id: athleteId },
+    select: { parentName: true },
+  });
+  const parentName = athlete?.parentName?.trim();
+  if (parentName) return { name: parentName, relation: "veli" };
+
+  // Daha önce kişinin kendi beyan ettiği ad/ilişki (başvuru veya ilk-giriş kapısı).
+  const prev = await prisma.consentRecord.findFirst({
+    where: { athleteId, granterName: { not: "" } },
+    orderBy: { createdAt: "desc" },
+    select: { granterName: true, granterRelation: true },
+  });
+  if (prev?.granterName?.trim()) {
+    return { name: prev.granterName.trim(), relation: prev.granterRelation ?? null };
+  }
+
+  return { name: accountName, relation: "hesap-sahibi" };
+}
+
 /** Sporcunun 'saglik-verisi' onayı aktif mi? (en yeni kayıt granted && geri alınmamış)
  *  DEĞİŞMEZ KURAL: onay yazan her akış (bkz. panel/izinler/actions.ts) her
  *  ver/geri-al işleminde YENİ bir satır ekler (kayıtlar değişmez/immutable);

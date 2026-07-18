@@ -7,7 +7,7 @@ import { getPanelSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { idSchema } from "@/lib/validation";
 import { clientIp } from "@/lib/net";
-import { consentTextHash, getConsentDocumentByKey } from "@/lib/consent.server";
+import { consentTextHash, getConsentDocumentByKey, resolveAthleteGranter } from "@/lib/consent.server";
 
 export type ConsentActionResult = { ok: true } | { ok: false; error: string };
 
@@ -44,6 +44,10 @@ export async function setAthleteConsent(documentKey: unknown, granted: unknown):
   const ipAddress = clientIp(h); // #8: CF-Connecting-IP önceliği (spoof'a açık XFF değil)
   const userAgent = h.get("user-agent") || null;
 
+  // Onaylayan kişi: hesabın adı ÇOCUĞUN adıdır — "veli" diye yazmak denetim izini
+  // yanlış kılıyordu. Gerçek sorumlu kişiyi çöz; bilinmiyorsa yakınlık İDDİA ETME.
+  const granter = await resolveAthleteGranter(session.athleteId, session.name);
+
   try {
     await prisma.consentRecord.create({
       data: {
@@ -52,8 +56,8 @@ export async function setAthleteConsent(documentKey: unknown, granted: unknown):
         documentTitle: doc.title,
         textHash: consentTextHash(doc.body),
         granted: grant,
-        granterName: session.name,
-        granterRelation: "veli",
+        granterName: granter.name,
+        granterRelation: granter.relation,
         channel: "veli-panel",
         ipAddress,
         userAgent,

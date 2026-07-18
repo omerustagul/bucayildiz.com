@@ -8,6 +8,7 @@ import { requirePermission } from "@/lib/auth";
 import { clientIp } from "@/lib/net";
 import { idSchema } from "@/lib/validation";
 import { MANUAL_APPLICATION_STATUSES } from "@/lib/applicationStatus";
+import { errLabel } from "@/lib/log";
 
 // Durum listesi TEK KAYNAKTAN türetilir (elle hardcode edilmez — katalog büyüyünce
 // sessizce drift ederdi). Sistem-yazımlı durumlar (ör. "registered") HARİÇ: onları
@@ -84,6 +85,10 @@ export async function createAthleteFromApplication(applicationId: unknown, input
           name: app.athleteName,
           birthDate: app.birthDate,
           position: app.position ?? "",
+          // Sorumlu kişi başvuruda beyan edilmiş — sporcuya TAŞI. Yoksa rıza kayıtları
+          // "onaylayan" olarak hesabın adını (yani ÇOCUĞUN adını) yazmak zorunda kalır;
+          // bkz. lib/consent.server.ts resolveAthleteGranter.
+          parentName: app.parentName.trim() || null,
           parentPhone: app.phone,
           teamId: parsed.data.teamId,
           number: parsed.data.number ?? null,
@@ -126,7 +131,7 @@ export async function createAthleteFromApplication(applicationId: unknown, input
         ipAddress: clientIp(await headers()),
       },
     })
-    .catch(() => { });
+    .catch((e) => console.error("[audit] YAZILAMADI action=athlete.create_from_application", errLabel(e)));
 
   revalidatePath("/admin/basvurular");
   revalidatePath("/admin/sporcular");
@@ -190,7 +195,7 @@ export async function linkAthleteToApplication(applicationId: unknown, athleteId
         ipAddress: clientIp(await headers()),
       },
     })
-    .catch(() => { });
+    .catch((e) => console.error("[audit] YAZILAMADI action=athlete.link_application", errLabel(e)));
 
   revalidatePath("/admin/basvurular");
   revalidatePath("/admin/sporcular");
@@ -239,7 +244,7 @@ export async function unlinkAthleteFromApplication(applicationId: unknown): Prom
         ipAddress: clientIp(await headers()),
       },
     })
-    .catch(() => { });
+    .catch((e) => console.error("[audit] YAZILAMADI action=athlete.unlink_application", errLabel(e)));
 
   revalidatePath("/admin/basvurular");
   revalidatePath("/admin/sporcular");

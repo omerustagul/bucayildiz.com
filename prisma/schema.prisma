@@ -161,6 +161,10 @@ model Athlete {
   photoUrl    String?
   birthYear   Int? // (kullanımdan kalktı — birthDate'e taşındı)
   birthDate   String? // "YYYY-MM-DD"
+  /// Sorumlu kişi adı: minörde VELİ, yetişkin sporcuda kendisi (Application.parentName ile aynı anlam).
+  /// KVKK rıza kayıtlarında `granterName` bu alandan gelir — panel hesabının adı ÇOCUĞUN adıdır,
+  /// onu "veli" diye yazmak denetim izini yanlış kılıyordu. Boşsa ilişki iddia EDİLMEZ.
+  parentName  String?
   parentPhone String?
   /// Bu sporcu hangi başvurudan oluşturuldu (varsa) — admin'in elle yarattığında null.
   /// @unique: bir başvurudan EN FAZLA bir sporcu (mükerrer dönüşüm DB'de engellenir).

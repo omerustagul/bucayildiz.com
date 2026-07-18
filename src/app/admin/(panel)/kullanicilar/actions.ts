@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOwner, hashPassword } from "@/lib/auth";
 import { isValidPermission } from "@/lib/permissions";
 import { clientIp } from "@/lib/net";
+import { errLabel } from "@/lib/log";
 import { idSchema } from "@/lib/validation";
 import type { SessionPayload } from "@/lib/session";
 
@@ -16,12 +17,14 @@ import type { SessionPayload } from "@/lib/session";
 
 export type UserResult = { ok: true } | { ok: false; error: string };
 
-/** Denetim izi (best-effort — kaydı başarısız olsa da ana işlem geri alınmaz). */
+/** Denetim izi (best-effort — kaydı başarısız olsa da ana işlem geri alınmaz).
+ *  Ama SESSİZ olmaz: KVKK izinde açıklanamayan boşluk kalmasın diye hata loglanır.
+ *  Log'a yalnız PII'siz etiket yazılır (bkz. lib/log.ts). */
 async function writeAudit(actor: SessionPayload, action: string, target: { id: string; name: string } | null, detail: string) {
   const ip = clientIp(await headers());
   await prisma.adminAuditLog
     .create({ data: { actorId: actor.sub, actorName: actor.name, action, targetId: target?.id ?? null, targetName: target?.name ?? null, detail, ipAddress: ip } })
-    .catch(() => {});
+    .catch((e) => console.error(`[audit] YAZILAMADI action=${action}`, errLabel(e)));
 }
 
 /** İstemci izin listesini kataloğa göre süz + "kullanicilar.*" dışla (owner-exclusive, devredilemez). */

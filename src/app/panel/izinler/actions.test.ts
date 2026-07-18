@@ -5,10 +5,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const H = vi.hoisted(() => ({
   latest: null as null | { granted: boolean; withdrawnAt: Date | null },
-  create: vi.fn(async () => ({})),
+  // İmza AÇIKÇA verilir: argümansız çıkarım `mock.calls[0][0]`'ı `undefined`
+  // tipler ve typecheck'te patlar (bu tuzağa daha önce de düşüldü).
+  create: vi.fn(async (_args: { data: Record<string, unknown> }) => ({})),
   findFirst: vi.fn(async () => H.latest),
   // foto-video değişiminde public kadroyu tazelemek için sporcunun takımı okunur
   athleteFindUnique: vi.fn(async () => ({ team: { slug: "u-17" } })),
+  resolveGranter: vi.fn(async () => ({ name: "Ayşe Yılmaz", relation: "veli" })),
   revalidatePath: vi.fn(),
 }));
 
@@ -20,6 +23,9 @@ vi.mock("next/cache", () => ({ revalidatePath: H.revalidatePath }));
 vi.mock("@/lib/consent.server", () => ({
   getConsentDocumentByKey: async (key: string) => ({ key, version: "v1", title: "Foto/Video", body: "b", required: false }),
   consentTextHash: () => "hash",
+  // Onaylayan kişi çözümü ayrı ayrıca test edilir (consent.granter.test.ts);
+  // burada YALNIZ sonucunun kayda geçtiği doğrulanır.
+  resolveAthleteGranter: H.resolveGranter,
 }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -36,6 +42,7 @@ beforeEach(() => {
   H.findFirst.mockClear();
   H.revalidatePath.mockClear();
   H.athleteFindUnique.mockClear();
+  H.resolveGranter.mockClear();
 });
 
 describe("setAthleteConsent (çift-tık idempotanlık)", () => {
@@ -57,6 +64,26 @@ describe("setAthleteConsent (çift-tık idempotanlık)", () => {
     H.latest = null;
     await setAthleteConsent("foto-video", true);
     expect(H.create).toHaveBeenCalledOnce();
+  });
+
+  // KVKK: kayıt "kim onayladı"yı DOĞRU yazmalı. Panel hesabının adı ÇOCUĞUN adıdır;
+  // eskiden sabit "veli" yazılıyordu → "Veli: <çocuğun adı>" gibi tutarsız iz kalıyordu.
+  it("onaylayan kişi ÇÖZÜLEREK yazılır — hesap adı + sabit 'veli' DEĞİL", async () => {
+    H.latest = null;
+    await setAthleteConsent("foto-video", true);
+    expect(H.resolveGranter).toHaveBeenCalledWith("ath-1", "Veli"); // (athleteId, hesap adı)
+    const row = H.create.mock.calls[0]![0].data;
+    expect(row.granterName).toBe("Ayşe Yılmaz");
+    expect(row.granterRelation).toBe("veli");
+  });
+
+  it("çözümleyici yakınlık bilmiyorsa kayda 'veli' YAZILMAZ", async () => {
+    H.latest = null;
+    H.resolveGranter.mockResolvedValueOnce({ name: "Can Demir", relation: "hesap-sahibi" });
+    await setAthleteConsent("foto-video", true);
+    const row = H.create.mock.calls[0]![0].data;
+    expect(row.granterRelation).toBe("hesap-sahibi");
+    expect(row.granterRelation).not.toBe("veli");
   });
 
   it("geçersiz girdi (granted boolean değil) reddedilir, yazmaz", async () => {

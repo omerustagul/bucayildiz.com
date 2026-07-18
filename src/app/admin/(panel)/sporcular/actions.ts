@@ -19,6 +19,9 @@ const schema = z.object({
   foot: z.enum(["Sağ", "Sol", "Çift"]).nullable().optional(),
   status: z.enum(["active", "injured", "rest"]).default("active"),
   licenseNo: z.string().trim().max(40).optional().or(z.literal("")),
+  // Sorumlu kişi adı — KVKK rıza kayıtlarında "onaylayan" olarak kullanılır
+  // (bkz. lib/consent.server.ts resolveAthleteGranter). Boşsa yakınlık iddia edilmez.
+  parentName: z.string().trim().max(120).optional().or(z.literal("")),
   parentPhone: z.string().trim().max(20).optional().or(z.literal("")),
   photoUrl: z.string().trim().nullable().optional(),
 });
@@ -38,6 +41,7 @@ function toData(d: z.infer<typeof schema>) {
     foot: d.foot ?? null,
     status: d.status,
     licenseNo: d.licenseNo || null,
+    parentName: d.parentName || null,
     parentPhone: d.parentPhone || null,
     photoUrl: d.photoUrl && d.photoUrl.trim() ? d.photoUrl : null,
   };
