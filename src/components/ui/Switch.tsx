@@ -9,6 +9,7 @@ export function Switch({
   onChange,
   disabled = false,
   label,
+  ariaLabel,
   size = "md",
   style = {},
 }: {
@@ -17,6 +18,9 @@ export function Switch({
   onChange?: (next: boolean) => void;
   disabled?: boolean;
   label?: React.ReactNode;
+  /** Görünür `label` YOKKEN erişilebilir ad — yanındaki metin ayrı bir öğedeyse
+   *  switch ekran okuyucuda adsız kalır (WCAG: kontrolün adı olmalı). */
+  ariaLabel?: string;
   size?: "sm" | "md";
   style?: React.CSSProperties;
 }) {
@@ -44,6 +48,7 @@ export function Switch({
       }}
       role="switch"
       aria-checked={on}
+      aria-label={label ? undefined : ariaLabel}
       aria-disabled={disabled || undefined}
       tabIndex={disabled ? -1 : 0}
       style={{

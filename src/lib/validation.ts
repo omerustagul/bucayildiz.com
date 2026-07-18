@@ -173,10 +173,42 @@ export const trainingCreateSchema = z
     notes: z.string().trim().max(500).optional().or(z.literal("")),
     drills: z.array(z.string().trim().min(1, "Boş madde olamaz.").max(200)).max(30).default([]),
     athleteIds: z.array(z.string().min(1)).max(40).default([]),
+    /** "Sporculara bildirim gönder" anahtarı. Eskiden payload'a HİÇ gönderilmiyordu →
+     *  kapatılsa bile bildirim gidiyordu (kullanıcıya yalan söyleyen kontrol). */
+    notify: z.boolean().optional().default(true),
   })
   .superRefine((v, ctx) => {
     if (v.scope === "individual" && v.athleteIds.length === 0) {
       ctx.addIssue({ code: "custom", message: "Bireysel antrenman için en az bir sporcu seçiniz.", path: ["athleteIds"] });
+    }
+  });
+
+/** Tekrarlı antrenman serisi (Faz 4.1). Tekil şemayla AYNI alan kuralları; tek fark:
+ *  `date` yerine `startDate`+`endDate`+`weekdays`. Tarihler "YYYY-MM-DD" olduğu için
+ *  sözlüksel karşılaştırma kronolojiktir. */
+export const trainingSeriesSchema = z
+  .object({
+    teamId: z.string().min(1, "Takım seçiniz."),
+    scope: z.enum(TRAINING_SCOPES).default("team"),
+    startDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Başlangıç tarihi seçiniz."),
+    endDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Bitiş tarihi seçiniz."),
+    weekdays: z.array(z.number().int().min(0).max(6)).min(1, "En az bir gün seçiniz.").max(7),
+    time: z.string().trim().max(5).optional().or(z.literal("")),
+    duration: z.number().int().min(0).max(300).nullable().optional(),
+    pitch: z.string().trim().max(80).optional().or(z.literal("")),
+    notes: z.string().trim().max(500).optional().or(z.literal("")),
+    drills: z.array(z.string().trim().min(1, "Boş madde olamaz.").max(200)).max(30).default([]),
+    athleteIds: z.array(z.string().min(1)).max(40).default([]),
+    /** "Sporculara bildirim gönder" anahtarı. Eskiden payload'a HİÇ gönderilmiyordu →
+     *  kapatılsa bile bildirim gidiyordu (kullanıcıya yalan söyleyen kontrol). */
+    notify: z.boolean().optional().default(true),
+  })
+  .superRefine((v, ctx) => {
+    if (v.scope === "individual" && v.athleteIds.length === 0) {
+      ctx.addIssue({ code: "custom", message: "Bireysel antrenman için en az bir sporcu seçiniz.", path: ["athleteIds"] });
+    }
+    if (v.endDate < v.startDate) {
+      ctx.addIssue({ code: "custom", message: "Bitiş tarihi başlangıçtan önce olamaz.", path: ["endDate"] });
     }
   });
 

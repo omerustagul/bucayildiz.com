@@ -12,7 +12,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { Icon } from "@/lib/icons";
-import { createTraining } from "@/app/admin/(panel)/takvim-programi/actions";
+import { createTraining, createTrainingSeries } from "@/app/admin/(panel)/takvim-programi/actions";
+import { expandWeekdays, WEEKDAYS, MAX_SERIES_TRAININGS } from "@/lib/schedule";
 import type { SAthlete, SFixture, SPitch, STeam } from "@/components/admin/views/ScheduleView";
 
 type ProgramKind = "team" | "individual" | "mac";
@@ -40,6 +41,24 @@ export function ScheduleAssignCard({ teams, athletes, pitches, fixtures }: { tea
   const [error, setError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  // Tekrarlı seri (Faz 4.1): tek tarih yerine aralık + hafta günleri.
+  const [repeat, setRepeat] = useState(false);
+  const [endDate, setEndDate] = useState("");
+  const [weekdays, setWeekdays] = useState<Set<number>>(new Set());
+  const [result, setResult] = useState<string | null>(null);
+
+  /** Canlı önizleme — kullanıcı kaç antrenman üreteceğini GÖRMEDEN oluşturmasın. */
+  const seriesDates = useMemo(
+    () => (repeat ? expandWeekdays(date, endDate, [...weekdays]) : []),
+    [repeat, date, endDate, weekdays],
+  );
+  const toggleWeekday = (n: number) =>
+    setWeekdays((s) => {
+      const next = new Set(s);
+      if (next.has(n)) next.delete(n);
+      else next.add(n);
+      return next;
+    });
 
   const teamAthletes = useMemo(() => athletes.filter((a) => a.teamId === team), [athletes, team]);
   const currentTeam = useMemo(() => teams.filter((t) => t.id === team), [teams, team]);
@@ -61,28 +80,53 @@ export function ScheduleAssignCard({ teams, athletes, pitches, fixtures }: { tea
 
   const assign = () => {
     setError(null);
+    setResult(null);
     if (!date) {
-      setError("Tarih seçiniz.");
+      setError(repeat ? "Başlangıç tarihi seçiniz." : "Tarih seçiniz.");
       return;
     }
-    startTransition(async () => {
-      const res = await createTraining({
-        teamId: team,
-        scope: kind === "individual" ? "individual" : "team",
-        date,
-        time,
-        duration: duration ? Number(duration) : null,
-        pitch,
-        notes,
-        drills: drills.map((d) => d.trim()).filter(Boolean),
-        athleteIds: kind === "individual" ? [...selAthletes] : [],
+    const common = {
+      teamId: team,
+      scope: kind === "individual" ? ("individual" as const) : ("team" as const),
+      time,
+      duration: duration ? Number(duration) : null,
+      pitch,
+      notes,
+      drills: drills.map((d) => d.trim()).filter(Boolean),
+      athleteIds: kind === "individual" ? [...selAthletes] : [],
+      notify,
+    };
+    const reset = () => {
+      setNotes("");
+      setDate("");
+      setDrills([""]);
+      setSelAthletes(new Set());
+    };
+
+    if (repeat) {
+      if (!endDate) return setError("Bitiş tarihi seçiniz.");
+      if (weekdays.size === 0) return setError("En az bir gün seçiniz.");
+      startTransition(async () => {
+        const res = await createTrainingSeries({ ...common, startDate: date, endDate, weekdays: [...weekdays] });
+        if (!res.ok) return setError(res.error);
+        // Sonucu AÇIKÇA raporla: kaç oluştu, kaç atlandı, sınıra takıldı mı.
+        const parts = [`${res.created} antrenman oluşturuldu`];
+        if (res.skipped.length) parts.push(`${res.skipped.length} tarih atlandı (o saatte zaten antrenman var)`);
+        if (res.capped) parts.push(`en fazla ${MAX_SERIES_TRAININGS} tarih — kalan haftalar için seriyi tekrar kurun`);
+        setResult(parts.join(" · "));
+        reset();
+        setEndDate("");
+        setWeekdays(new Set());
+        router.refresh();
       });
+      return;
+    }
+
+    startTransition(async () => {
+      const res = await createTraining({ ...common, date });
       if (res?.error) setError(res.error);
       else {
-        setNotes("");
-        setDate("");
-        setDrills([""]);
-        setSelAthletes(new Set());
+        reset();
         router.refresh();
       }
     });
@@ -140,10 +184,54 @@ export function ScheduleAssignCard({ teams, athletes, pitches, fixtures }: { tea
                 )}
               </Field>
             )}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <Field label="Tarih" required><TextInput type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
-              <Field label="Saat"><TextInput type="time" value={time} onChange={(e) => setTime(e.target.value)} /></Field>
+            {/* Tekrarlı program (Faz 4.1): tek tarih yerine aralık + hafta günleri */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 12px", borderRadius: "var(--radius-md)", background: "var(--navy-50)", border: "1px solid var(--navy-100)" }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text-strong)" }}>Tekrarlı program</div>
+                <div style={{ fontSize: 12, color: "var(--ink-400)", lineHeight: 1.4 }}>Bir tarih aralığında seçtiğiniz günlere otomatik antrenman oluşturur</div>
+              </div>
+              <Switch ariaLabel="Tekrarlı program" checked={repeat} onChange={(val) => { setRepeat(val); setError(null); setResult(null); }} />
             </div>
+
+            {repeat ? (
+              <>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                  <Field label="Başlangıç" required><TextInput type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
+                  <Field label="Bitiş" required><TextInput type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></Field>
+                  <Field label="Saat"><TextInput type="time" value={time} onChange={(e) => setTime(e.target.value)} /></Field>
+                </div>
+                <Field label="Günler" required hint="Haftanın hangi günlerinde tekrarlansın">
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {WEEKDAYS.map((w) => {
+                      const on = weekdays.has(w.value);
+                      return (
+                        <button
+                          key={w.value}
+                          type="button"
+                          onClick={() => toggleWeekday(w.value)}
+                          aria-pressed={on}
+                          aria-label={w.label}
+                          style={{ font: "inherit", cursor: "pointer", minWidth: 48, padding: "8px 10px", borderRadius: "var(--radius-sm)", border: `1.5px solid ${on ? "var(--navy-600)" : "var(--ink-200)"}`, background: on ? "var(--navy-600)" : "#fff", color: on ? "#fff" : "var(--ink-700)", fontWeight: 600, fontSize: 13 }}
+                        >
+                          {w.short}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Önizleme — körlemesine toplu oluşturma yapılmasın */}
+                  <span style={{ fontSize: 12.5, fontWeight: 600, color: seriesDates.length ? "var(--navy-700)" : "var(--ink-400)" }}>
+                    {seriesDates.length > 0
+                      ? `${seriesDates.length} antrenman oluşturulacak · ${seriesDates[0].split("-").reverse().join(".")} – ${seriesDates[seriesDates.length - 1].split("-").reverse().join(".")}`
+                      : "Tarih aralığı ve en az bir gün seçin"}
+                  </span>
+                </Field>
+              </>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <Field label="Tarih" required><TextInput type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
+                <Field label="Saat"><TextInput type="time" value={time} onChange={(e) => setTime(e.target.value)} /></Field>
+              </div>
+            )}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <Field label="Süre" hint="dakika"><TextInput type="number" value={duration} onChange={(e) => setDuration(e.target.value)} /></Field>
               {pitches.length > 0 ? (
@@ -178,9 +266,11 @@ export function ScheduleAssignCard({ teams, athletes, pitches, fixtures }: { tea
             <Field label="Genel Not"><TextArea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="örn. Krampon ve yağmurluk getirilecek" /></Field>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ fontSize: 13, color: "var(--ink-600)" }}>Sporculara bildirim gönder</span>
-              <Switch checked={notify} onChange={setNotify} />
+              <Switch ariaLabel="Sporculara bildirim gönder" checked={notify} onChange={setNotify} />
             </div>
             {error && <div style={{ padding: "10px 13px", background: "var(--red-100)", border: "1px solid var(--red-600)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--red-600)" }}>{error}</div>}
+            {/* Seri sonucu: kaç oluştu / kaç atlandı / sınıra takıldı mı */}
+            {result && <div style={{ padding: "10px 13px", background: "var(--green-100, #dcfce7)", border: "1px solid var(--green-600, #16a34a)", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--green-700, #15803d)", lineHeight: 1.5 }}>{result}</div>}
             <Button variant="accent" fullWidth leftIcon={<Icon name="calendar-check" size={16} />} onClick={assign} disabled={pending}>
               {pending ? "Ekleniyor…" : "Programa Ekle"}
             </Button>
