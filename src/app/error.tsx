@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { useChunkRecovery } from "@/lib/chunkRecovery";
 
 /** Marka amblemi (yıldız) — dış görsele bağımsız. */
 function Emblem() {
@@ -25,6 +26,8 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Bayat-chunk/deploy sürüm-kaymasıysa sessizce yenile (kullanıcı hata görmez).
+  if (useChunkRecovery(error)) return null;
   return (
     <main
       style={{

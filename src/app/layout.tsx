@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Barlow, Barlow_Condensed, Barlow_Semi_Condensed, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import { getSettings, activeCursor } from "@/lib/settings";
+import { ChunkGuard } from "@/components/ChunkGuard";
 
 /* Self-hosted via next/font (no Google Fonts CDN call at runtime).
    CSS variables are consumed by src/styles/tokens/typography.css. */
@@ -103,7 +104,10 @@ export default async function RootLayout({
       data-cursor={activeCursor(settings)}
       className={`${barlow.variable} ${barlowCondensed.variable} ${barlowSemiCondensed.variable} ${bebasNeue.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <ChunkGuard />
+        {children}
+      </body>
     </html>
   );
 }

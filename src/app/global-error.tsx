@@ -1,5 +1,7 @@
 "use client";
 
+import { useChunkRecovery } from "@/lib/chunkRecovery";
+
 /**
  * Kök (global) hata sınırı — kök layout'un kendisi render sırasında çökerse
  * devreye girer ve KENDİ <html>/<body>'sini kurar. Bu yüzden globals.css/tokenlar
@@ -13,6 +15,14 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Bayat-chunk/deploy sürüm-kaymasıysa sessizce yenile; bu arada nötr lacivert ekran.
+  if (useChunkRecovery(error)) {
+    return (
+      <html lang="tr">
+        <body style={{ margin: 0, minHeight: "100vh", background: "#0A0927" }} />
+      </html>
+    );
+  }
   return (
     <html lang="tr">
       <body

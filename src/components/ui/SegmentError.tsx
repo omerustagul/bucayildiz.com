@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/Button";
+import { useChunkRecovery } from "@/lib/chunkRecovery";
 
 /** Segment hata amblemi — dış görsele/ikon adına bağımsız (inline SVG). */
 function WarnMark() {
@@ -32,10 +33,14 @@ export function SegmentError({
   homeHref: string;
   homeLabel: string;
 }) {
+  const recovering = useChunkRecovery(error);
   useEffect(() => {
     // Üretimde `digest` ile sunucu loglarından izlenir; geliştirmede konsola düşer.
     console.error("[segment-error]", error);
   }, [error]);
+
+  // Bayat-chunk/deploy sürüm-kaymasıysa sessizce yenile (kullanıcı hata görmez).
+  if (recovering) return null;
 
   return (
     <div style={{ display: "grid", placeItems: "center", minHeight: "60vh", padding: "40px 20px" }}>

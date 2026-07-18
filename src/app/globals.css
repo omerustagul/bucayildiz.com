@@ -440,9 +440,15 @@ main:has(+ footer) .by-page-transition> :last-child {
   }
 
   /* Ana takım kartı burada tek başına tam satıra düşer — stretch edecek
-     komşusu kalmaz; çökmesin diye kendi oranıyla yükseklik alır. */
+     komşusu kalmaz; çökmesin diye kendi oranıyla yükseklik alır.
+     ⚠️ iOS Safari (WebKit): inline `align-self: stretch` + `aspect-ratio` BİRLİKTE
+     kartı 0×0 çökertiyordu (stretch yüksekliği 0 yapıp aspect-ratio genişliği de
+     0'a türetiyor). `align-self: start !important` inline stretch'i ezer → yalnız
+     aspect-ratio kalır, yükseklik grid genişliğinden hesaplanır. Chromium'da da
+     doğru. (Kanıt: WebKit reprosu 0×0 → düzeltmeyle ~197px.) */
   .by-age-card--wide {
     aspect-ratio: 16 / 9;
+    align-self: start !important;
   }
 
   .hp-grid-footer {
