@@ -16,7 +16,18 @@ function urlBase64ToUint8Array(base64: string) {
   return arr;
 }
 
-type State = "loading" | "unsupported" | "ios-needs-pwa" | "off" | "on" | "denied";
+/**
+ * VAPID public anahtarı = base64url kodlu sıkıştırılmamış P-256 noktası (65 bayt →
+ * 87 karakter, 0x04 öneki yüzünden HER ZAMAN "B" ile başlar). Placeholder/açıklama
+ * metni (ör. Türkçe harf veya parantez içeren) bu kapıdan geçemez. Geçersiz anahtarla
+ * `pushManager.subscribe` KESİN fırlatır; kullanıcıya "açılamadı" demek yerine
+ * yapılandırma eksikliğini dürüstçe söyleriz.
+ */
+export function isValidVapidKey(k: string): boolean {
+  return /^B[A-Za-z0-9_-]{79,95}$/.test(k);
+}
+
+type State = "loading" | "unsupported" | "ios-needs-pwa" | "unconfigured" | "off" | "on" | "denied";
 
 /**
  * Sporcu/veli paneli — bildirim aç/kapat. KVKK: opt-in, tek tıkla iptal.
@@ -30,15 +41,30 @@ export function PushToggle() {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
+    const ua = navigator.userAgent;
+    const isIOS = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      ("standalone" in navigator && (navigator as Navigator & { standalone?: boolean }).standalone === true);
+
+    // iOS'ta Web Push YALNIZ "Ana Ekrana Ekle" ile kurulu PWA'da çalışır. iOS 16.4+
+    // Safari SEKMESİNDE Push API'leri VAR görünür ama subscribe() patlar → butonu hiç
+    // gösterme, doğrudan kurulum yönergesi ver. (Eskiden bu kontrol yalnız API'ler YOKken
+    // tetikleniyordu; modern iOS'ta API'ler var olduğu için kullanıcı "Aç"a basıp
+    // "Bildirim açılamadı" hatası alıyordu.)
+    if (isIOS && !standalone) {
+      setState("ios-needs-pwa");
+      return;
+    }
+
     const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
     if (!supported) {
-      // iOS Safari: PWA kurulu değilse Push API yok
-      const ua = navigator.userAgent;
-      const isIOS = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-      const standalone =
-        window.matchMedia("(display-mode: standalone)").matches ||
-        ("standalone" in navigator && (navigator as Navigator & { standalone?: boolean }).standalone === true);
-      setState(isIOS && !standalone ? "ios-needs-pwa" : "unsupported");
+      setState("unsupported");
+      return;
+    }
+    // Anahtar yok/placeholder ise subscribe kesin patlar → dürüst mesaj.
+    if (!isValidVapidKey(VAPID_PUBLIC)) {
+      setState("unconfigured");
       return;
     }
     if (Notification.permission === "denied") {
@@ -55,9 +81,9 @@ export function PushToggle() {
     setBusy(true);
     setErr(null);
     try {
-      if (!VAPID_PUBLIC) {
-        setState("off");
-        setErr("Bildirim servisi henüz yapılandırılmadı. Lütfen daha sonra deneyin.");
+      // Savunma derinliği: mount kapısı geçilse bile geçersiz anahtarla subscribe denemeyiz.
+      if (!isValidVapidKey(VAPID_PUBLIC)) {
+        setState("unconfigured");
         return;
       }
       const reg = await navigator.serviceWorker.register("/sw.js");
@@ -131,6 +157,9 @@ export function PushToggle() {
 
   if (state === "unsupported")
     return card(<>{title}<div style={{ fontSize: 13, color: "var(--text-muted)" }}>Bu tarayıcı bildirimleri desteklemiyor.</div></>);
+
+  if (state === "unconfigured")
+    return card(<>{title}<div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5 }}>Bildirim servisi henüz yapılandırılmadı. Kulüp yöneticisi bildirim anahtarlarını tanımladığında bu bölüm otomatik olarak aktifleşecek.</div></>);
 
   if (state === "denied")
     return card(<>{title}<div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5 }}>Bildirim izni engellenmiş. Tarayıcı ayarlarından bu site için bildirimlere izin verin.</div></>);
