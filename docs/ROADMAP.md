@@ -77,9 +77,16 @@ KURULABİLİR.**
 iki adımlı onay + `adminAuditLog` izi. Muafiyetler: dönüştürülmüş başvuru ve canlı bağlı
 rıza asla silinmez. **FAZ 2 TAMAMEN BİTTİ.**
 
+**✅ FAZ 3 TAMAM (canlı):** 3.1 fikstür fallback (yaklaşan maç yokken son 3 sonuç + puan
+durumu yönlendirmesi; yan düzeltme: skorsuz bitmiş maç artık "0–0" uydurmuyor) · 3.2 örnek
+rapor gerçek 9 teste bağlandı (tek kaynak `lib/performanceTests.ts`) · 3.3 header dropdown
+animasyonu (kural globals.css'te tek yerde, yalnız opacity+transform, reduced-motion
+destekli) · 3.4 tesislerde OpenStreetMap (Facility.latitude/longitude göçü + admin MapPicker).
+
 **⏸ Bekleyen (⚖️ avukat):** `ConsentDocument.body` (5 sözleşme) nihai metinleri (taslak).
-**⏭ Sıradaki:** Faz 3 (fikstür fallback, örnek rapor→9 test, header dropdown animasyonu,
-tesis haritaları).
+**⏭ Sıradaki — Faz 4 (kullanıcının 14 maddelik listesinin SON 3 kalemi):** 4.1 toplu/tekrarlı
+takvim · 4.2 hatırlatma bildirimleri (2-3g + 1g) + gerçek mobil push · 4.3 header arama.
+Ardından Faz 5 (cila/sertleştirme).
 
 **Faz 0 — KVKK Kritik+Yüksek (gerçek kullanıcı öncesi ŞART)**
 - **0.1 Giriş sözleşme modalı (L, 🤖):** sıfır-rızalı sporcu panele girince zorunlu
