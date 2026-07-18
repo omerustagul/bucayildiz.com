@@ -86,6 +86,30 @@ model ConsentRecord {
   @@index([documentKey])
 }
 
+/// Bülten (ticari elektronik ileti) abonesi. Athlete/Application'a bağlı OLMAYAN
+/// halka açık aboneler için ayrı. Rıza ispatı satırın kendisinde durur: abone
+/// olurken aktif "pazarlama" belgesinin sürümü + gövde SHA-256'sı + IP/UA + zaman.
+/// Çift opt-in: SMTP varsa `pending` (doğrulama e-postası) → onayla → `active`;
+/// SMTP yoksa doğrudan `active` (tek opt-in). İptal jetonla (login'siz tek tık).
+/// Not: Türkiye'de gerçek GÖNDERİM ayrıca İYS kaydı gerektirir (kod dışı).
+model NewsletterSubscriber {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  status         String    @default("pending") // pending | active | unsubscribed
+  consentVersion String // abone olurken aktif "pazarlama" belgesinin sürümü (ispat)
+  consentHash    String // o metnin SHA-256'sı (sonradan değişmediğinin ispatı)
+  ipAddress      String?
+  userAgent      String?
+  confirmToken   String?   @unique // çift opt-in doğrulama jetonu (onaylanınca null'lanır)
+  unsubToken     String    @unique // tek-tık iptal jetonu (kalıcı)
+  confirmedAt    DateTime? // çift opt-in onay zamanı
+  unsubscribedAt DateTime? // iptal zamanı (kayıt SİLİNMEZ — denetim izi durur)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status])
+}
+
 /// Takım (A Takım, U-18…U-15).
 model Team {
   id         String     @id @default(cuid())

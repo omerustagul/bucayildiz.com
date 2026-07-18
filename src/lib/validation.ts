@@ -115,6 +115,13 @@ export const contactSchema = z.object({
   message: z.string().trim().min(5, "Mesajınızı yazınız.").max(2000),
 });
 
+/** Bülten aboneliği (public). `consent` boolean gelir; zorunlu onay kontrolü
+ *  action'da yapılır (Türkçe mesaj için — Zod literal'e bağlı kalmadan). */
+export const newsletterSchema = z.object({
+  email: z.string().trim().email("Geçerli bir e-posta giriniz.").max(160),
+  consent: z.boolean(),
+});
+
 // --- Kariyer: iş ilanı (admin) + iş başvurusu (public) ---
 export const JOB_EMPLOYMENT = ["full-time", "part-time", "stajyer"] as const;
 export const JOB_APPLICATION_STATUSES = ["new", "reviewing", "closed"] as const;

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/icons";
+import { NewsletterForm } from "@/components/layout/NewsletterForm";
 import { logoSrc } from "@/lib/branding";
 import { SocialLinks } from "@/components/layout/SocialLinks";
 import type { SocialLink } from "@/lib/social";
@@ -95,25 +95,7 @@ export function SiteFooter({ socials = [], logoUrl, address, phone }: { socials?
             <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "rgba(255, 255, 255, 0.62)", margin: 0 }}>
               Kulüpten haberler ve maç duyuruları için kayıt olun.
             </p>
-            <form style={{ display: "flex", gap: 8 }}>
-              <input
-                type="email"
-                placeholder="E-posta adresiniz"
-                aria-label="E-posta adresiniz"
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  fontFamily: "var(--font-body)",
-                  fontSize: 13.5,
-                  padding: "9px 12px",
-                  borderRadius: "var(--radius-sm)",
-                  border: "1px solid rgba(255, 255, 255, 0.16)",
-                  background: "rgba(255, 255, 255, 0.06)",
-                  color: "#fff",
-                }}
-              />
-              <Button variant="accent" size="sm">Katıl</Button>
-            </form>
+            <NewsletterForm />
             {/* Adres/telefon admin ayarlarından beslenir (tek kaynak). Boşsa satır
                 gösterilmez — sahte iletişim bilgisi basmayız (bkz. /iletisim aynı kaynak). */}
             {(address || phone) && (
