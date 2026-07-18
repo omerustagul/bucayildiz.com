@@ -4,21 +4,24 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Icon, type IconName } from "@/lib/icons";
 import { SceneBody, SceneFlex, SceneVertical, SceneLongJump, SceneLadder, SceneSprint, SceneAgility505, SceneTTest, SceneYoyo, SceneRoad, SceneViewport } from "./TrialScenes";
+import { perfTest } from "@/lib/performanceTests";
 import "@/styles/trial-journey.css";
 
 /** Buca Yıldız — Ücretsiz Deneme "Yolculuk" ekranı (veli gözünden).
  *  Sahne animasyonları framer-motion + eklemli SVG figür ile TrialScenes.tsx'te. */
 
+/* Test BAŞLIKLARI tek kaynaktan (`@/lib/performanceTests`) gelir — anasayfadaki örnek
+   raporla aynı 9 test. Sahne (animasyon) ve açıklama metni burada kalır. */
 const TJ_STEPS: { kicker: string; title: string; scene: React.ComponentType; text: string; final?: boolean }[] = [
-  { kicker: "Test 01", title: "Vücut Profili Çıkarılır", scene: SceneBody, text: "Çocuğunuzun boyu, kilosu, vücut yağ ve kas oranı ölçülür; sağlıklı gelişim için başlangıç noktasını birlikte görürüz." },
-  { kicker: "Test 02", title: "Esneklik Testi", scene: SceneFlex, text: "Otur-uzan ve eklem hareket açıklığı ölçülür; esneklik profili çıkarılarak sakatlık riski azaltılır." },
-  { kicker: "Test 03", title: "Dikey Sıçrama Testi", scene: SceneVertical, text: "Dikey sıçrama yüksekliği ölçülür — patlayıcı bacak gücünün, ivmelenme ve şutun temeli." },
-  { kicker: "Test 04", title: "Uzun Atlama", scene: SceneLongJump, text: "Durarak uzun atlama ile alt vücut patlayıcılığı ve denge değerlendirilir." },
-  { kicker: "Test 05", title: "Koordinasyon Testi", scene: SceneLadder, text: "Çeviklik merdiveni ve ayak çalışmalarıyla denge, ritim ve koordinasyon becerileri ölçülür — futbolun temel taşı." },
-  { kicker: "Test 06", title: "Sprint Testleri", scene: SceneSprint, text: "10-20-30 m sprintlerle ivmelenme ve maksimum hız ölçülür; nabız takibiyle bilimsel bir değerlendirme yapılır." },
-  { kicker: "Test 07", title: "505 Çeviklik Testi", scene: SceneAgility505, text: "Sprint ve keskin 180° dönüşle yön değiştirme hızı — futbolda çevikliğin ölçütü — değerlendirilir." },
-  { kicker: "Test 08", title: "T Testi", scene: SceneTTest, text: "İleri, yana ve geri hareketle çok yönlü çeviklik, denge ve ayak hızı ölçülür." },
-  { kicker: "Test 09", title: "Yo-Yo Testi", scene: SceneYoyo, text: "Aralıklı mekik koşusuyla dayanıklılık ve toparlanma kapasitesi bilimsel olarak ölçülür." },
+  { kicker: "Test 01", title: perfTest("vucut").title, scene: SceneBody, text: "Çocuğunuzun boyu, kilosu, vücut yağ ve kas oranı ölçülür; sağlıklı gelişim için başlangıç noktasını birlikte görürüz." },
+  { kicker: "Test 02", title: perfTest("esneklik").title, scene: SceneFlex, text: "Otur-uzan ve eklem hareket açıklığı ölçülür; esneklik profili çıkarılarak sakatlık riski azaltılır." },
+  { kicker: "Test 03", title: perfTest("dikey").title, scene: SceneVertical, text: "Dikey sıçrama yüksekliği ölçülür — patlayıcı bacak gücünün, ivmelenme ve şutun temeli." },
+  { kicker: "Test 04", title: perfTest("uzun").title, scene: SceneLongJump, text: "Durarak uzun atlama ile alt vücut patlayıcılığı ve denge değerlendirilir." },
+  { kicker: "Test 05", title: perfTest("koordinasyon").title, scene: SceneLadder, text: "Çeviklik merdiveni ve ayak çalışmalarıyla denge, ritim ve koordinasyon becerileri ölçülür — futbolun temel taşı." },
+  { kicker: "Test 06", title: perfTest("sprint").title, scene: SceneSprint, text: "10-20-30 m sprintlerle ivmelenme ve maksimum hız ölçülür; nabız takibiyle bilimsel bir değerlendirme yapılır." },
+  { kicker: "Test 07", title: perfTest("cev505").title, scene: SceneAgility505, text: "Sprint ve keskin 180° dönüşle yön değiştirme hızı — futbolda çevikliğin ölçütü — değerlendirilir." },
+  { kicker: "Test 08", title: perfTest("ttest").title, scene: SceneTTest, text: "İleri, yana ve geri hareketle çok yönlü çeviklik, denge ve ayak hızı ölçülür." },
+  { kicker: "Test 09", title: perfTest("yoyo").title, scene: SceneYoyo, text: "Aralıklı mekik koşusuyla dayanıklılık ve toparlanma kapasitesi bilimsel olarak ölçülür." },
   { kicker: "Sonuç", title: "Sporcuya Özel Yol Haritası", scene: SceneRoad, final: true, text: "Tüm test sonuçları birleştirilir ve çocuğunuza özel, adım adım bir gelişim planı hazırlanır. Her sporcu farklıdır." },
 ];
 

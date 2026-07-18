@@ -1,4 +1,5 @@
 import { AppointmentForm } from "./AppointmentForm";
+import { PERFORMANCE_TESTS } from "@/lib/performanceTests";
 
 /**
  * Buca Yıldız — "Nasıl Çalışıyoruz?" section. Hero'nun hemen altında.
@@ -22,12 +23,8 @@ const RADAR = [
   { label: "Güç", value: 74 },
 ];
 
-const TESTS = [
-  { label: "20 m Sprint", value: "3.45 sn" },
-  { label: "Çeviklik Testi", value: "11.20 sn" },
-  { label: "Dikey Sıçrama", value: "38 cm" },
-  { label: "Yo-Yo Dayanıklılık", value: "1200 m" },
-];
+/* Test listesi ARTIK tek kaynaktan (`@/lib/performanceTests`) gelir — eskiden burada
+   4 testlik ayrı bir liste vardı ve /ucretsiz-deneme'deki 9 testle UYUŞMUYORDU. */
 
 function StepsColumn() {
   return (
@@ -108,12 +105,18 @@ function SampleReportCard() {
         </div>
 
         {/* test sonuçları */}
-        <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--ink-500)", margin: "0 0 4px" }}>Test Sonuçları</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 0, gridTemplateColumns: "2fr 2fr", gridTemplateRows: "2fr 2fr", gridAutoFlow: "column" }}>
-          {TESTS.map((t, i) => (
-            <div key={t.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0", borderTop: i === 0 ? "none" : "1px solid rgba(21,41,90,0.08)" }}>
-              <span style={{ fontSize: 13, color: "var(--ink-700)" }}>{t.label}</span>
-              <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, fontSize: 13.5, color: "var(--navy-900)" }}>{t.value}</span>
+        <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--ink-500)", margin: "0 0 4px" }}>
+          Test Sonuçları <span style={{ color: "var(--gold-700)" }}>· {PERFORMANCE_TESTS.length} Test</span>
+        </div>
+        {/* 9 test 2 sütunda → kart yüksekliği kontrollü kalır (tek sütunda çok uzardı).
+            375px'te ölçüldü: sütun ~139px, etiket+değer sığıyor, kırpma yok. `.hp-report-tests`
+            ileride dar-ekran ayarı gerekirse diye stil kancası olarak duruyor. */}
+        <div className="hp-report-tests" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 14 }}>
+          {PERFORMANCE_TESTS.map((t, i) => (
+            <div key={t.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "4.5px 0", borderTop: i < 2 ? "none" : "1px solid rgba(21,41,90,0.08)" }}>
+              {/* min-width:0 → flex öğesinde ellipsis çalışsın (proje CSS taşma kuralı) */}
+              <span style={{ fontSize: 11.5, color: "var(--ink-700)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.short}</span>
+              <span style={{ flex: "none", fontFamily: "var(--font-stat)", fontWeight: 700, fontSize: 12, color: "var(--navy-900)" }}>{t.sample}</span>
             </div>
           ))}
         </div>

@@ -58,7 +58,10 @@ export function FixtureCard({
   const center =
     live || finished ? (
       <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, fontSize: 34, color: "var(--navy-900)", fontVariantNumeric: "tabular-nums" }}>
-        {home.score ?? 0}–{away.score ?? 0}
+        {/* Skor GİRİLMEMİŞSE "0–0" UYDURMA — sonuç yalanı olur. Yönetici skoru
+            girene kadar tire gösterilir (anasayfa fallback'i bitmiş maçları öne
+            çıkardığı için bu durum artık daha görünür). */}
+        {home.score ?? "–"}–{away.score ?? "–"}
       </span>
     ) : (
       <span style={{ fontFamily: "var(--font-stat)", fontWeight: 700, fontSize: 26, color: "var(--navy-600)", fontVariantNumeric: "tabular-nums" }}>

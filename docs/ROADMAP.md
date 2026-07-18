@@ -73,9 +73,13 @@ rıza kaydı **10 yıl** · başvuru **6-12 ay** · bülten (iptal sonrası) **3
 (operasyonel, kod dışı) — rıza toplama tamam. → **Faz 2.4/B (otomatik periyodik imha) artık
 KURULABİLİR.**
 
+**✅ Faz 2.4/B TAMAM (canlı):** Ayarlar→"KVKK Saklama & İmha" paneli — kuru çalışma +
+iki adımlı onay + `adminAuditLog` izi. Muafiyetler: dönüştürülmüş başvuru ve canlı bağlı
+rıza asla silinmez. **FAZ 2 TAMAMEN BİTTİ.**
+
 **⏸ Bekleyen (⚖️ avukat):** `ConsentDocument.body` (5 sözleşme) nihai metinleri (taslak).
-**⏭ Sıradaki seçenekler:** Faz 2.4/B otomatik imha (yukarıdaki sürelerle) · Faz 3 (fikstür
-fallback, örnek rapor→9 test, header dropdown animasyonu, tesis haritaları).
+**⏭ Sıradaki:** Faz 3 (fikstür fallback, örnek rapor→9 test, header dropdown animasyonu,
+tesis haritaları).
 
 **Faz 0 — KVKK Kritik+Yüksek (gerçek kullanıcı öncesi ŞART)**
 - **0.1 Giriş sözleşme modalı (L, 🤖):** sıfır-rızalı sporcu panele girince zorunlu

@@ -38,6 +38,40 @@ export async function FixtureSection() {
   const next = upcoming[0];
   const compact = [finished[finished.length - 1], upcoming[1]].filter(Boolean).slice(0, 2) as Fx[];
 
+  // YAKLAŞAN MAÇ YOKSA (sezon arası / fikstür henüz girilmemiş): eskiden öne çıkan
+  // "Sıradaki Maç" kartı hiç render edilmiyor, bölüm yarım/boş kalıyordu. Artık son
+  // 3 SONUÇ gösterilir + puan durumuna yönlendirilir. Hiç oynanmış maç da yoksa
+  // gösterilecek bir şey kalmadığından bölüm gizlenir.
+  if (!next) {
+    const recent = finished.slice(-3).reverse();
+    if (recent.length === 0) return null;
+    return (
+      <section className="by-navy-sec" style={{ background: "var(--grad-navy-deep)", position: "relative", overflow: "hidden" }}>
+        <span style={{ position: "absolute", right: -80, top: -60, fontSize: 420, lineHeight: 1, color: "rgba(201,162,39,0.04)", pointerEvents: "none" }}>★</span>
+        <div style={{ maxWidth: 1540, margin: "0 auto", padding: "38px clamp(16px, 5vw, 32px)", position: "relative" }}>
+          <SectionHeading
+            kicker="Fikstür"
+            title="Son Maç Sonuçları"
+            onDark
+            action={
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <Button as="a" href="/fikstur/puan-durumu" variant="accent" size="sm">Puan Durumu</Button>
+                <Button as="a" href="/fikstur" variant="on-navy" size="sm">Tüm Fikstür</Button>
+              </div>
+            }
+            style={{ marginBottom: 32 }}
+          />
+          {/* auto-fit → 3/2/1 sütuna kendiliğinden düşer (ayrı media query gerekmez) */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 16, alignItems: "stretch" }}>
+            {recent.map((f) => (
+              <FixtureCard key={f.id} {...toCard(f, CREST)} />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="by-navy-sec" style={{ background: "var(--grad-navy-deep)", position: "relative", overflow: "hidden" }}>
       <span style={{ position: "absolute", right: -80, top: -60, fontSize: 420, lineHeight: 1, color: "rgba(201,162,39,0.04)", pointerEvents: "none" }}>★</span>
