@@ -84,9 +84,20 @@ animasyonu (kural globals.css'te tek yerde, yalnız opacity+transform, reduced-m
 destekli) · 3.4 tesislerde OpenStreetMap (Facility.latitude/longitude göçü + admin MapPicker).
 
 **⏸ Bekleyen (⚖️ avukat):** `ConsentDocument.body` (5 sözleşme) nihai metinleri (taslak).
-**⏭ Sıradaki — Faz 4 (kullanıcının 14 maddelik listesinin SON 3 kalemi):** 4.1 toplu/tekrarlı
-takvim · 4.2 hatırlatma bildirimleri (2-3g + 1g) + gerçek mobil push · 4.3 header arama.
-Ardından Faz 5 (cila/sertleştirme).
+**✅ Faz 4.1 + 4.2 TAMAM (canlı):**
+- **4.1 Tekrarlı antrenman programı:** tarih aralığı + hafta günleri → toplu oluşturma;
+  ÇAKIŞMA korumalı (aynı takım+gün+saat atlanır → seri iki kez kurulsa mükerrer olmaz);
+  canlı önizleme; seri için TEK özet bildirim. Yan düzeltmeler: "bildirim gönder" anahtarı
+  ölüydü (payload'a gitmiyordu) → çalışır hâle geldi; `Switch` a11y (ariaLabel).
+- **4.2 Hatırlatma bildirimleri:** antrenman/maçtan **3 gün ve 1 gün** önce otomatik
+  bildirim. Sunucu cron (saatlik) → `POST /api/cron/reminders` (`x-cron-key`, zamanlama-
+  güvenli; anahtar yoksa uç kapalı). Çift gönderim `ReminderLog` **@@unique** ile DB
+  seviyesinde engellenir (claim-then-send; PM2'de 2 instance olduğu için şart). Gönderim
+  penceresi 09:00–21:00. KVKK: gövdede yalnız zaman/yer.
+  Kurulum: `npm run cron:secret` (sırrı .env.production'a yazar, ekrana basmaz) + crontab
+  satırı kuruldu. Cron log: `/var/log/bucayildiz-reminders.log`.
+
+**⏭ Sıradaki:** 4.3 header arama (14 maddelik listenin SON kalemi) → sonra Faz 5 (cila).
 
 **Faz 0 — KVKK Kritik+Yüksek (gerçek kullanıcı öncesi ŞART)**
 - **0.1 Giriş sözleşme modalı (L, 🤖):** sıfır-rızalı sporcu panele girince zorunlu
