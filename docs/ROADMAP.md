@@ -84,7 +84,7 @@ animasyonu (kural globals.css'te tek yerde, yalnız opacity+transform, reduced-m
 destekli) · 3.4 tesislerde OpenStreetMap (Facility.latitude/longitude göçü + admin MapPicker).
 
 **⏸ Bekleyen (⚖️ avukat):** `ConsentDocument.body` (5 sözleşme) nihai metinleri (taslak).
-**✅ Faz 4.1 + 4.2 TAMAM (canlı):**
+**✅ Faz 4.1 + 4.2 + 4.3 TAMAM (4.1-4.2 canlı, 4.3 bu deploy ile):**
 - **4.1 Tekrarlı antrenman programı:** tarih aralığı + hafta günleri → toplu oluşturma;
   ÇAKIŞMA korumalı (aynı takım+gün+saat atlanır → seri iki kez kurulsa mükerrer olmaz);
   canlı önizleme; seri için TEK özet bildirim. Yan düzeltmeler: "bildirim gönder" anahtarı
@@ -97,7 +97,18 @@ destekli) · 3.4 tesislerde OpenStreetMap (Facility.latitude/longitude göçü +
   Kurulum: `npm run cron:secret` (sırrı .env.production'a yazar, ekrana basmaz) + crontab
   satırı kuruldu. Cron log: `/var/log/bucayildiz-reminders.log`.
 
-**⏭ Sıradaki:** 4.3 header arama (14 maddelik listenin SON kalemi) → sonra Faz 5 (cila).
+- **4.3 Site içi arama:** header'da (masaüstü mega menü sağı + mobil çekmece) arama kutusu
+  → `/arama` sayfası. Kapsam **yalnız yayımlanmış içerik**: haber (`status='published'`),
+  takım, tesis, medya, açık iş ilanı (`active=true`). **KVKK: sporcu/veli/kullanıcı
+  tabloları kapsam DIŞI** — çocuk kişisel verisi aranamaz (testle sabit).
+  **Türkçe arama düzeltmesi:** DB collation `en_US.UTF-8` olduğu için Prisma'nın
+  `mode:"insensitive"` (ILIKE) kıvırması Türkçe'de yanlış çalışıyordu — "TAKIM" yazan
+  kullanıcı "Takım" içeriğini BULAMIYORDU (tarayıcıda 0 sonuçla yakalandı). Çözüm: sorgu
+  ve içerik aynı katlamayla ASCII'ye indirilir (`foldTr` ↔ SQL `translate`); yan fayda
+  aksansız arama ("goztepe"→"Göztepe", "TACLANDI"→"taçlandırdı").
+  Not: katlama indeks kullanmaz (seq scan) — bu hacimde sorunsuz; büyürse ifade-indeksi.
+
+**⏭ Sıradaki:** 14 maddelik liste BİTTİ. Sırada Faz 5 (cila) — bkz. aşağısı.
 
 **Faz 0 — KVKK Kritik+Yüksek (gerçek kullanıcı öncesi ŞART)**
 - **0.1 Giriş sözleşme modalı (L, 🤖):** sıfır-rızalı sporcu panele girince zorunlu

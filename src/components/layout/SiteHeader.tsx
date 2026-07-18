@@ -9,6 +9,7 @@ import { IconButton } from "@/components/ui/IconButton";
 import { Icon, type IconName } from "@/lib/icons";
 import { logoSrc } from "@/lib/branding";
 import { SocialLinks } from "@/components/layout/SocialLinks";
+import { HeaderSearch } from "@/components/layout/HeaderSearch";
 import type { SocialLink } from "@/lib/social";
 
 /**
@@ -169,6 +170,7 @@ export function SiteHeader({ active: activeOverride, socials = [], logoUrl, team
           }}
         >
           <div style={{ padding: "14px 18px", display: "flex", flexDirection: "column", gap: 10, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <HeaderSearch variant="drawer" />
             <Button as="a" href="/giris" variant="on-navy" size="md" fullWidth leftIcon={navIcon("lock", 16)}>
               Sporcu Girişi
             </Button>
@@ -377,6 +379,8 @@ export function SiteHeader({ active: activeOverride, socials = [], logoUrl, team
                 </div>
               );
             })}
+            {/* Arama — menü öğelerinden sonra sağa yaslanır (marginLeft:auto). */}
+            <HeaderSearch variant="menubar" />
           </div>
         </nav>
         <TeamStripe />
