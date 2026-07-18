@@ -41,13 +41,23 @@ uyumu birinci sınıf gereksinim**. Arayüz ve kod yorumları **Türkçe**.
 **Bir işi "bitti" demeden önce:** en az `npm run typecheck` (ideali + `lint` +
 ilgili `test`) temiz olmalı.
 
-## Veritabanı (bu makine — Windows)
+## Veritabanı
 
-- **Native PostgreSQL 18, port `5432`** (Docker/5433 DEĞİL — Docker Desktop bu
-  makinede bozuk).
-- Bağlantı: `postgresql://bucayildiz:DEV_DB_PAROLA@127.0.0.1:5432/bucayildiz?schema=public`
+- **TEK DOĞRU KAYNAK `.env` içindeki `DATABASE_URL`'dir.** Port/sürüm makineden
+  makineye değişir — buraya sabit bir port YAZMA, varsayma, "düzeltmeye" kalkma.
+  Doğrulamak için (parolayı basmadan):
+  ```bash
+  grep '^DATABASE_URL' .env | sed -E 's#//[^:]+:[^@]+@#//***:***@#'
+  lsof -nP -iTCP -sTCP:LISTEN | grep -i postgres   # gerçekten dinleyen port
+  ```
+- Ölçülen durum (2026-07-18, macOS geliştirme makinesi): **PostgreSQL 16.14, port
+  `5433`** — tek örnek çalışıyor; uygulama, `db:backup` ve `prisma migrate` hepsi
+  aynı veritabanına bakıyor. (Bu bölüm daha önce "Windows / PG 18 / 5432" diyordu;
+  ikisi de bu makine için yanlıştı ve bir oturumda "yanlış DB'ye migration attım"
+  paniğine yol açtı.)
 - `.env` git'e girmez. Şablonlar: `.env.example`, `.env.production.example`.
 - Üretim: Türkiye veri merkezi (KVKK). Ayrıntı `docs/DEPLOYMENT.md`.
+- **Migration ÖNCESİ `npm run db:backup` zorunlu** (aşağıdaki kural 6).
 
 ## Dizin yapısı
 
