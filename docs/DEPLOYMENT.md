@@ -222,3 +222,33 @@ bilinçli olarak reddedildi: sağlık verisi yurt dışında barınamaz + ciddi 
 - Onay metinleri (`ConsentDocument.body`) şu an **taslak**; KVKK avukatı yazıp
   onaylayınca admin/seed üzerinden yeni sürüm olarak güncellenir.
 - VERBİS kaydı (özel nitelikli veri) — hukuki süreç.
+
+## 10. Web Push (VAPID) kurulumu
+
+Bildirimlerin **gerçekten** çalışması için geçerli bir VAPID anahtar çifti şarttır.
+2026-07-18'de prod'da `NEXT_PUBLIC_VAPID_PUBLIC_KEY` bir **placeholder metin**di
+(142 karakter, Türkçe); `pushManager.subscribe()` fırlatıp kullanıcıya "Bildirim
+açılamadı" gösteriyordu.
+
+```bash
+cd /var/www/bucayildiz.com
+npm run vapid:generate     # üretir + .env'e YAZAR; anahtarları ekrana BASMAZ
+```
+
+Betik üç değişkeni set eder: `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (istemci) ve
+`VAPID_PUBLIC_KEY` (sunucu) **aynı** public anahtar, `VAPID_PRIVATE_KEY` (sır).
+Geçerli public anahtar **87 karakter** ve **`B`** ile başlar (`isValidVapidKey`
+bunu doğrular; geçersizse panel "yapılandırılmadı" der, sessizce patlamaz).
+
+> ⚠️ **Env-only değişiklik build gerektirir.** `NEXT_PUBLIC_*` değişkenleri
+> **derleme anında** gömülür; yalnız `.env`'i değiştirmek istemciyi güncellemez.
+> Ayrıca `deploy.sh`, `HEAD == origin/main` ise "Zaten güncel" deyip **build'i
+> atlar** → env değişikliğinden sonra yeni bir commit push'layıp deploy edin
+> (veya sunucuda build+reload'u elle çalıştırın).
+
+> ⚠️ Anahtar **değiştirmek** mevcut abonelikleri geçersiz kılar; kullanıcılar
+> bildirimi yeniden açar (eski endpoint'ler gönderimde 410 alıp temizlenir).
+
+**iOS:** Web Push iPhone/iPad'de **yalnızca "Ana Ekrana Ekle" ile kurulmuş PWA'da**
+çalışır (Apple kısıtı). Safari sekmesinde API'ler var görünür ama `subscribe()`
+patlar — panel bu durumda butonu gizleyip kurulum yönergesi gösterir.
