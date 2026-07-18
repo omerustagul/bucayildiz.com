@@ -223,22 +223,32 @@ bilinçli olarak reddedildi: sağlık verisi yurt dışında barınamaz + ciddi 
   onaylayınca admin/seed üzerinden yeni sürüm olarak güncellenir.
 - VERBİS kaydı (özel nitelikli veri) — hukuki süreç.
 
-## 10. Web Push (VAPID) kurulumu
-
-Bildirimlerin **gerçekten** çalışması için geçerli bir VAPID anahtar çifti şarttır.
-2026-07-18'de prod'da `NEXT_PUBLIC_VAPID_PUBLIC_KEY` bir **placeholder metin**di
-(142 karakter, Türkçe); `pushManager.subscribe()` fırlatıp kullanıcıya "Bildirim
-açılamadı" gösteriyordu.
+## 10. Web Push (VAPID)
 
 ```bash
 cd /var/www/bucayildiz.com
-npm run vapid:generate     # üretir + .env'e YAZAR; anahtarları ekrana BASMAZ
+npm run vapid:check        # mevcut yapılandırmayı DOĞRULAR (hiçbir şey değiştirmez)
+npm run vapid:generate     # yalnız check başarısızsa: yeni çift üretir + yazar
 ```
 
-Betik üç değişkeni set eder: `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (istemci) ve
-`VAPID_PUBLIC_KEY` (sunucu) **aynı** public anahtar, `VAPID_PRIVATE_KEY` (sır).
-Geçerli public anahtar **87 karakter** ve **`B`** ile başlar (`isValidVapidKey`
-bunu doğrular; geçersizse panel "yapılandırılmadı" der, sessizce patlamaz).
+`vapid:check` beş şeyi doğrular: iki public'in biçimi (**87 karakter, `B` ile
+başlar**), istemci==sunucu public eşitliği, private uzunluğu (43) ve **private'ın
+o public'i türetmesi** (çift tutarlılığı). Değerler asla ekrana basılmaz.
+
+> ⚠️ **HANGİ DOSYA — en sık tuzak.** Next.js üretimde şu öncelikle okur:
+> `.env.production.local` > `.env.local` > **`.env.production`** > `.env`.
+> Bu sunucuda **`.env.production` vardır** → `.env`'e yazmak **hiçbir şeyi
+> değiştirmez**. Araç en yüksek öncelikli dosyayı otomatik hedefler.
+
+> ⚠️ **Ayrıştırma tuzağı.** `.env.production` satırlarında değerden sonra **inline
+> yorum** olabilir (`KEY="deger"  # açıklama`). Naif `cut -d= -f2-` yorumu değere
+> katar → geçerli 87 karakterlik anahtar "143 karakter geçersiz" görünür.
+> 2026-07-18'de tam bu yanlış teşhise yol açtı; `vapid:check` doğru ayrıştırır.
+
+> ⚠️ **Env-only değişiklik build gerektirir.** `NEXT_PUBLIC_*` **derleme anında**
+> gömülür; yalnız env'i değiştirmek istemciyi güncellemez. Ayrıca `deploy.sh`,
+> `HEAD == origin/main` ise "Zaten güncel" deyip **build'i atlar** → env
+> değişikliğinden sonra yeni bir commit push'layıp deploy edin.
 
 > ⚠️ **Env-only değişiklik build gerektirir.** `NEXT_PUBLIC_*` değişkenleri
 > **derleme anında** gömülür; yalnız `.env`'i değiştirmek istemciyi güncellemez.
@@ -252,3 +262,8 @@ bunu doğrular; geçersizse panel "yapılandırılmadı" der, sessizce patlamaz)
 **iOS:** Web Push iPhone/iPad'de **yalnızca "Ana Ekrana Ekle" ile kurulmuş PWA'da**
 çalışır (Apple kısıtı). Safari sekmesinde API'ler var görünür ama `subscribe()`
 patlar — panel bu durumda butonu gizleyip kurulum yönergesi gösterir.
+
+**Masaüstü (Chrome/Edge/Firefox):** anahtar geçerliyse çalışır; kullanıcı tarayıcının
+izin penceresinde **"İzin Ver"** demelidir. Reddedilir/kapatılırsa panel "İzin
+verilmedi…" der (hata değil, kullanıcı eylemi). Chrome izin isteğini birkaç kez
+kapatan kullanıcıya sessiz moda alabilir → site ayarlarından elle açılmalıdır.

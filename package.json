@@ -16,7 +16,8 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "db:backup": "node --env-file=.env scripts/db-backup.mjs",
-    "vapid:generate": "node scripts/generate-vapid.mjs"
+    "vapid:generate": "node scripts/generate-vapid.mjs",
+    "vapid:check": "node scripts/generate-vapid.mjs --check"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1070.0",
