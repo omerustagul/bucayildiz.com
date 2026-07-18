@@ -1,7 +1,10 @@
 // @vitest-environment node
 import { describe, it, expect, vi } from "vitest";
 vi.mock("server-only", () => ({})); // node testinde server-only no-op
-import { isOwnStorageUrl, sniffVideo, sniffDocument, saveUpload } from "@/lib/storage";
+import { isOwnStorageUrl, sniffVideo, sniffDocument, saveUpload, deleteUpload } from "@/lib/storage";
+import { writeFile, mkdir } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import path from "node:path";
 
 // S3_* env yok → yalnız yerel /uploads/ geçerli; tüm harici adresler reddedilir.
 describe("isOwnStorageUrl (yükleme allowlist)", () => {
@@ -62,5 +65,30 @@ describe("saveUpload document modu — PDF-dışı REDDEDİLİR (istemci MIME'ı
   it("MIME 'application/pdf' ama içerik PDF DEĞİL → magic-byte reddi", async () => {
     const file = new File([notPdf()], "sahte.pdf", { type: "application/pdf" });
     await expect(saveUpload(file, { kind: "document" })).rejects.toThrow(/PDF/i);
+  });
+});
+
+// KVKK dosya imhası (deleteUpload): sporcu silininde foto gerçekten diskten gitmeli.
+describe("deleteUpload (KVKK dosya imhası)", () => {
+  const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
+
+  it("yerel /uploads dosyasını GERÇEKTEN siler", async () => {
+    await mkdir(UPLOAD_DIR, { recursive: true });
+    const name = "__test_erasure__.txt";
+    const fp = path.join(UPLOAD_DIR, name);
+    await writeFile(fp, "x");
+    expect(existsSync(fp)).toBe(true);
+    await deleteUpload(`/uploads/${name}`);
+    expect(existsSync(fp)).toBe(false); // gerçekten silindi
+  });
+
+  it("kendi depomuzda OLMAYAN URL'e / boşa dokunmaz (best-effort, hata fırlatmaz)", async () => {
+    await expect(deleteUpload("https://evil.example/x.png")).resolves.toBeUndefined();
+    await expect(deleteUpload(null)).resolves.toBeUndefined();
+    await expect(deleteUpload("")).resolves.toBeUndefined();
+  });
+
+  it("var olmayan yerel dosyada HATA FIRLATMAZ (best-effort — DB silmesini bloklamaz)", async () => {
+    await expect(deleteUpload("/uploads/__olmayan__.webp")).resolves.toBeUndefined();
   });
 });

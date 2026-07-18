@@ -500,8 +500,10 @@ model PageSeo {
 /// Aidat / ödeme kaydı. Tutar TL cinsinden tam sayı (kuruş yok — basitlik).
 model Payment {
   id        String   @id @default(cuid())
-  athleteId String
-  athlete   Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  // Sporcu silinince mali kayıt SİLİNMEZ (VUK/TTK saklama) → SetNull + ad snapshot.
+  athleteId String?
+  athlete   Athlete? @relation(fields: [athleteId], references: [id], onDelete: SetNull)
+  payerName String? // sporcu silinmeden önceki ad anlık görüntüsü (atıf için — mali kayıt saklanır)
   amount    Int // ₺ (tam sayı)
   period    String // dönem etiketi, örn. "Haziran 2026" veya açıklama
   status    String   @default("pending") // paid | pending | overdue

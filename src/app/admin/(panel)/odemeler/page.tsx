@@ -16,8 +16,9 @@ export default async function OdemelerPage() {
   const athleteOpts = athletes.map((a) => ({ id: a.id, name: a.name, teamName: a.team.name }));
   const rows: PaymentRow[] = payments.map((p) => ({
     id: p.id,
-    athleteName: p.athlete.name,
-    teamName: p.athlete.team.name,
+    // Sporcu silinmişse (KVKK imha) ödeme mali kayıt olarak kalır → ad snapshot'ı gösterilir.
+    athleteName: p.athlete?.name ?? (p.payerName ? `${p.payerName} (silinmiş sporcu)` : "—"),
+    teamName: p.athlete?.team.name ?? "—",
     amount: p.amount,
     period: p.period,
     status: p.status,

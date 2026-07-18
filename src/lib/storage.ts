@@ -1,5 +1,5 @@
 import "server-only";
-import { writeFile, mkdir } from "node:fs/promises";
+import { writeFile, mkdir, unlink } from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 
@@ -187,4 +187,36 @@ export async function saveUpload(file: File, opts: { kind?: "image" | "video" | 
   await mkdir(UPLOAD_DIR, { recursive: true });
   await writeFile(path.join(UPLOAD_DIR, filename), out);
   return { url: `/uploads/${filename}` };
+}
+
+/**
+ * Yüklenen bir dosyayı depodan siler (KVKK imha — sporcu silininde foto vb.).
+ * YALNIZCA kendi depomuzdaki (`isOwnStorageUrl`) URL'ler silinir — keyfi harici
+ * adres silinmez. BEST-EFFORT: dosya yoksa/silinemezse hata FIRLATMAZ (yalnız
+ * loglar) — DB kaydının silinmesi dosya temizliğine bağlı kalmamalı (kayıt gitti).
+ */
+export async function deleteUpload(url: string | null | undefined): Promise<void> {
+  if (!url) return;
+  const u = url.trim();
+  if (!isOwnStorageUrl(u)) return;
+  const filename = u.split("/").pop();
+  if (!filename) return;
+  try {
+    if (u.startsWith("/uploads/")) {
+      await unlink(path.join(UPLOAD_DIR, filename)); // yerel disk (DEV)
+    } else {
+      const cfg = s3Config();
+      if (!cfg) return; // S3 URL ama yapılandırma yok → silinemez (sessizce geç)
+      const { S3Client, DeleteObjectCommand } = await import("@aws-sdk/client-s3");
+      const client = new S3Client({
+        region: cfg.region,
+        endpoint: cfg.endpoint,
+        forcePathStyle: Boolean(cfg.endpoint),
+        credentials: { accessKeyId: cfg.accessKeyId, secretAccessKey: cfg.secretAccessKey },
+      });
+      await client.send(new DeleteObjectCommand({ Bucket: cfg.bucket, Key: `uploads/${filename}` }));
+    }
+  } catch (e) {
+    console.error("[storage] dosya silinemedi:", url, e instanceof Error ? e.message : e);
+  }
 }

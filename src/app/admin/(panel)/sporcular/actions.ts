@@ -1,9 +1,12 @@
 "use server";
 
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requirePermission, hashPassword } from "@/lib/auth";
+import { clientIp } from "@/lib/net";
+import { deleteUpload } from "@/lib/storage";
 
 const schema = z.object({
   name: z.string().trim().min(1, "İsim zorunlu.").max(120),
@@ -90,8 +93,50 @@ export async function provisionAthleteLogin(athleteId: string, username: string,
   return { ok: true };
 }
 
+/**
+ * Sporcuyu ve kişisel verilerini imha eder (KVKK md.7 unutulma hakkı). Karar-bağımsız
+ * imha mekaniği (Faz 2.4): ölçüm/antrenman/beslenme/bildirim CASCADE ile gider; ancak
+ * — ÖDEME kayıtları SİLİNMEZ (VUK/TTK saklama): silmeden önce sporcu adı `payerName`'e
+ *   snapshot alınır, sonra SetNull ile atıflı-ama-bağsız kalır;
+ * — giriş `User` hesabı (yetim kalmasın diye) SİLİNİR;
+ * — yüklenen foto DİSKTEN/S3'ten silinir (best-effort, DB'yi bloklamaz);
+ * — `adminAuditLog`'a silme denetim izi yazılır (kim/ne zaman/ne).
+ * Rıza kayıtları şimdilik SetNull ile korunur (PII imha kararı avukatta — Faz 2.4/B).
+ * Eski sürüm tek satır `athlete.delete().catch(()=>{})` idi — sessiz hata + ödeme kaybı +
+ * yetim User/dosya bırakıyordu.
+ */
 export async function deleteAthlete(id: string): Promise<void> {
-  await requirePermission("sporcular.manage");
-  await prisma.athlete.delete({ where: { id } }).catch(() => {});
+  const actor = await requirePermission("sporcular.manage");
+  const athlete = await prisma.athlete.findUnique({
+    where: { id },
+    select: { id: true, name: true, photoUrl: true, user: { select: { id: true } } },
+  });
+  if (!athlete) return; // zaten yok
+
+  await prisma.$transaction(async (tx) => {
+    // Mali kayıt saklanır: silmeden önce atıf için ad snapshot'ı (sonra SetNull ile bağ kopar).
+    await tx.payment.updateMany({ where: { athleteId: id }, data: { payerName: athlete.name } });
+    // Yetim kalmasın: giriş hesabını sil (varsa). Sporcu silinince aksi halde SetNull ile orphan kalırdı.
+    if (athlete.user) await tx.user.delete({ where: { id: athlete.user.id } });
+    // Sporcu + cascade (ölçüm/antrenman/beslenme/bildirim). Ödeme+rıza SetNull ile korunur.
+    await tx.athlete.delete({ where: { id } });
+  });
+
+  // Foto dosyasını depodan sil (best-effort — DB kaydı gitti, dosya temizliği bloklamaz).
+  await deleteUpload(athlete.photoUrl);
+
+  // KVKK imha denetim izi.
+  await prisma.adminAuditLog.create({
+    data: {
+      actorId: actor.sub,
+      actorName: actor.name,
+      action: "athlete.delete",
+      targetId: id,
+      targetName: athlete.name,
+      detail: "Sporcu imha edildi; ödemeler saklandı (ad snapshot + SetNull), giriş hesabı ve foto silindi, rıza kayıtları korundu.",
+      ipAddress: clientIp(await headers()),
+    },
+  });
+
   revalidatePath("/admin/sporcular");
 }
