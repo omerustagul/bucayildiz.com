@@ -8,7 +8,7 @@ import { describe, it, expect, vi } from "vitest";
 // geçtiği için bu mock onları ETKİLEMEZ.
 const H = vi.hoisted(() => ({
   rows: [] as Array<Record<string, unknown>>,
-  requiredDocs: [] as Array<{ key: string }>,
+  requiredDocs: [] as Array<{ key: string; version: string }>,
 }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -113,7 +113,14 @@ describe("photoConsentedAthleteIds (foto-video kapısı)", () => {
 // Yanlışı = ya sıfır-rızalı sporcu paneli açar (fail-open, KVKK ihlali) ya da
 // rızalı sporcu kilitlenir. DB-güdümlü (aktif+required belgeler).
 describe("missingRequiredConsents (panel ilk-giriş kapısı)", () => {
-  const REQ = [{ key: "aydinlatma" }, { key: "acik-riza" }, { key: "saglik-verisi" }];
+  const V = "2026-06-15";
+  const REQ = [
+    { key: "aydinlatma", version: V },
+    { key: "acik-riza", version: V },
+    { key: "saglik-verisi", version: V },
+  ];
+  // Yardımcı: güncel sürüme rıza kaydı (sürüm kayması testleri hariç hep eşleşir).
+  const grantedNow = (key: string) => ({ documentKey: key, documentVersion: V, granted: true, withdrawnAt: null });
 
   it("hiç kayıt yoksa TÜM zorunlular eksik (sıfır-rızalı admin sporcusu)", async () => {
     H.requiredDocs = REQ; H.rows = [];
@@ -122,34 +129,46 @@ describe("missingRequiredConsents (panel ilk-giriş kapısı)", () => {
 
   it("hepsi aktif onaylıysa eksik YOK (kapı tetiklenmez)", async () => {
     H.requiredDocs = REQ;
-    H.rows = REQ.map((d) => ({ documentKey: d.key, granted: true, withdrawnAt: null }));
+    H.rows = REQ.map((d) => grantedNow(d.key));
     expect(await missingRequiredConsents("a1")).toEqual([]);
   });
 
   it("bir zorunlu geri alınmışsa yalnız o eksik sayılır", async () => {
     H.requiredDocs = REQ;
     H.rows = [
-      { documentKey: "aydinlatma", granted: true, withdrawnAt: null },
-      { documentKey: "acik-riza", granted: true, withdrawnAt: null },
-      { documentKey: "saglik-verisi", granted: false, withdrawnAt: new Date() },
+      grantedNow("aydinlatma"),
+      grantedNow("acik-riza"),
+      { documentKey: "saglik-verisi", documentVersion: V, granted: false, withdrawnAt: new Date() },
     ];
     expect(await missingRequiredConsents("a1")).toEqual(["saglik-verisi"]);
   });
 
   it("EN YENİ kayıt esas: eski granted, yeni geri-alma varsa EKSİK", async () => {
-    H.requiredDocs = [{ key: "saglik-verisi" }];
+    H.requiredDocs = [{ key: "saglik-verisi", version: V }];
     // DESC: önce yeni (geri alma), sonra eski (verilmiş)
     H.rows = [
-      { documentKey: "saglik-verisi", granted: false, withdrawnAt: new Date() },
-      { documentKey: "saglik-verisi", granted: true, withdrawnAt: null },
+      { documentKey: "saglik-verisi", documentVersion: V, granted: false, withdrawnAt: new Date() },
+      { documentKey: "saglik-verisi", documentVersion: V, granted: true, withdrawnAt: null },
     ];
     expect(await missingRequiredConsents("a1")).toEqual(["saglik-verisi"]);
+  });
+
+  it("SÜRÜM KAYMASI: eski sürüme rıza verilmişse EKSİK (belge güncellendi → yeniden onay)", async () => {
+    H.requiredDocs = [{ key: "acik-riza", version: "2026-07-01" }]; // güncel sürüm
+    H.rows = [{ documentKey: "acik-riza", documentVersion: "2026-06-01", granted: true, withdrawnAt: null }]; // eski sürüme rıza
+    expect(await missingRequiredConsents("a1")).toEqual(["acik-riza"]);
+  });
+
+  it("GÜNCEL sürüme rıza varsa eksik YOK (sürüm eşleşiyor)", async () => {
+    H.requiredDocs = [{ key: "acik-riza", version: "2026-07-01" }];
+    H.rows = [{ documentKey: "acik-riza", documentVersion: "2026-07-01", granted: true, withdrawnAt: null }];
+    expect(await missingRequiredConsents("a1")).toEqual([]);
   });
 
   it("OPSİYONEL belgeler (required:false) tetikleyiciye GİRMEZ", async () => {
     // requiredDocs yalnız required:true döndürür (query where'i) → foto-video/pazarlama yok
     H.requiredDocs = REQ; // opsiyoneller listeye hiç gelmez
-    H.rows = REQ.map((d) => ({ documentKey: d.key, granted: true, withdrawnAt: null }));
+    H.rows = REQ.map((d) => grantedNow(d.key));
     expect(await missingRequiredConsents("a1")).toEqual([]);
   });
 

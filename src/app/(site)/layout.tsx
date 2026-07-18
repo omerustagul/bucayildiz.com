@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { CookieNotice } from "@/components/layout/CookieNotice";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { getSettings } from "@/lib/settings";
 import { resolveSocialLinks } from "@/lib/social";
@@ -26,6 +27,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <PageTransition>{children}</PageTransition>
       </main>
       <SiteFooter socials={socials} logoUrl={settings.logoUrl} address={settings.address} phone={settings.phone} />
+      <CookieNotice />
     </>
   );
 }

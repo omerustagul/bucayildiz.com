@@ -112,24 +112,38 @@ export async function hasPhotoConsent(athleteId: string): Promise<boolean> {
 export async function missingRequiredConsents(athleteId: string): Promise<string[]> {
   const requiredDocs = await prisma.consentDocument.findMany({
     where: { active: true, required: true },
-    select: { key: true },
+    select: { key: true, version: true },
   });
-  const requiredKeys = [...new Set(requiredDocs.map((d) => d.key))];
-  if (requiredKeys.length === 0) return [];
+  if (requiredDocs.length === 0) return [];
+  // Anahtar başına GÜNCEL (en yüksek) aktif sürüm. Sürüm string ("2026-06-15" — ISO
+  // olduğundan sözlüksel karşılaştırma kronolojiktir); normalde anahtar başına tek aktif
+  // satır olur, ama birden çoksa en yenisini alırız.
+  const currentVersion = new Map<string, string>();
+  for (const d of requiredDocs) {
+    const cur = currentVersion.get(d.key);
+    if (cur === undefined || d.version > cur) currentVersion.set(d.key, d.version);
+  }
+  const requiredKeys = [...currentVersion.keys()];
 
   const rows = await prisma.consentRecord.findMany({
     where: { athleteId, documentKey: { in: requiredKeys } },
     orderBy: { createdAt: "desc" },
-    select: { documentKey: true, granted: true, withdrawnAt: true },
+    select: { documentKey: true, documentVersion: true, granted: true, withdrawnAt: true },
   });
-  const activeGranted = new Set<string>();
-  const seen = new Set<string>();
+  // Anahtar başına yalnız EN YENİ kayıt belirleyici (append-only model).
+  const latest = new Map<string, { documentVersion: string; granted: boolean; withdrawnAt: Date | null }>();
   for (const r of rows) {
-    if (seen.has(r.documentKey)) continue; // yalnız EN YENİ kayıt sayılır (append-only)
-    seen.add(r.documentKey);
-    if (r.granted && !r.withdrawnAt) activeGranted.add(r.documentKey);
+    if (latest.has(r.documentKey)) continue;
+    latest.set(r.documentKey, r);
   }
-  return requiredKeys.filter((k) => !activeGranted.has(k));
+  // EKSİK sayılır: (a) kayıt yok · (b) reddedilmiş/geri alınmış · (c) SÜRÜM KAYMASI —
+  // en yeni kaydın sürümü güncel aktif belge sürümünden farklı (belge güncellenmiş →
+  // KVKK: değişen/yeni işleme için taze rıza gerekir; kapı yeniden tetiklenir).
+  return requiredKeys.filter((k) => {
+    const rec = latest.get(k);
+    if (!rec || !rec.granted || rec.withdrawnAt) return true;
+    return rec.documentVersion !== currentVersion.get(k);
+  });
 }
 
 export async function photoConsentedAthleteIds(athleteIds: string[]): Promise<Set<string>> {

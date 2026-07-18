@@ -61,6 +61,7 @@ import {
   Apple,
   EyeOff,
   Camera,
+  Cookie,
   type LucideIcon,
   Footprints,
 } from "lucide-react";
@@ -131,6 +132,7 @@ const ICONS = {
   apple: Apple,
   "eye-off": EyeOff,
   camera: Camera,
+  cookie: Cookie,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;
