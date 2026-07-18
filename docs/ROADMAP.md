@@ -63,10 +63,19 @@ adres/tel, "Bildirimleri Aç" durumu) · ✅ Faz 2.1 çerez bilgilendirme banner
 hizalama · ✅ Faz 2.2 bülten aboneliği + pazarlama rızası (NewsletterSubscriber, çift opt-in) ·
 ✅ Faz 2.3 rıza sürüm kayması kapısı · ✅ Faz 2.4/A imha mekaniği (ödeme SetNull+snapshot,
 User+dosya silme, silme audit).
-**⏸ Bekleyen (⚖️ avukat/işletme kararı):** Faz 2.4/B saklama süreleri + otomatik imha ·
-rıza kaydı PII imha kararı (şu an SetNull ile korunuyor) · İYS kaydı (pazarlama GÖNDERİMİ) ·
-`ConsentDocument.body` + çerez politikası nihai metinleri (taslak).
-**⏭ Sıradaki:** Faz 3 (fikstür fallback, örnek rapor→9 test, header dropdown animasyonu, tesis haritaları).
+**✅ Ek düzeltmeler (2026-07-18, canlı):** bayat-chunk crash otomatik-kurtarma (React #130 /
+deploy sürüm-kayması → sessiz yenile; kullanıcı raporu) · mobil A-takım kartı iOS Safari 0×0
+düzeltmesi (WebKit reprosu) · çerez politikası PROFESYONEL metin yazıldı.
+
+**✅ KARARLAR ALINDI (🧑 2026-07-18):** Saklama süreleri — ödeme **10 yıl** · sağlık **derhal** ·
+rıza kaydı **10 yıl** · başvuru **6-12 ay** · bülten (iptal sonrası) **3 yıl**. Rıza kaydı PII:
+**ispat için TUT** (mevcut SetNull davranışı doğru). İYS: pazarlama GÖNDERİMİ için gerekli
+(operasyonel, kod dışı) — rıza toplama tamam. → **Faz 2.4/B (otomatik periyodik imha) artık
+KURULABİLİR.**
+
+**⏸ Bekleyen (⚖️ avukat):** `ConsentDocument.body` (5 sözleşme) nihai metinleri (taslak).
+**⏭ Sıradaki seçenekler:** Faz 2.4/B otomatik imha (yukarıdaki sürelerle) · Faz 3 (fikstür
+fallback, örnek rapor→9 test, header dropdown animasyonu, tesis haritaları).
 
 **Faz 0 — KVKK Kritik+Yüksek (gerçek kullanıcı öncesi ŞART)**
 - **0.1 Giriş sözleşme modalı (L, 🤖):** sıfır-rızalı sporcu panele girince zorunlu
