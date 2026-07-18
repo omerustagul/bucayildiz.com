@@ -57,6 +57,17 @@ Son güncelleme: 2026-06-16
 görünür düzeltmeler → tamamlayıcı KVKK → büyük özellikler → cila.
 Sahip: 🤖 orkestratör(+builder) · 🧑 kullanıcı(karar/tasarım/cihaz) · ⚖️ avukat(metin). Büyük: S/M/L
 
+**Durum (2026-07-18) — HEPSİ CANLIDA:** ✅ Faz 0.1 panel ilk-giriş sözleşme kapısı ·
+✅ Faz 1 (favicon+logo, panel takvimi bu hafta, mobil A-takım [zaten çalışıyordu], footer
+adres/tel, "Bildirimleri Aç" durumu) · ✅ Faz 2.1 çerez bilgilendirme banner'ı + politika
+hizalama · ✅ Faz 2.2 bülten aboneliği + pazarlama rızası (NewsletterSubscriber, çift opt-in) ·
+✅ Faz 2.3 rıza sürüm kayması kapısı · ✅ Faz 2.4/A imha mekaniği (ödeme SetNull+snapshot,
+User+dosya silme, silme audit).
+**⏸ Bekleyen (⚖️ avukat/işletme kararı):** Faz 2.4/B saklama süreleri + otomatik imha ·
+rıza kaydı PII imha kararı (şu an SetNull ile korunuyor) · İYS kaydı (pazarlama GÖNDERİMİ) ·
+`ConsentDocument.body` + çerez politikası nihai metinleri (taslak).
+**⏭ Sıradaki:** Faz 3 (fikstür fallback, örnek rapor→9 test, header dropdown animasyonu, tesis haritaları).
+
 **Faz 0 — KVKK Kritik+Yüksek (gerçek kullanıcı öncesi ŞART)**
 - **0.1 Giriş sözleşme modalı (L, 🤖):** sıfır-rızalı sporcu panele girince zorunlu
   sözleşmeleri (aşağı-kaydır-oku doğrulamalı) imzalatan SERVER-ENFORCED kapı; imzalanmadan
