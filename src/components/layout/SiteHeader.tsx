@@ -326,10 +326,19 @@ export function SiteHeader({ active: activeOverride, socials = [], logoUrl, team
                     }}
                   >
                     {m.label}
-                    {m.items.length > 0 && navIcon("chevron-down")}
+                    {m.items.length > 0 && (
+                      <span className={`by-mega-chevron${isOpen ? " by-mega-chevron--open" : ""}`}>
+                        {navIcon("chevron-down")}
+                      </span>
+                    )}
                   </Link>
-                  {isOpen && m.items.length > 0 && (
+                  {/* Kutu HER ZAMAN render edilir; açılış/kapanış `by-mega-dd--open`
+                      sınıfıyla animasyonlanır (koşullu render'da giriş animasyonu
+                      çalışmazdı). Kapalıyken visibility:hidden → boyanmaz/odaklanmaz.
+                      Animasyon kuralları: globals.css `.by-mega-dd`. */}
+                  {m.items.length > 0 && (
                     <div
+                      className={`by-mega-dd${isOpen ? " by-mega-dd--open" : ""}`}
                       style={{
                         position: "absolute",
                         top: "100%",

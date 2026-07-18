@@ -125,6 +125,57 @@ main {
   color: var(--navy-800) !important;
 }
 
+/* ── Mega-menü açılır kutusu animasyonu — TEK KAYNAK ──────────────────────────
+   Kural burada tanımlıdır; SiteHeader yalnız `--open` sınıfını takar (inline
+   animasyon yok → davranış tek yerden değişir).
+   PERFORMANS: yalnız `opacity` + `transform` animasyonlanır (compositor'da çalışır,
+   layout/paint tetiklemez). Kutu HER ZAMAN DOM'da durur; kapalıyken
+   `visibility: hidden` → boyanmaz, tıklanmaz ve sekme sırasında YER ALMAZ.
+   `visibility` geçişi gecikmeli kapanır ki çıkış animasyonu görünsün. */
+.by-mega-dd {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out),
+    visibility 0s linear var(--dur-fast);
+}
+
+.by-mega-dd--open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out),
+    visibility 0s;
+}
+
+/* Menü okunun dönüşü (masaüstü) — mobil akordeonla aynı dil */
+.by-mega-chevron {
+  display: inline-flex;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.by-mega-chevron--open {
+  transform: rotate(180deg);
+}
+
+/* Hareket azaltma tercihi: anında aç/kapa, kayma yok */
+@media (prefers-reduced-motion: reduce) {
+  .by-mega-dd,
+  .by-mega-dd--open,
+  .by-mega-chevron {
+    transition: none;
+  }
+
+  .by-mega-dd,
+  .by-mega-dd--open {
+    transform: none;
+  }
+}
+
 /* Link card hover lift (used on overview/index pages) */
 .link-card {
   transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
