@@ -610,6 +610,11 @@ model Facility {
   capacity    String? // "2× tam saha", "300 kişilik tribün"...
   features    String   @default("") // virgülle ayrılmış özellik listesi
   photoUrl    String?
+  /// Harita konumu (opsiyonel). Girilirse public tesisler sayfasında OpenStreetMap
+  /// haritası gösterilir; boşsa harita HİÇ render edilmez (bozuk yer tutucu olmaz).
+  /// Tip SiteSetting.latitude/longitude ile aynı.
+  latitude    Float?
+  longitude   Float?
   /// true ise Takvim Programı'nda "saha" seçeneği olarak listelenir (elle işaretlenir).
   isPitch     Boolean  @default(false)
   sort        Int      @default(0)

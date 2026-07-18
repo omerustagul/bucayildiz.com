@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ViewHeader, Toolbar, Field } from "@/components/admin/kit";
 import { TextInput, TextArea, SearchBox, Drawer } from "@/components/admin/controls";
 import { MediaLibraryPicker } from "@/components/admin/MediaLibraryPicker";
+import { MapPicker } from "@/components/ui/LeafletMap";
 import { Table, type Column } from "@/components/ui/Table";
 import { CardList, CardEmpty, DataCard, CardHeader, CardFields } from "@/components/admin/MobileCardList";
 import { Badge } from "@/components/ui/Badge";
@@ -22,6 +23,9 @@ export type FacilityRow = {
   features: string;
   photoUrl: string | null;
   sort: number;
+  /** Harita konumu — ikisi de doluysa public tesisler sayfasında harita gösterilir. */
+  latitude: number | null;
+  longitude: number | null;
   isPitch: boolean;
 };
 
@@ -55,11 +59,15 @@ function FacilityDrawer({ facility, onClose }: { facility: FacilityRow | null; o
     features: facility?.features ?? "",
     photoUrl: facility?.photoUrl ?? "",
     sort: facility?.sort?.toString() ?? "0",
+    latitude: facility?.latitude ?? null,
+    longitude: facility?.longitude ?? null,
     isPitch: facility?.isPitch ?? false,
   });
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const set = <K extends keyof typeof v>(k: K, val: (typeof v)[K]) => setV((s) => ({ ...s, [k]: val }));
+  /** Konum ikisi birlikte set/temizlenir (yarım koordinat haritayı yanlış yere koyar). */
+  const setLocation = (lat: number | null, lng: number | null) => setV((s) => ({ ...s, latitude: lat, longitude: lng }));
 
   const save = () => {
     setError(null);
@@ -70,6 +78,8 @@ function FacilityDrawer({ facility, onClose }: { facility: FacilityRow | null; o
       features: v.features,
       photoUrl: v.photoUrl || null,
       sort: v.sort.trim() === "" ? 0 : Number(v.sort),
+      latitude: v.latitude,
+      longitude: v.longitude,
       isPitch: v.isPitch,
     };
     startTransition(async () => {
@@ -143,6 +153,28 @@ function FacilityDrawer({ facility, onClose }: { facility: FacilityRow | null; o
           <TextInput value={v.features} onChange={(e) => set("features", e.target.value)} placeholder="Aydınlatma, Soyunma Odası, Tribün" />
         </Field>
         {v.features.trim() && <FeatureChips features={v.features} />}
+
+        {/* Konum opsiyoneldir: girilirse public tesisler sayfasında harita çıkar,
+            boşsa harita HİÇ gösterilmez. Kulüp konumundaki MapPicker ile aynı bileşen. */}
+        <Field label="Konum" hint="Haritaya tıklayın — sitede bu tesisin haritası görünür (boş bırakılabilir)">
+          <MapPicker lat={v.latitude} lng={v.longitude} onChange={setLocation} height={240} />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12.5, color: "var(--text-muted)" }}>
+              {v.latitude != null && v.longitude != null
+                ? `Seçili konum: ${v.latitude.toFixed(4)}, ${v.longitude.toFixed(4)}`
+                : "Konum seçilmedi — bu tesiste harita gösterilmez"}
+            </span>
+            {v.latitude != null && v.longitude != null && (
+              <button
+                type="button"
+                onClick={() => setLocation(null, null)}
+                style={{ flex: "none", background: "none", border: "none", padding: 0, color: "var(--red-600)", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}
+              >
+                Konumu temizle
+              </button>
+            )}
+          </div>
+        </Field>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderRadius: "var(--radius-md)", background: "var(--navy-50)", border: "1px solid var(--navy-100)" }}>
           <div style={{ minWidth: 0 }}>

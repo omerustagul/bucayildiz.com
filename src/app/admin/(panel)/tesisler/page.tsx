@@ -17,6 +17,8 @@ export default async function TesislerPage() {
     features: f.features,
     photoUrl: f.photoUrl,
     sort: f.sort,
+    latitude: f.latitude,
+    longitude: f.longitude,
     isPitch: f.isPitch,
   }));
 

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section, Prose } from "@/components/content/blocks";
 import { Badge } from "@/components/ui/Badge";
+import { LocationMap } from "@/components/ui/LeafletMap";
 
 export const generateMetadata = () => getPageMetadata("/kurumsal/tesisler");
 
@@ -69,6 +70,14 @@ export default async function TesislerPage() {
                       </div>
                     )}
                   </div>
+                  {/* Konum girilmişse harita (iletişim sayfasıyla aynı bileşen: CARTO
+                      tile, API anahtarı yok). Koordinat yoksa HİÇ render edilmez —
+                      boş/bozuk harita kutusu göstermeyiz. */}
+                  {f.latitude != null && f.longitude != null && (
+                    <div style={{ borderTop: "1px solid var(--border-subtle)" }}>
+                      <LocationMap lat={f.latitude} lng={f.longitude} height={200} />
+                    </div>
+                  )}
                 </div>
               );
             })}

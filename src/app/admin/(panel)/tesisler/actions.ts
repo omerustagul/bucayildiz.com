@@ -12,6 +12,10 @@ const schema = z.object({
   features: z.string().trim().max(500).optional().or(z.literal("")),
   photoUrl: z.string().trim().nullable().optional(),
   sort: z.coerce.number().int().min(0).max(999).default(0),
+  // Harita konumu (opsiyonel). DİKKAT: `z.coerce.number()` KULLANILMAZ — null'ı 0'a
+  // çevirir ve tesis (0,0)'a (Gine Körfezi) düşerdi. İstemci gerçek sayı veya null yollar.
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
   // true ise Takvim Programı'nda "saha" seçeneği olarak listelenir (elle işaretlenir).
   isPitch: z.boolean().optional().default(false),
 });
@@ -19,6 +23,8 @@ const schema = z.object({
 export type FacilityResult = { error: string };
 
 function toData(d: z.infer<typeof schema>) {
+  // Koordinat YA İKİSİ birden YA HİÇBİRİ — yarım koordinat haritayı yanlış yere koyar.
+  const hasCoords = typeof d.latitude === "number" && typeof d.longitude === "number";
   return {
     name: d.name,
     description: d.description ?? "",
@@ -26,6 +32,8 @@ function toData(d: z.infer<typeof schema>) {
     features: d.features ?? "",
     photoUrl: d.photoUrl && d.photoUrl.trim() ? d.photoUrl : null,
     sort: d.sort,
+    latitude: hasCoords ? d.latitude! : null,
+    longitude: hasCoords ? d.longitude! : null,
     isPitch: d.isPitch,
   };
 }
