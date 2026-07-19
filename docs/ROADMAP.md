@@ -132,7 +132,25 @@ destekli) · 3.4 tesislerde OpenStreetMap (Facility.latitude/longitude göçü +
   Kapsam dışı bırakıldı (bilinçli): void dönen ~20 silme — başarısızsa satır tazelenen
   listede zaten görünür kalıyor.
 
-**⏭ Sıradaki:** D6/D7 rıza geçmişi + dışa aktarım (tasarım onayı bekliyor).
+- **✅ D6/D7 rıza geçmişi + dışa aktarım (KVKK md.11).**
+  - **Yeni `kvkk` izin alanı:** rıza denetim izi (isim/IP/ilişki) ayrı yetki ister —
+    roster yöneten herkes görmesin (erişim minimizasyonu). Owner örtük; yeni yetenek
+    olduğu için kilitlenme yok.
+  - **Admin `/admin/kvkk`:** sporcu listesi → satırda "X/Y onay" → denetim modalı
+    (sürüm/hash/onaylayan/ilişki/kanal/tarih/IP/OTP) → **CSV indir**. Dönüştürülmüş
+    sporcularda başvuru-anı rızaları athleteId'ye taşındığı için tek sorgu tüm geçmişi kapsar.
+  - **Export:** `lib/consentExport.ts` saf CSV üreteci (tek kaynak). Route handler
+    `/admin/kvkk/consent-export?athleteId=` → attachment; DOĞRUDAN çağrılabilir uç,
+    kendi `kvkk.view` kapısını yapar (redirect değil temiz 403). CSV injection nötrleme
+    (`= + - @` → `'`) + UTF-8 BOM (Excel Türkçe) + CRLF.
+  - **Panel `/panel/izinler`:** her onayın altında "Geçmiş (N)" açılırı — olay zaman
+    çizelgesi (verildi/geri-alındı/reddedildi, tarihlerle); veli'ye hash/IP GÖSTERİLMEZ.
+  - **Reuse:** `ApplicationConsentCell` → `ConsentAuditCell` (başvurular çalışmaya devam).
+  - Doğrulama: 353 test (23 yeni; CSV + route izin kapısı, ikisi de mutasyon testli) +
+    üretim derlemesi temiz + gerçek tarayıcıda (admin sayfası+modal+CSV indirme, izin
+    kapısı yönlendirmesi, panel geçmiş açılırı 390px). Şema değişikliği YOK.
+
+**🎉 FAZ 5 TAMAM.** Kalan tek gerçek KVKK açığı: `ConsentDocument.body` nihai metinleri (⚖️ avukat).
 
 **Faz 0 — KVKK Kritik+Yüksek (gerçek kullanıcı öncesi ŞART)**
 - **0.1 Giriş sözleşme modalı (L, 🤖):** sıfır-rızalı sporcu panele girince zorunlu

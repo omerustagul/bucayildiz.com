@@ -56,6 +56,7 @@ const NAV: NavGroup[] = [
     group: "Sistem",
     items: [
       { href: "/admin/ayarlar", label: "Ayarlar", icon: "settings", ready: true, area: "ayarlar" },
+      { href: "/admin/kvkk", label: "KVKK Onay Kayıtları", icon: "shield-check", ready: true, area: "kvkk" },
       // Owner-exclusive: "kullanicilar" izni matriste devredilmez → yalnız owner (bypass) görür.
       { href: "/admin/kullanicilar", label: "Yöneticiler & Yetkiler", icon: "lock", ready: true, area: "kullanicilar" },
     ],

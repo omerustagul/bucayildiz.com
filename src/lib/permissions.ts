@@ -30,6 +30,10 @@ export const PERMISSION_AREAS: PermissionArea[] = [
   { key: "mesajlar", label: "Mesaj & Doküman", group: "İletişim" },
   { key: "bildirimler", label: "Bildirimler", group: "İletişim" },
   { key: "ayarlar", label: "Ayarlar", group: "Sistem" },
+  // KVKK rıza denetim izi (isim/IP/ilişki gibi hassas alanlar) — erişim minimizasyonu:
+  // roster'ı yöneten herkes bu izi görmesin, ayrı yetki gerektirsin. Yalnız GÖRÜNTÜLEME
+  // + CSV dışa aktarım (kayıtlar append-only; buradan mutasyon yok).
+  { key: "kvkk", label: "KVKK Onay Kayıtları", group: "Sistem" },
   { key: "kullanicilar", label: "Yöneticiler & Yetkiler", group: "Sistem" },
 ];
 

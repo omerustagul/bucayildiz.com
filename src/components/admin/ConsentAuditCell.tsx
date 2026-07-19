@@ -20,10 +20,12 @@ export type ConsentRow = {
 };
 
 /**
- * Admin başvuru satırında KVKK onaylarının özeti + denetim detayı (modal).
- * Her belge ayrı gösterilir; verilen/verilmeyen, sürüm, hash, IP, tarih.
+ * KVKK onaylarının özeti (satırda "X/Y onay" rozeti) + denetim detayı (modal).
+ * Her belge ayrı: verilen/verilmeyen, sürüm, hash, IP, tarih. Başvuru VE sporcu
+ * satırlarında kullanılır (aynı ConsentRecord şekli). `exportHref` verilirse
+ * modalda "CSV indir" gösterilir (D7 — yalnız KVKK yetkisi olan sayfalar geçer).
  */
-export function ApplicationConsentCell({ consents }: { consents: ConsentRow[] }) {
+export function ConsentAuditCell({ consents, exportHref }: { consents: ConsentRow[]; exportHref?: string }) {
   const [open, setOpen] = useState(false);
   if (consents.length === 0) return <span style={{ color: "var(--ink-400)", fontSize: 13 }}>—</span>;
 
@@ -55,6 +57,24 @@ export function ApplicationConsentCell({ consents }: { consents: ConsentRow[] })
 
       {open && (
         <Modal open onClose={() => setOpen(false)} title="KVKK Onay Kayıtları" width={640}>
+          {exportHref && (
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+              {/* download route → Content-Disposition attachment. <a download> yeter;
+                  route zaten kvkk.view kapısıyla korunur (istemci gizlemez, sunucu reddeder). */}
+              <a
+                href={exportHref}
+                download
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "7px 12px", borderRadius: "var(--radius-pill)",
+                  border: "1px solid var(--border-subtle)", background: "var(--surface-card)",
+                  color: "var(--text-body)", fontSize: 12.5, fontWeight: 600, textDecoration: "none",
+                }}
+              >
+                <Icon name="download" size={14} /> CSV indir
+              </a>
+            </div>
+          )}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {consents.map((c, i) => (
               <div

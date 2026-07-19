@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApplicationStatusSelect } from "@/components/admin/ApplicationStatusSelect";
-import { ApplicationConsentCell, type ConsentRow } from "@/components/admin/ApplicationConsentCell";
+import { ConsentAuditCell, type ConsentRow } from "@/components/admin/ConsentAuditCell";
 import { CardList, DataCard, CardHeader, CardFields, CardActions } from "@/components/admin/MobileCardList";
 import { Modal, TextInput } from "@/components/admin/controls";
 import { Field } from "@/components/admin/kit";
@@ -391,7 +391,7 @@ export function BasvurularView({ apps, teams, canConvert, unlinkedAthletes }: { 
                         <td style={{ ...TD, color: a.email ? "var(--text-body)" : "var(--ink-400)" }}>{a.email || "—"}</td>
                         <td style={{ ...TD, color: "var(--text-muted)" }}>{a.createdAt}</td>
                         <td style={TD}>
-                          <ApplicationConsentCell consents={a.consents} />
+                          <ConsentAuditCell consents={a.consents} />
                         </td>
                         <td style={TD}>
                           <ApplicationStatusSelect id={a.id} status={a.status} />
@@ -432,7 +432,7 @@ export function BasvurularView({ apps, teams, canConvert, unlinkedAthletes }: { 
                     ]}
                   />
                   <CardActions>
-                    <ApplicationConsentCell consents={a.consents} />
+                    <ConsentAuditCell consents={a.consents} />
                     <ConvertCell app={a} teams={teams} canConvert={canConvert} unlinkedAthletes={unlinkedAthletes} />
                   </CardActions>
                 </DataCard>

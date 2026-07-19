@@ -20,12 +20,21 @@ export default async function IzinlerPage() {
     prisma.consentRecord.findMany({ where: { athleteId }, orderBy: { createdAt: "desc" } }),
   ]);
 
-  // Her belge için en son kayıt = güncel durum.
+  // records createdAt DESC → her belgenin ilk kaydı = güncel durum; tümü = geçmiş.
   const latest = new Map<string, (typeof records)[number]>();
-  for (const r of records) if (!latest.has(r.documentKey)) latest.set(r.documentKey, r);
+  const byDoc = new Map<string, typeof records>();
+  for (const r of records) {
+    if (!latest.has(r.documentKey)) latest.set(r.documentKey, r);
+    (byDoc.get(r.documentKey) ?? byDoc.set(r.documentKey, []).get(r.documentKey)!).push(r);
+  }
+
+  // Bir rıza olayının insan-dostu etiketi (veli'ye hash/IP GÖSTERİLMEZ — sade).
+  const eventLabel = (r: (typeof records)[number], isConsent: boolean) =>
+    r.withdrawnAt ? "Geri alındı" : r.granted ? (isConsent ? "Verildi" : "Okundu") : "Reddedildi";
 
   const items: ConsentItem[] = docs.map((d) => {
     const r = latest.get(d.key);
+    const events = byDoc.get(d.key) ?? [];
     return {
       key: d.key,
       title: d.title,
@@ -35,6 +44,8 @@ export default async function IzinlerPage() {
       version: d.version,
       granted: r ? r.granted : false,
       updatedAt: r ? fmt(r.createdAt) : null,
+      // Geçmiş: yeni→eski. Tek olay varsa güncel durumla aynı → gösterme (>1 anlamlı).
+      history: events.map((e) => ({ label: eventLabel(e, d.isConsent), date: fmt(e.createdAt) })),
     };
   });
 
