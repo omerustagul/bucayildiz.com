@@ -204,13 +204,6 @@ main {
   .by-mega-dd--open .mega-link { transition-delay: 0s; }
 }
 
-/* type="search" native temizle (×) butonunu gizle — SmartSearch kendi × butonunu
-   çiziyor; ikisi birden çift × gösteriyordu. */
-.by-hide-search-x::-webkit-search-cancel-button {
-  -webkit-appearance: none;
-  appearance: none;
-}
-
 /* Link card hover lift (used on overview/index pages) */
 .link-card {
   transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);

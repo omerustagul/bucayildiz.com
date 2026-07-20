@@ -71,10 +71,12 @@ export function SmartSearch() {
     };
   }, [q]);
 
-  const open = () => {
-    setExpanded(true);
-    requestAnimationFrame(() => inputRef.current?.focus());
-  };
+  const open = () => setExpanded(true);
+  // input yalnız expanded iken render edilir → mount SONRASI odaklan (effect,
+  // rAF yarışına düşmez).
+  useEffect(() => {
+    if (expanded) inputRef.current?.focus();
+  }, [expanded]);
   const go = (href: string) => {
     collapse();
     router.push(href);
@@ -104,24 +106,27 @@ export function SmartSearch() {
 
   return (
     <div ref={rootRef} style={{ position: "relative", marginLeft: "auto", alignSelf: "center" }}>
-      {/* Alan: daralmış 40px kare → genişlemiş ~300px. width animasyonu (tek header
-          öğesi → layout maliyeti ihmal edilebilir). overflow:hidden ile input akıcı girer. */}
+      {/* Alan: daralmış 38px KARE (ikon tam ortada) → genişlemiş input. Daralmışken
+          input HİÇ render edilmez (sadece ikon → justify:center ile ortalanır).
+          input type="text" (search DEĞİL → native × yok, çift × olmaz); global gold
+          odak halkası (base.css :focus-visible) inline boxShadow:none ile ezilir
+          (konteyner border'ı odak göstergesi) — iç içe sarı kenar olmaz. */}
       <div
         onClick={() => !expanded && open()}
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 6,
-          height: 40,
-          width: expanded ? 300 : 40,
-          padding: expanded ? "0 6px 0 10px" : 0,
-          justifyContent: expanded ? "flex-start" : "center",
+          gap: expanded ? 8 : 0,
+          height: 38,
+          width: expanded ? 280 : 38,
+          padding: expanded ? "0 8px 0 12px" : 0,
+          justifyContent: "center",
           borderRadius: "var(--radius-md)",
-          background: "var(--paper-2, #f4f5f7)",
+          background: expanded ? "var(--surface-card, #fff)" : "var(--paper-2, #f4f5f7)",
           border: `1px solid ${expanded ? "var(--gold-500)" : "var(--ink-200)"}`,
           overflow: "hidden",
           cursor: expanded ? "text" : "pointer",
-          transition: "width 0.32s var(--ease-out), border-color 0.16s ease, background 0.16s ease",
+          transition: "width 0.3s var(--ease-out), gap 0.2s ease, border-color 0.16s ease, background 0.16s ease",
           boxShadow: showDropdown ? "var(--shadow-sm)" : "none",
         }}
       >
@@ -133,52 +138,56 @@ export function SmartSearch() {
             if (expanded) submit();
             else open();
           }}
-          style={{ display: "inline-flex", flex: "none", padding: 0, border: "none", background: "transparent", color: "var(--ink-500)", cursor: "pointer" }}
+          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "none", padding: 0, border: "none", background: "transparent", color: "var(--ink-500)", cursor: "pointer" }}
         >
           <Icon name="search" size={18} />
         </button>
-        <input
-          ref={inputRef}
-          type="search"
-          className="by-hide-search-x"
-          value={q}
-          onChange={(e) => {
-            const v = e.target.value;
-            setQ(v);
-            setActive(-1);
-            if (v.trim().length >= MIN_QUERY) setLoading(true); // anlık "Aranıyor…"
-          }}
-          onKeyDown={onKey}
-          placeholder="Sitede ara"
-          aria-label="Sitede ara"
-          style={{
-            flex: 1,
-            minWidth: 0,
-            width: expanded ? "auto" : 0,
-            opacity: expanded ? 1 : 0,
-            border: "none",
-            outline: "none",
-            background: "transparent",
-            fontFamily: "var(--font-body)",
-            fontSize: 14,
-            color: "var(--ink-900)",
-            transition: "opacity 0.2s ease",
-          }}
-        />
-        {expanded && q && (
-          <button
-            type="button"
-            aria-label="Temizle"
-            onClick={(e) => {
-              e.stopPropagation();
-              setQ("");
-              setActive(-1);
-              inputRef.current?.focus();
-            }}
-            style={{ display: "inline-flex", flex: "none", padding: 4, border: "none", background: "transparent", color: "var(--ink-400)", cursor: "pointer" }}
-          >
-            <Icon name="x" size={14} />
-          </button>
+        {expanded && (
+          <>
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="search"
+              value={q}
+              onChange={(e) => {
+                const v = e.target.value;
+                setQ(v);
+                setActive(-1);
+                if (v.trim().length >= MIN_QUERY) setLoading(true); // anlık "Aranıyor…"
+              }}
+              onKeyDown={onKey}
+              placeholder="Sitede ara"
+              aria-label="Sitede ara"
+              style={{
+                flex: 1,
+                minWidth: 0,
+                border: "none",
+                outline: "none",
+                boxShadow: "none", // global gold odak halkasını ez
+                WebkitAppearance: "none",
+                appearance: "none",
+                background: "transparent",
+                fontFamily: "var(--font-body)",
+                fontSize: 14,
+                color: "var(--ink-900)",
+              }}
+            />
+            {q && (
+              <button
+                type="button"
+                aria-label="Temizle"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setQ("");
+                  setActive(-1);
+                  inputRef.current?.focus();
+                }}
+                style={{ display: "inline-flex", flex: "none", padding: 2, border: "none", background: "transparent", color: "var(--ink-400)", cursor: "pointer" }}
+              >
+                <Icon name="x" size={15} />
+              </button>
+            )}
+          </>
         )}
       </div>
 
