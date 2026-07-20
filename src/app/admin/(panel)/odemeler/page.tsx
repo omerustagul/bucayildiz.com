@@ -9,7 +9,8 @@ export const metadata: Metadata = { title: "Ödemeler" };
 export default async function OdemelerPage() {
   await requirePermission("odemeler.view");
   const [athletes, payments] = await Promise.all([
-    prisma.athlete.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, team: { select: { name: true } } } }),
+    // Yalnız ödeme takibi AÇIK sporcular ödeme ekleme seçicisinde görünür.
+    prisma.athlete.findMany({ where: { paymentsEnabled: true }, orderBy: { name: "asc" }, select: { id: true, name: true, team: { select: { name: true } } } }),
     prisma.payment.findMany({ orderBy: { createdAt: "desc" }, take: 300, include: { athlete: { select: { name: true, team: { select: { name: true } } } } } }),
   ]);
 

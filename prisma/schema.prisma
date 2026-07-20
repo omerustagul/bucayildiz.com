@@ -166,6 +166,10 @@ model Athlete {
   /// onu "veli" diye yazmak denetim izini yanlış kılıyordu. Boşsa ilişki iddia EDİLMEZ.
   parentName  String?
   parentPhone String?
+  /// Ödeme/aidat takibi bu sporcu için açık mı. Kapalıysa: admin ödemeler sayfasında
+  /// listelenmez VE sporcu panelinde ödeme sayfası hiç görünmez (kafası karışmasın).
+  /// Varsayılan açık (opt-out) — mevcut davranış korunur, ödemesiz olanlar tek tek kapatılır.
+  paymentsEnabled Boolean @default(true)
   /// Bu sporcu hangi başvurudan oluşturuldu (varsa) — admin'in elle yarattığında null.
   /// @unique: bir başvurudan EN FAZLA bir sporcu (mükerrer dönüşüm DB'de engellenir).
   /// Bağ, başvuruda verilen KVKK rızalarının (ConsentRecord) sporcuya taşınmasının

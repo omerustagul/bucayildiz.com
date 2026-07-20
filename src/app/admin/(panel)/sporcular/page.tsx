@@ -28,6 +28,7 @@ export default async function SporcularPage() {
     birthDate: a.birthDate,
     foot: a.foot,
     status: a.status,
+    paymentsEnabled: a.paymentsEnabled,
     licenseNo: a.licenseNo,
     photoUrl: a.photoUrl,
     parentName: a.parentName,

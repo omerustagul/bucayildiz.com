@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { requireAthlete } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -21,6 +22,11 @@ function Summary({ label, value, accent }: { label: string; value: string; accen
 
 export default async function PanelOdemeler() {
   const session = await requireAthlete();
+  // Ödeme takibi kapalı sporcu bu sayfayı HİÇ görmemeli (nav'da da gizli) — server
+  // kapısı: doğrudan URL ile gelse bile /panel'e döner (kafası karışmasın).
+  const me = await prisma.athlete.findUnique({ where: { id: session.athleteId! }, select: { paymentsEnabled: true } });
+  if (!me?.paymentsEnabled) redirect("/panel");
+
   const payments = await prisma.payment.findMany({
     where: { athleteId: session.athleteId! },
     orderBy: [{ createdAt: "desc" }],

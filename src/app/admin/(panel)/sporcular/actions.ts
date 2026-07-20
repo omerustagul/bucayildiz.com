@@ -18,6 +18,7 @@ const schema = z.object({
   birthDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçerli bir doğum tarihi giriniz.").optional().or(z.literal("")).nullable(),
   foot: z.enum(["Sağ", "Sol", "Çift"]).nullable().optional(),
   status: z.enum(["active", "injured", "rest"]).default("active"),
+  paymentsEnabled: z.boolean().optional().default(true),
   licenseNo: z.string().trim().max(40).optional().or(z.literal("")),
   // Sorumlu kişi adı — KVKK rıza kayıtlarında "onaylayan" olarak kullanılır
   // (bkz. lib/consent.server.ts resolveAthleteGranter). Boşsa yakınlık iddia edilmez.
@@ -40,6 +41,7 @@ function toData(d: z.infer<typeof schema>) {
     birthDate: d.birthDate && d.birthDate.trim() ? d.birthDate : null,
     foot: d.foot ?? null,
     status: d.status,
+    paymentsEnabled: d.paymentsEnabled,
     licenseNo: d.licenseNo || null,
     parentName: d.parentName || null,
     parentPhone: d.parentPhone || null,

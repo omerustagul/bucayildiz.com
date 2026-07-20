@@ -31,6 +31,7 @@ export type AthleteRow = {
   birthDate: string | null;
   foot: string | null;
   status: string;
+  paymentsEnabled: boolean;
   licenseNo: string | null;
   photoUrl: string | null;
   parentName: string | null;
@@ -68,6 +69,7 @@ function AthleteDrawer({ athlete, teams, onClose }: { athlete: AthleteRow | null
     parentPhone: athlete?.parentPhone ?? "",
     photoUrl: athlete?.photoUrl ?? "",
     active: athlete ? athlete.status === "active" : true,
+    paymentsEnabled: athlete ? athlete.paymentsEnabled : true,
   });
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -103,6 +105,7 @@ function AthleteDrawer({ athlete, teams, onClose }: { athlete: AthleteRow | null
       birthDate: v.birthDate || null,
       foot: v.foot || null,
       status: v.active ? "active" : "rest",
+      paymentsEnabled: v.paymentsEnabled,
       licenseNo: v.licenseNo,
       parentName: v.parentName,
       parentPhone: v.parentPhone,
@@ -243,7 +246,16 @@ function AthleteDrawer({ athlete, teams, onClose }: { athlete: AthleteRow | null
             <div style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 14, color: "var(--text-strong)" }}>Aktif sporcu</div>
             <div style={{ fontSize: 12.5, color: "var(--ink-400)" }}>Pasif sporcular kadro listelerinde görünmez.</div>
           </div>
-          <Switch checked={v.active} onChange={(next) => set("active", next)} />
+          <Switch checked={v.active} onChange={(next) => set("active", next)} ariaLabel="Aktif sporcu" />
+        </div>
+
+        <div style={{ height: 1, background: "var(--border-subtle)" }} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 0" }}>
+          <div>
+            <div style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 14, color: "var(--text-strong)" }}>Ödeme takibi</div>
+            <div style={{ fontSize: 12.5, color: "var(--ink-400)" }}>Kapalıysa ödemeler sayfasında yönetilmez ve sporcu panelinde ödeme sayfası görünmez.</div>
+          </div>
+          <Switch checked={v.paymentsEnabled} onChange={(next) => set("paymentsEnabled", next)} ariaLabel="Ödeme takibi" />
         </div>
 
         {athlete && (

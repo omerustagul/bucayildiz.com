@@ -38,8 +38,11 @@ const TABBAR_ITEMS: TabBarItem[] = [
   { kind: "link", href: "/panel/maclar", label: "Maçlar", icon: "trophy" },
 ];
 
-export function PanelShell({ athlete, unreadCount = 0, notifUnread = 0, mobileNav = true, logoUrl, children }: { athlete: Athlete; unreadCount?: number; notifUnread?: number; mobileNav?: boolean; logoUrl?: string | null; children: React.ReactNode }) {
+export function PanelShell({ athlete, unreadCount = 0, notifUnread = 0, mobileNav = true, logoUrl, paymentsEnabled = true, children }: { athlete: Athlete; unreadCount?: number; notifUnread?: number; mobileNav?: boolean; logoUrl?: string | null; paymentsEnabled?: boolean; children: React.ReactNode }) {
   const pathname = usePathname();
+  // Ödeme takibi kapalı sporcuda "Ödemeler" sekmesi HİÇ gösterilmez (kafası karışmasın).
+  // Sayfanın kendisi de /panel/odemeler'de server-enforced kapıyla korunur.
+  const nav = paymentsEnabled ? NAV : NAV.filter((n) => n.href !== "/panel/odemeler");
   const numberLabel = athlete.number != null ? `${athlete.number} Numara` : athlete.position;
   const title = NAV.find((n) => n.href === pathname)?.label ?? "Genel Bakış";
   const subtitle = pathname === "/panel" ? `Hoş geldin, ${athlete.name.split(" ")[0]}` : undefined;
@@ -85,7 +88,7 @@ export function PanelShell({ athlete, unreadCount = 0, notifUnread = 0, mobileNa
           </div>
         </div>
         <nav className="by-scroll-on-dark" style={{ padding: 12, display: "flex", flexDirection: "column", gap: 3, flex: 1, overflowY: "auto", minHeight: 0 }}>
-          {NAV.map((n) => {
+          {nav.map((n) => {
             const on = pathname === n.href;
             const disabled = !n.ready;
             const inner = (
@@ -170,7 +173,7 @@ export function PanelShell({ athlete, unreadCount = 0, notifUnread = 0, mobileNa
           initials: athlete.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase(),
           photoUrl: athlete.photoUrl,
         }}
-        groups={[{ items: NAV.map((n) => ({ href: n.href, label: n.label, icon: n.icon, badge: n.href === "/panel/mesajlar" ? unreadCount : undefined, disabled: n.ready === false })) }]}
+        groups={[{ items: nav.map((n) => ({ href: n.href, label: n.label, icon: n.icon, badge: n.href === "/panel/mesajlar" ? unreadCount : undefined, disabled: n.ready === false })) }]}
         footer={
           <form action={panelLogout}>
             <button type="submit" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 9, minHeight: 48, borderRadius: "var(--radius-md)", border: "1px solid var(--border-subtle)", background: "var(--surface-card)", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 14.5, color: "var(--red-600)", cursor: "pointer" }}>

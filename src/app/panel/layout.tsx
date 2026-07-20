@@ -48,6 +48,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
       notifUnread={notifUnread}
       mobileNav={settings.mobileNavPanel}
       logoUrl={settings.logoUrl}
+      paymentsEnabled={athlete.paymentsEnabled}
     >
       {children}
     </PanelShell>
