@@ -1,6 +1,32 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Framework sürüm sızıntısını kapat (x-powered-by: Next.js kaldırılır).
+  poweredByHeader: false,
+
+  // HTTP güvenlik başlıkları — TÜM rotalar. (Denetim bulgusu: hiç güvenlik başlığı
+  // yoktu.) CSP BİLEREK burada YOK: inline style/script + harita tile + upload'lar
+  // yüzünden yanlış bir CSP tüm siteyi kırar → ayrı, tam-sayfa test gerektiren iş.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          // HTTPS zorunlu (1 yıl + alt alan adları). Site tamamen CF HTTPS üzerinden.
+          { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
+          // MIME-sniffing kapalı (yanlış Content-Type ile XSS'i zorlaştırır).
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          // Clickjacking: site yalnız kendi origin'inde çerçevelenebilir.
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          // Referrer sızıntısını kıs (çapraz-origin'e yalnız origin).
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          // Kullanılmayan tarayıcı yetenekleri + Topics API kapalı.
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), browsing-topics=()" },
+        ],
+      },
+    ];
+  },
+
   // Dev'de ağ üzerinden erişim (telefon vb.) için izinli origin'ler.
   // IP DHCP ile değişse de bozulmasın diye yaygın yerel ağ aralıkları wildcard ile
   // (her oktet için "*"). Yalnız geliştirme sunucusunu etkiler.
