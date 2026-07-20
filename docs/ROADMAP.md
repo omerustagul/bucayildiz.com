@@ -152,6 +152,24 @@ destekli) · 3.4 tesislerde OpenStreetMap (Facility.latitude/longitude göçü +
 
 **🎉 FAZ 5 TAMAM.** Kalan tek gerçek KVKK açığı: `ConsentDocument.body` nihai metinleri (⚖️ avukat).
 
+### Faz 6 — Kullanıcı geri bildirimi cila (UI, 2026-07-19)
+Kullanıcının 3 talebi:
+- **Tesis detay sayfası** `/kurumsal/tesisler/[slug]`: liste kartları artık tıklanabilir →
+  büyük foto + tam genişlik harita + açıklama + özellikler + kapasite. Ad'dan türetilen
+  slug (`lib/slug.ts trSlug`, şema değişikliği yok). Harita karttan detaya taşındı
+  (kartı Link'e sarınca harita içindeki linkle iç-içe interaktif çakışması olurdu).
+  Not: eklenen foto/konum ZATEN görünüyordu (bug değildi); eksik olan tıklanabilir detaydı.
+- **Modern arama (SmartSearch):** hep-açık hap yerine kompakt KARE ikon → tıkla →
+  animasyonla genişleyen input; yazdıkça ANLIK öneri (`/api/arama`, debounce 220ms) +
+  klavye gezinme (↑/↓/Enter/Esc). Köşe hafif yuvarlak (radius-md, hap değil). Mobil
+  çekmece + /arama sayfası ayrı (HeaderSearch) korundu.
+- **Dropdown animasyonu:** 6px kayma yetersizdi → `transform-origin:top` + scaleY büyüme
+  (unfold) + öğeler sıralı (stagger) transparandan belirir. Compositor-güvenli, gölge
+  korunur (clip-path kırpardı), `prefers-reduced-motion` korunur.
+- Doğrulama: typecheck + 353 test + üretim derlemesi temiz; gerçek tarayıcıda üçü de
+  (masaüstü + 375px): detay foto/harita render, arama genişleme+anlık öneri+Enter/tık
+  navigasyonu, dropdown açılış ortasında scaleY<1 & yazılar sırayla beliriyor.
+
 **Faz 0 — KVKK Kritik+Yüksek (gerçek kullanıcı öncesi ŞART)**
 - **0.1 Giriş sözleşme modalı (L, 🤖):** sıfır-rızalı sporcu panele girince zorunlu
   sözleşmeleri (aşağı-kaydır-oku doğrulamalı) imzalatan SERVER-ENFORCED kapı; imzalanmadan

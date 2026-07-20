@@ -1,10 +1,12 @@
 import { getPageMetadata } from "@/lib/seo";
 import Image from "next/image";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { trSlug } from "@/lib/slug";
 import { PageHero } from "@/components/layout/PageHero";
 import { Section, Prose } from "@/components/content/blocks";
 import { Badge } from "@/components/ui/Badge";
-import { LocationMap } from "@/components/ui/LeafletMap";
+import { Icon } from "@/lib/icons";
 
 export const generateMetadata = () => getPageMetadata("/kurumsal/tesisler");
 
@@ -36,9 +38,14 @@ export default async function TesislerPage() {
                 .split(",")
                 .map((x) => x.trim())
                 .filter(Boolean);
+              // Kartın TAMAMI detay sayfasına link — foto/konum/açıklama orada.
+              // (Haritayı karta gömüp kartı da linke sarmak iç-içe interaktif çakışması
+              //  yaratırdı; harita detay sayfasında tam genişlik gösterilir.)
               return (
-                <div
+                <Link
                   key={f.id}
+                  href={`/kurumsal/tesisler/${trSlug(f.name)}`}
+                  className="link-card"
                   style={{
                     display: "flex",
                     flexDirection: "column",
@@ -47,6 +54,7 @@ export default async function TesislerPage() {
                     borderRadius: "var(--radius-lg)",
                     overflow: "hidden",
                     boxShadow: "var(--shadow-sm)",
+                    textDecoration: "none",
                   }}
                 >
                   <div style={{ position: "relative", aspectRatio: "16 / 10", background: "var(--grad-navy)", display: "grid", placeItems: "center" }}>
@@ -54,6 +62,11 @@ export default async function TesislerPage() {
                       <Image src={f.photoUrl} alt="" fill style={{ objectFit: "cover" }} sizes="(max-width: 600px) 100vw, 400px" />
                     ) : (
                       <span style={{ color: "rgba(255,255,255,0.08)", fontFamily: "var(--font-heading)", fontSize: 96 }}>★</span>
+                    )}
+                    {f.latitude != null && f.longitude != null && (
+                      <span style={{ position: "absolute", top: 12, right: 12, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: "var(--radius-pill)", background: "rgba(8,18,38,0.72)", color: "#fff", fontSize: 12, fontWeight: 600, backdropFilter: "blur(4px)" }}>
+                        <Icon name="map-pin" size={13} /> Konumlu
+                      </span>
                     )}
                   </div>
                   <div style={{ padding: "var(--space-6)", display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
@@ -63,22 +76,17 @@ export default async function TesislerPage() {
                     </div>
                     {f.description && <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--text-muted)", margin: 0 }}>{f.description}</p>}
                     {features.length > 0 && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: "auto", paddingTop: 6 }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, paddingTop: 6 }}>
                         {features.map((ft) => (
                           <Badge key={ft} tone="neutral">{ft}</Badge>
                         ))}
                       </div>
                     )}
+                    <span style={{ marginTop: "auto", paddingTop: 8, display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13.5, fontWeight: 600, color: "var(--text-link)" }}>
+                      Detayları gör <Icon name="arrow-right" size={15} />
+                    </span>
                   </div>
-                  {/* Konum girilmişse harita (iletişim sayfasıyla aynı bileşen: CARTO
-                      tile, API anahtarı yok). Koordinat yoksa HİÇ render edilmez —
-                      boş/bozuk harita kutusu göstermeyiz. */}
-                  {f.latitude != null && f.longitude != null && (
-                    <div style={{ borderTop: "1px solid var(--border-subtle)" }}>
-                      <LocationMap lat={f.latitude} lng={f.longitude} height={200} />
-                    </div>
-                  )}
-                </div>
+                </Link>
               );
             })}
           </div>

@@ -41,6 +41,9 @@ function toData(d: z.infer<typeof schema>) {
 function revalidateFacilityPages() {
   revalidatePath("/admin/tesisler");
   revalidatePath("/kurumsal/tesisler");
+  // Detay sayfaları (ad'dan türetilen slug) — tüm dinamik örnekleri tazele,
+  // yoksa admin foto/konum değişikliği detayda bayat kalır.
+  revalidatePath("/kurumsal/tesisler/[slug]", "page");
 }
 
 export async function createFacility(input: unknown): Promise<FacilityResult | void> {

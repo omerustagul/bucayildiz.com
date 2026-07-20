@@ -10,6 +10,7 @@ import { Icon, type IconName } from "@/lib/icons";
 import { logoSrc } from "@/lib/branding";
 import { SocialLinks } from "@/components/layout/SocialLinks";
 import { HeaderSearch } from "@/components/layout/HeaderSearch";
+import { SmartSearch } from "@/components/layout/SmartSearch";
 import type { SocialLink } from "@/lib/social";
 
 /**
@@ -379,8 +380,9 @@ export function SiteHeader({ active: activeOverride, socials = [], logoUrl, team
                 </div>
               );
             })}
-            {/* Arama — menü öğelerinden sonra sağa yaslanır (marginLeft:auto). */}
-            <HeaderSearch variant="menubar" />
+            {/* Arama — kompakt kare, tıklanınca genişler + anlık öneri (SmartSearch).
+                marginLeft:auto ile menü öğelerinden sonra sağa yaslanır. */}
+            <SmartSearch />
           </div>
         </nav>
         <TeamStripe />
