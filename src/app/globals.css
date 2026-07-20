@@ -653,6 +653,20 @@ footer {
   background-color: var(--navy-950);
 }
 
+/* Alt kenardan yukarı koyu lacivert gradyan geçişi — hero'yu sonraki (koyu) bölüme
+   yumuşak bağlar. Bg foto katmanının ÜSTÜNDE ama içeriğin ALTINDA (DOM sırası:
+   bg → fade → inner içerik) → metin okunur kalır. pointer-events yok, tıklamayı geçirir. */
+.trial-hero-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: clamp(90px, 14vh, 170px);
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to top, var(--navy-950) 0%, rgba(10, 9, 39, 0.55) 42%, rgba(10, 9, 39, 0) 100%);
+}
+
 /* Arka plan ayrı katmanda: açılışta transform ile yumuşak zoom-out
    (background-size animasyonu jank üretir; transform GPU'da akıcıdır). */
 .trial-hero-bg {
@@ -1303,7 +1317,9 @@ footer {
 }
 
 .adm-main {
-  margin-left: 256px;
+  /* Genişletilmiş sidebar 236px (AdminShell inline width). Eskiden 256 idi →
+     sidebar ile header/içerik arasında 20px boşluk kalıyordu. Eşitlendi. */
+  margin-left: 236px;
   transition: margin-left var(--dur-base) var(--ease-out);
 }
 

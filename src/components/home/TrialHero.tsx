@@ -47,6 +47,8 @@ export function TrialHero({ href = "/ucretsiz-deneme", heroImageUrl, heroMobileI
     >
       {/* Arka plan katmanı — açılışta yumuşak zoom-out (transform, bg'den ayrık) */}
       <div className="trial-hero-bg" aria-hidden="true" />
+      {/* Alt kenar koyu lacivert gradyan geçişi (#6) */}
+      <div className="trial-hero-fade" aria-hidden="true" />
       <div
         className="trial-hero-inner"
         style={{

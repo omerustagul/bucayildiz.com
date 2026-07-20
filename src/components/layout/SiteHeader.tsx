@@ -138,7 +138,7 @@ export function SiteHeader({ active: activeOverride, socials = [], logoUrl, team
           position: "sticky",
           top: 0,
           zIndex: 50,
-          background: "var(--navy-900)",
+          background: "var(--navy-950)",
           borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
@@ -262,7 +262,7 @@ export function SiteHeader({ active: activeOverride, socials = [], logoUrl, team
           position: "sticky",
           top: 0,
           zIndex: 50,
-          background: "var(--navy-900)",
+          background: "var(--navy-950)",
         }}
       >
         <div style={{ maxWidth: 1680, margin: "0 auto", position: "relative" }}>
