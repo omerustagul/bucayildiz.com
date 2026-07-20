@@ -109,15 +109,45 @@ npm run start               # PORT=3000 (reverse proxy arkasında)
 
 ---
 
-## 5. Yedekleme (KVKK + iş sürekliliği)
+## 5. Yedekleme + izleme (KVKK + iş sürekliliği + felaket kurtarma)
 
-```bash
-# Günlük yedek (cron)
-pg_dump -Fc -h DB_HOST -U bucayildiz bucayildiz > /yedek/bucayildiz_$(date +%F).dump
-# Geri yükleme
-pg_restore -h DB_HOST -U bucayildiz -d bucayildiz --clean /yedek/DOSYA.dump
+**Katmanlar:** (1) her migration ÖNCESİ otomatik `pg_dump` (deploy.sh) · (2) günlük
+off-site yedek (cron) · (3) saatlik sağlık kontrolü + e-posta uyarı · (4) owner-only
+`/admin/sistem` paneli (son yedekler, disk/DB durumu, indirme).
+
+### Off-site yedek (KRİTİK — sunucu-dışı kopya)
+Yerel yedekler VPS diskinde; sunucu/disk kaybında DB ile birlikte giderler. Bu yüzden
+**S3-uyumlu bir kovaya** off-site kopya şart. Env boşsa yalnız yerel yedek alınır (sessiz
+devre dışı) — bu durumda `/admin/sistem` sarı uyarı gösterir.
+
+**`.env.production`'a eklenecek (değerleri SEN gir, git'e commit ETME):**
 ```
-Yedekler de **Türkiye'de** saklanmalı; en az 7 günlük rotasyon önerilir.
+BACKUP_S3_BUCKET=bucayildiz-yedek          # ayrı, PRIVATE kova (app storage'dan farklı)
+BACKUP_S3_ENDPOINT=https://s3.<sağlayıcı>  # Backblaze B2 / iDrive e2 / Wasabi vb.
+BACKUP_S3_REGION=<bölge>
+BACKUP_S3_ACCESS_KEY_ID=***
+BACKUP_S3_SECRET_ACCESS_KEY=***
+```
+> Kova AYRI ve PRIVATE olmalı (uploads kovasıyla karıştırma; yedekler herkese açık olamaz).
+> Sağlayıcıda "object lock / versioning" açmak fidye yazılımına karşı ekstra koruma verir.
+
+### Cron (sunucuda, `crontab -e`)
+Sırlar crontab'da tutulmaz — script'ler `.env.production`'ı kendisi okur.
+```bash
+# Günlük off-site yedek — 03:30
+30 3 * * * cd /var/www/bucayildiz.com && /usr/bin/node --env-file=.env.production scripts/backup-offsite.mjs >> /var/log/bucayildiz-backup.log 2>&1
+# Saatlik sağlık kontrolü (disk/DB/yedek tazeliği/PM2) — sorunda e-posta
+0 * * * * cd /var/www/bucayildiz.com && /usr/bin/node --env-file=.env.production scripts/health-check.mjs >> /var/log/bucayildiz-health.log 2>&1
+```
+(`npm run backup:offsite` / `npm run health:check` elle çalıştırma için.)
+
+### Geri yükleme
+```bash
+pg_restore -d "$DATABASE_URL" --clean --no-owner backups/bucayildiz_TARIH.dump
+# off-site'tan: önce S3'ten .dump indir (veya /admin/sistem → İndir), sonra üstteki komut.
+```
+Yedekler **Türkiye'de / KVKK-uyumlu** sağlayıcıda saklanmalı. Sağlık uyarıları için
+Ayarlar → E-posta (SMTP) dolu olmalı; alarm `mailToAdmin`'e gider.
 
 ---
 

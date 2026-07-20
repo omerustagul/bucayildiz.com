@@ -14,7 +14,7 @@ import { logoutAction } from "@/app/admin/actions";
 import { hasPermission } from "@/lib/permissions";
 
 // `area`: RBAC izin alanı (ör. "sporcular"). Boşsa herkese açık (Genel Bakış, Profilim).
-type NavItem = { href: string; label: string; icon: IconName; ready?: boolean; area?: string };
+type NavItem = { href: string; label: string; icon: IconName; ready?: boolean; area?: string; ownerOnly?: boolean };
 type NavGroup = { group: string; items: NavItem[] };
 
 const NAV: NavGroup[] = [
@@ -59,6 +59,7 @@ const NAV: NavGroup[] = [
       { href: "/admin/kvkk", label: "KVKK Onay Kayıtları", icon: "shield-check", ready: true, area: "kvkk" },
       // Owner-exclusive: "kullanicilar" izni matriste devredilmez → yalnız owner (bypass) görür.
       { href: "/admin/kullanicilar", label: "Yöneticiler & Yetkiler", icon: "lock", ready: true, area: "kullanicilar" },
+      { href: "/admin/sistem", label: "Sistem & Yedekler", icon: "shield", ready: true, ownerOnly: true },
     ],
   },
 ];
@@ -108,8 +109,8 @@ export function AdminShell({ user, mobileNav = true, logoUrl, children }: { user
   // useMemo: nav/dock referansı stabil kalsın — her render yeni array üretmek
   // MobileTabBar'ı navigasyon animasyonu sırasında gereksiz re-render ediyordu.
   const { nav, tabbarItems } = useMemo(() => {
-    const canView = (area?: string) => !area || hasPermission(user.role, user.permissions, `${area}.view`);
-    const nav = NAV.map((g) => ({ ...g, items: g.items.filter((i) => canView(i.area)) })).filter((g) => g.items.length > 0);
+    const canView = (i: NavItem) => (i.ownerOnly ? user.role === "owner" : !i.area || hasPermission(user.role, user.permissions, `${i.area}.view`));
+    const nav = NAV.map((g) => ({ ...g, items: g.items.filter(canView) })).filter((g) => g.items.length > 0);
     const navG = (name: string): NavItem[] => nav.find((g) => g.group === name)?.items ?? [];
     const tabbarItems: TabBarItem[] = (
       [

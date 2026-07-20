@@ -16,6 +16,8 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "db:backup": "node --env-file=.env scripts/db-backup.mjs",
+    "backup:offsite": "node --env-file=.env scripts/backup-offsite.mjs",
+    "health:check": "node --env-file=.env scripts/health-check.mjs",
     "vapid:generate": "node scripts/generate-vapid.mjs",
     "vapid:check": "node scripts/generate-vapid.mjs --check",
     "cron:secret": "node scripts/generate-cron-secret.mjs"
