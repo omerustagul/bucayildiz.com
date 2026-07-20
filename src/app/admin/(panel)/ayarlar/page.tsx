@@ -49,6 +49,7 @@ export default async function AyarlarPage() {
     clubName: s.clubName,
     clubShortName: s.clubShortName,
     logoUrl: str(s.logoUrl),
+    faviconUrl: str(s.faviconUrl),
     foundedYear: numStr(s.foundedYear),
     phone: str(s.phone),
     email: str(s.email),

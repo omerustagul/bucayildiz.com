@@ -16,7 +16,7 @@ import { SOCIAL_PLATFORMS, parseSocialLinks, type SocialLink } from "@/lib/socia
 import { saveSettings, setHomeGalleryFeatured, setHeroMobileImage } from "@/app/admin/(panel)/ayarlar/actions";
 
 export type SettingsFormValues = {
-  clubName: string; clubShortName: string; logoUrl: string; foundedYear: string;
+  clubName: string; clubShortName: string; logoUrl: string; faviconUrl: string; foundedYear: string;
   phone: string; email: string; address: string;
   latitude: number | null; longitude: number | null;
   socialLinks: string; // JSON: [{ platform, url }]
@@ -207,9 +207,15 @@ export function SettingsForm({ initial, smtpPassSet, mediaCategories = [], media
         {tab === "kulup" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ display: "grid", gridTemplateColumns: "210px minmax(0,1fr)", gap: 22, alignItems: "start" }} className="jersey-form-grid">
-              <Field label="Logo" hint="Şeffaf PNG önerilir">
-                <MediaLibraryPicker value={v.logoUrl || null} onChange={(url) => set("logoUrl", url ?? "")} label="Logo seç / yükle" aspect="1 / 1" icon="shield" />
-              </Field>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <Field label="Logo" hint="Şeffaf PNG önerilir">
+                  <MediaLibraryPicker value={v.logoUrl || null} onChange={(url) => set("logoUrl", url ?? "")} label="Logo seç / yükle" aspect="1 / 1" icon="shield" />
+                </Field>
+                {/* Favicon (tarayıcı sekme ikonu) — ana logodan AYRI. Boşsa logoyu izler. */}
+                <Field label="Favicon" hint="Sekme ikonu · boşsa logoyu izler">
+                  <MediaLibraryPicker value={v.faviconUrl || null} onChange={(url) => set("faviconUrl", url ?? "")} label="Favicon seç / yükle" aspect="1 / 1" icon="star" />
+                </Field>
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <Field label="Kulüp Adı" required><TextInput value={v.clubName} onChange={(e) => set("clubName", e.target.value)} /></Field>
                 <Field label="Kısa Ad" required hint="Sekmelerde / PWA'da"><TextInput value={v.clubShortName} onChange={(e) => set("clubShortName", e.target.value)} /></Field>

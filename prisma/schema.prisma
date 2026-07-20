@@ -462,6 +462,9 @@ model SiteSetting {
   clubName      String  @default("Buca Yıldız Futbol Akademisi")
   clubShortName String  @default("Buca Yıldız")
   logoUrl       String?
+  /// Tarayıcı sekmesi ikonu (favicon). Boşsa favicon logoUrl'i, o da boşsa statik
+  /// yıldız ikonunu izler. Ana logodan AYRI seçilebilir (küçük boyutta okunaklı ikon).
+  faviconUrl    String?
   foundedYear   Int?
   phone         String?
   email         String?

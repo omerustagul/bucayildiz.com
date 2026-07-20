@@ -58,12 +58,15 @@ export async function generateMetadata(): Promise<Metadata> {
       // Eski iOS sürümlerinin tam-ekran (standalone) açılışı için klasik etiket
       "apple-mobile-web-app-capable": "yes",
     },
-    // Favicon admin logosunu İZLER: logo seçilince tarayıcı sekme ikonu da onunla
-    // güncellenir (kullanıcı isteği: "logo seçince favicon da değişsin"). Logo boşsa
-    // statik yıldız PNG'lerine düşer. Statik app/favicon.ico kaldırıldı — yoksa
-    // sizes="any" ile dinamik ikonu ezip eski ikonu gösteriyordu.
-    icons: s.logoUrl
-      ? { icon: s.logoUrl, shortcut: s.logoUrl, apple: s.logoUrl }
+    // Favicon önceliği: AYRI favicon (faviconUrl) → ana logo (logoUrl) → statik yıldız.
+    // Kullanıcı ayarlardan favicon'a özel (küçük boyutta okunaklı) bir ikon seçebilir;
+    // seçmezse eskisi gibi logoyu izler (geriye uyumlu). Statik app/favicon.ico
+    // kaldırıldı — yoksa sizes="any" ile dinamik ikonu ezip eski ikonu gösteriyordu.
+    icons: s.faviconUrl || s.logoUrl
+      ? (() => {
+          const ico = (s.faviconUrl || s.logoUrl)!;
+          return { icon: ico, shortcut: ico, apple: s.logoUrl || ico };
+        })()
       : {
           icon: [
             { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
