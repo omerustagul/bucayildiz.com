@@ -46,7 +46,7 @@ export async function JerseySection() {
           // Bandın ÜST kenarı başlığın ALTINDAN başlar: başlık+kicker açık zeminde
           // kalır → koyu metin okunur (ölçüldü: başlık altı %20/1280px, %17.2/375px;
           // bant %3'ten başlayınca kontrast 1.27:1 idi — görünmezdi). Eğim korunur (5 puan).
-          clipPath: "polygon(0% 23%, 100% 28%, 100% 86%, 0% 82%)",
+          clipPath: "polygon(0% 1%, 100% 5%, 100% 86%, 0% 82%)",
           overflow: "hidden",
           zIndex: -1,
           filter: "drop-shadow(0 18px 38px rgba(14,33,72,.18))",
@@ -57,12 +57,13 @@ export async function JerseySection() {
       </div>
 
       <div>
-        <div style={{ maxWidth: 1540, margin: "0 auto", padding: "38px clamp(16px, 5vw, 32px) 8px" }}>
+        <div style={{ maxWidth: 1540, margin: "0 auto", padding: "28px clamp(16px, 5vw, 32px) 4px" }}>
           <SectionHeading
             kicker="Mağaza"
             title="2025/26 Formalarımız"
-            kickerColor="text"
-            style={{ marginBottom: 8 }}
+            align="center"
+            onDark
+            style={{ marginBottom: 4 }}
           />
         </div>
         <div className="by-marquee">
@@ -72,7 +73,7 @@ export async function JerseySection() {
             ))}
           </div>
         </div>
-        <div style={{ textAlign: "center", padding: "26px 0 48px" }}>
+        <div style={{ textAlign: "center", padding: "16px 0 36px" }}>
           <span style={{ fontSize: 13, color: "#fff", letterSpacing: "0.04em" }}>Resmi formalar yakında kulüp mağazasında · Üzerine gelin, kayma durur</span>
         </div>
       </div>

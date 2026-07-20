@@ -38,7 +38,7 @@ export function SectionHeading({
       style={{
         display: "flex",
         alignItems: "flex-end",
-        justifyContent: "space-between",
+        justifyContent: align === "center" ? "center" : "space-between",
         gap: "var(--space-6)",
         flexWrap: "wrap",
         textAlign: align,
