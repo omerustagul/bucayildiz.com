@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "@/lib/icons";
+import { useOverlayDismiss } from "@/components/ui/useOverlayDismiss";
 
 /**
  * Aşağı-kaydır-oku sözleşme okuyucusu — onay butonu metin SONUNA kadar
@@ -14,21 +15,16 @@ export function ConsentReaderModal({ title, body, onApprove, onClose }: { title:
   const bodyRef = useRef<HTMLDivElement>(null);
   const [reachedEnd, setReachedEnd] = useState(false);
 
+  // Escape ile kapatma + iOS-GÜVENLİ arka plan scroll kilidi (position:fixed).
+  // Eskiden `body.style.overflow = "hidden"` idi — iOS Safari'de dokunmatik
+  // kaydırmayı DURDURMUYOR (kullanıcı sözleşme açıkken parmakla siteyi kaydırabiliyordu).
+  useOverlayDismiss(true, onClose);
+
+  // Metin zaten kaydırma gerektirmiyorsa (kısa) onay butonunu hemen aktif et.
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    // Metin zaten kaydırma gerektirmiyorsa (kısa) butonu hemen aktif et.
     const el = bodyRef.current;
     if (el && el.scrollHeight - el.clientHeight <= 8) setReachedEnd(true);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [onClose]);
+  }, []);
 
   const handleScroll = () => {
     const el = bodyRef.current;

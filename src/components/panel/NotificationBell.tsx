@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Icon, type IconName } from "@/lib/icons";
 import { IconButton } from "@/components/ui/IconButton";
+import { useOverlayDismiss } from "@/components/ui/useOverlayDismiss";
 import {
   getMyNotifications,
   markNotificationRead,
@@ -67,15 +68,10 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
     });
   };
 
-  // Escape ile kapat + açıkken sayfa kaydırmasını kilitle (mobil-app hissi).
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
-  }, [open]);
+  // Escape ile kapat + iOS-GÜVENLİ arka plan scroll kilidi (position:fixed).
+  // Eskiden `body.style.overflow = "hidden"` idi — iOS Safari'de dokunmatik
+  // kaydırmayı durdurmuyordu (arka plan sızıyordu). Tek kaynak.
+  useOverlayDismiss(open, () => setOpen(false));
 
   const onTap = (n: FeedItem) => {
     if (!n.read) {
