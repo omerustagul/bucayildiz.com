@@ -44,9 +44,13 @@ export function HeaderSearch({
         alignSelf: "center",
         width: fullWidth ? "100%" : undefined,
         minWidth: 0,
-        height: 36,
-        padding: "0 12px",
-        borderRadius: 999,
+        // Drawer: alttaki butonlarla AYNI dil (radius-sm keskin köşe + buton yüksekliği).
+        // Eski 999 (tam hap) yuvarlak köşesi içeriği içeri itip "ikon-sol kenar boşluğu"
+        // hissi veriyordu; keskin köşe hem kompakt hem tutarlı. Page: desktop aramayla
+        // uyumlu (radius-md).
+        height: onDark ? 44 : 40,
+        padding: "0 13px",
+        borderRadius: onDark ? "var(--radius-sm)" : "var(--radius-md)",
         background: onDark ? "rgba(255,255,255,0.08)" : "var(--paper-2, #f4f5f7)",
         border: `1px solid ${focused ? "var(--gold-500)" : onDark ? "rgba(255,255,255,0.14)" : "var(--ink-200)"}`,
         transition: "border-color .16s ease",

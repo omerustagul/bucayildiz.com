@@ -51,8 +51,10 @@ export async function NewsSection() {
                 {featured.category && <Badge tone="gold">{featured.category}</Badge>}
                 <Badge tone="on-navy">{fmtTrDate(featured.publishedAt)}</Badge>
               </div>
-              <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 36, lineHeight: 1, textTransform: "uppercase", color: "#fff", margin: 0, maxWidth: 540 }}>{featured.title}</h3>
-              {featured.excerpt && <p style={{ fontSize: 15.5, lineHeight: 1.6, color: "var(--navy-100)", margin: 0, maxWidth: 520 }}>{featured.excerpt}</p>}
+              {/* Başlık + açıklama SATIR-KIRPMALI (line-clamp) → uzun metin karttan taşmaz,
+                  kart kompakt kalır. Font mobilde küçülür (clamp). */}
+              <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(22px, 5.2vw, 36px)", lineHeight: 1.05, textTransform: "uppercase", color: "#fff", margin: 0, maxWidth: 540, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{featured.title}</h3>
+              {featured.excerpt && <p style={{ fontSize: 15.5, lineHeight: 1.6, color: "var(--navy-100)", margin: 0, maxWidth: 520, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{featured.excerpt}</p>}
             </div>
           </Link>
           {/* Side list */}
@@ -70,7 +72,7 @@ export async function NewsSection() {
                   <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--gold-700)" }}>
                     {it.category || "Haber"} · {fmtTrDate(it.publishedAt)}
                   </span>
-                  <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 18, lineHeight: 1.1, color: "var(--text-strong)", margin: 0 }}>{it.title}</h4>
+                  <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 18, lineHeight: 1.1, color: "var(--text-strong)", margin: 0, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{it.title}</h4>
                 </div>
               </Link>
             ))}
